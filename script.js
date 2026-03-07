@@ -38,9 +38,39 @@ const GameState = {
     },
 };
 
-// Default dice values
-const DEFAULT_FRACTION_INT_DICE = [1, 1, 2, 2, 3, 3];
-const DEFAULT_FRACTION_FRAC_DICE = [4, 5, 6, 8, 10, 12];
+// Version configurations
+const VERSIONS = {
+    proper: {
+        label: 'Without Improper Fractions',
+        intDice: [1, 1, 2, 2, 3, 3],
+        fracDice: [4, 5, 6, 8, 10, 12],
+        wallRows: [
+            { denominator: 2, cells: 2, value: 1/2 },
+            { denominator: 3, cells: 3, value: 1/3 },
+            { denominator: 4, cells: 4, value: 1/4 },
+            { denominator: 5, cells: 5, value: 1/5 },
+            { denominator: 6, cells: 6, value: 1/6 },
+            { denominator: 8, cells: 8, value: 1/8 },
+            { denominator: 10, cells: 10, value: 1/10 },
+            { denominator: 12, cells: 12, value: 1/12 }
+        ]
+    },
+    improper: {
+        label: 'With Improper Fractions',
+        intDice: [1, 2, 2, 3, 3, 4],
+        fracDice: [2, 3, 4, 6, 8, 12],
+        wallRows: [
+            { denominator: 2, cells: 2, value: 1/2 },
+            { denominator: 3, cells: 3, value: 1/3 },
+            { denominator: 4, cells: 4, value: 1/4 },
+            { denominator: 6, cells: 6, value: 1/6 },
+            { denominator: 8, cells: 8, value: 1/8 },
+            { denominator: 12, cells: 12, value: 1/12 }
+        ]
+    }
+};
+
+let currentVersion = 'proper';
 
 
 // ============================================
@@ -134,14 +164,87 @@ function clearCustomDice(game) {
         if (game === 'fractions') {
             localStorage.removeItem(STORAGE_KEYS.fractionIntDice);
             localStorage.removeItem(STORAGE_KEYS.fractionFracDice);
-            GameState.fractions.customIntDice = [...DEFAULT_FRACTION_INT_DICE];
-            GameState.fractions.customFracDice = [...DEFAULT_FRACTION_FRAC_DICE];
+            const v = VERSIONS[currentVersion] || VERSIONS.proper;
+            GameState.fractions.customIntDice = [...v.intDice];
+            GameState.fractions.customFracDice = [...v.fracDice];
         }
         return true;
     } catch (e) {
         console.error('Error clearing dice settings:', e);
         return false;
     }
+}
+
+// ============================================
+// Version Picker
+// ============================================
+
+function showVersionPicker() {
+    return new Promise((resolve) => {
+        const modal = $('#version-modal');
+        const cancelBtn = $('#version-modal-cancel');
+        const options = $$('.version-option');
+
+        modal.hidden = false;
+        modal.querySelector('.version-option').focus();
+
+        function cleanup() {
+            modal.hidden = true;
+            options.forEach(o => o.removeEventListener('click', onPick));
+            cancelBtn.removeEventListener('click', onCancel);
+            modal.removeEventListener('click', onBackdrop);
+            document.removeEventListener('keydown', onEscape);
+        }
+
+        function onPick(e) {
+            const version = e.currentTarget.dataset.version;
+            cleanup();
+            resolve(version);
+        }
+        function onCancel() { cleanup(); resolve(null); }
+        function onBackdrop(e) { if (e.target === modal) { cleanup(); resolve(null); } }
+        function onEscape(e) { if (e.key === 'Escape') { cleanup(); resolve(null); } }
+
+        options.forEach(o => o.addEventListener('click', onPick));
+        cancelBtn.addEventListener('click', onCancel);
+        modal.addEventListener('click', onBackdrop);
+        document.addEventListener('keydown', onEscape);
+    });
+}
+
+function applyVersion(version) {
+    currentVersion = version;
+    const v = VERSIONS[version];
+
+    GameState.fractions.customIntDice = [...v.intDice];
+    GameState.fractions.customFracDice = [...v.fracDice];
+
+    localStorage.removeItem(STORAGE_KEYS.fractionIntDice);
+    localStorage.removeItem(STORAGE_KEYS.fractionFracDice);
+
+    createFractionWall();
+    resetFractionsGame();
+    populateFractionDiceInputs();
+
+    const subtitle = version === 'improper' ? '(With Improper Fractions)' : '(Without Improper Fractions)';
+    $('#fractions-title').textContent = `Colour in Fractions ${subtitle}`;
+}
+
+async function navigateToFractions() {
+    const version = await showVersionPicker();
+    if (!version) return;
+
+    const navLinks = $$('.nav-link');
+    const sections = $$('.section');
+
+    navLinks.forEach(l => l.classList.remove('active'));
+    const fractionsNav = $('.nav-link[href="#fractions"]');
+    if (fractionsNav) fractionsNav.classList.add('active');
+
+    sections.forEach(section => { section.hidden = section.id !== 'fractions'; });
+    window.scrollTo(0, 0);
+
+    applyVersion(version);
 }
 
 // ============================================
@@ -161,26 +264,27 @@ function initNavigation() {
         navMenu.setAttribute('aria-expanded', !expanded);
     });
     
-    // Navigation links
     navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const targetId = link.getAttribute('href').slice(1);
-            
-            // Update active state
+
+            if (targetId === 'fractions') {
+                mobileToggle?.setAttribute('aria-expanded', 'false');
+                navMenu?.setAttribute('aria-expanded', 'false');
+                navigateToFractions();
+                return;
+            }
+
             navLinks.forEach(l => l.classList.remove('active'));
             link.classList.add('active');
-            
-            // Show target section
+
             sections.forEach(section => {
                 section.hidden = section.id !== targetId;
             });
-            
-            // Close mobile menu
+
             mobileToggle?.setAttribute('aria-expanded', 'false');
             navMenu?.setAttribute('aria-expanded', 'false');
-            
-            // Scroll to top
             window.scrollTo(0, 0);
         });
     });
@@ -192,24 +296,7 @@ function initNavigation() {
 
 function initPlayNowButtons() {
     const fractionsBtn = $('.play-fractions-btn');
-    const navLinks = $$('.nav-link');
-    const sections = $$('.section');
-    
-    fractionsBtn?.addEventListener('click', () => {
-        // Update nav active state
-        navLinks.forEach(l => l.classList.remove('active'));
-        const fractionsNav = $('.nav-link[href="#fractions"]');
-        if (fractionsNav) fractionsNav.classList.add('active');
-        
-        // Show fractions section
-        sections.forEach(section => {
-            section.hidden = section.id !== 'fractions';
-        });
-        
-        // Scroll to top
-        window.scrollTo(0, 0);
-    });
-    
+    fractionsBtn?.addEventListener('click', () => navigateToFractions());
 }
 
 // ============================================
@@ -438,17 +525,8 @@ function createFractionWall() {
     
     wall.innerHTML = '';
     
-    // Define rows with denominators
-    const rows = [
-        { denominator: 2, cells: 2, value: 1/2 },
-        { denominator: 3, cells: 3, value: 1/3 },
-        { denominator: 4, cells: 4, value: 1/4 },
-        { denominator: 5, cells: 5, value: 1/5 },
-        { denominator: 6, cells: 6, value: 1/6 },
-        { denominator: 8, cells: 8, value: 1/8 },
-        { denominator: 10, cells: 10, value: 1/10 },
-        { denominator: 12, cells: 12, value: 1/12 }
-    ];
+    const v = VERSIONS[currentVersion] || VERSIONS.proper;
+    const rows = v.wallRows;
     
     rows.forEach((row, rowIndex) => {
         const rowDiv = document.createElement('div');

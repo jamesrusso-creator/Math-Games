@@ -310,6 +310,27 @@
         </div>
     </footer>
 
+    <!-- Version Picker Modal -->
+    <div id="version-modal" class="modal" role="dialog" aria-labelledby="version-modal-title" aria-modal="true" hidden>
+        <div class="modal-content version-picker">
+            <h3 id="version-modal-title">Choose a Version</h3>
+            <p class="version-picker-desc">Select which version of Colour in Fractions you'd like to play:</p>
+            <div class="version-options">
+                <button class="version-option" data-version="proper">
+                    <span class="version-badge">Proper</span>
+                    <span class="version-name">Without Improper Fractions</span>
+                    <span class="version-detail">Numerator &lt; Denominator (e.g. 2/5, 3/10)</span>
+                </button>
+                <button class="version-option" data-version="improper">
+                    <span class="version-badge">Improper</span>
+                    <span class="version-name">With Improper Fractions</span>
+                    <span class="version-detail">Numerator can &ge; Denominator (e.g. 3/2, 4/3)</span>
+                </button>
+            </div>
+            <button id="version-modal-cancel" class="btn btn-secondary">Cancel</button>
+        </div>
+    </div>
+
     <!-- Game Over Modal -->
     <div id="game-modal" class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true" hidden>
         <div class="modal-content">
