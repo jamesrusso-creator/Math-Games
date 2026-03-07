@@ -652,6 +652,33 @@ main {
     background: #e0e7ff;
 }
 
+.recording-table tbody tr.result-correct {
+    background: #d1fae5;
+    border-left: 3px solid var(--color-success, #10b981);
+}
+
+.recording-table tbody tr.result-incorrect {
+    background: #fee2e2;
+    border-left: 3px solid var(--color-error, #ef4444);
+}
+
+.recording-table tbody tr.result-skipped {
+    background: #fef3c7;
+    border-left: 3px solid var(--color-warning, #f59e0b);
+}
+
+.recording-table tbody tr.result-correct:hover {
+    background: #a7f3d0;
+}
+
+.recording-table tbody tr.result-incorrect:hover {
+    background: #fecaca;
+}
+
+.recording-table tbody tr.result-skipped:hover {
+    background: #fde68a;
+}
+
 /* Custom Dice Section */
 .custom-dice-section {
     background: var(--color-surface);

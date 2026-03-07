@@ -836,6 +836,13 @@ function addToFractionsTable(entry) {
     if (!tbody) return;
     
     const row = document.createElement('tr');
+    if (entry.result === 'Correct') {
+        row.className = 'result-correct';
+    } else if (entry.result === 'Incorrect') {
+        row.className = 'result-incorrect';
+    } else {
+        row.className = 'result-skipped';
+    }
     row.innerHTML = `
         <td>${entry.round}</td>
         <td>${entry.target}</td>
@@ -844,7 +851,6 @@ function addToFractionsTable(entry) {
     `;
     tbody.appendChild(row);
     
-    // Scroll to bottom
     row.scrollIntoView({ behavior: 'smooth' });
 }
 
