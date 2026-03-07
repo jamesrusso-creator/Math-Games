@@ -25,6 +25,7 @@ const GameState = {
         selectedCells: [], // Currently selected cells in current round
         isSelecting: false, // Whether user is in selection mode
         isGameOver: false,
+        attemptsLeft: 3, // Max 3 attempts per round
         // Statistics
         stats: {
             correct: 0,
@@ -499,6 +500,7 @@ function resetFractionsGame() {
     GameState.fractions.selectedCells = [];
     GameState.fractions.isSelecting = false;
     GameState.fractions.isGameOver = false;
+    GameState.fractions.attemptsLeft = 3;
     GameState.fractions.stats = { correct: 0, incorrect: 0, skipped: 0 };
     
     // Clear visual state
@@ -560,6 +562,7 @@ function rollFractionDice() {
         GameState.fractions.currentRoll = roll;
         GameState.fractions.isSelecting = true;
         GameState.fractions.selectedCells = [];
+        GameState.fractions.attemptsLeft = 3;
         
         $('#fraction-dice-int .dice-face').textContent = intValue;
         $('#fraction-dice .dice-face').textContent = denomValue;
@@ -683,18 +686,30 @@ function handleCorrectAnswer() {
 function handleIncorrectAnswer(selectedValue) {
     const roll = GameState.fractions.currentRoll;
     
-    // Update stats
     GameState.fractions.stats.incorrect++;
+    GameState.fractions.attemptsLeft--;
     
     const selectedDisplay = formatSelectedCells(GameState.fractions.selectedCells);
     
-    const selectedSum = formatFraction(Math.round(selectedValue * 12), 12);
-    showFeedback(`Incorrect! Your selection: ${selectedDisplay} = ${selectedSum}, but target is ${roll.display}. Try again!`, 'error');
+    const historyEntry = {
+        round: GameState.fractions.round,
+        target: roll.display,
+        selection: selectedDisplay,
+        result: 'Incorrect'
+    };
+    GameState.fractions.history.push(historyEntry);
+    addToFractionsTable(historyEntry);
     
-    // Clear selection but keep the same target
     clearSelection();
-    
     updateStatsDisplay();
+    
+    if (GameState.fractions.attemptsLeft <= 0) {
+        showFeedback(`3 incorrect attempts! Round over. Roll the dice for a new round.`, 'error');
+        nextRound();
+    } else {
+        const attemptsMsg = GameState.fractions.attemptsLeft === 1 ? '1 attempt' : `${GameState.fractions.attemptsLeft} attempts`;
+        showFeedback(`Incorrect! ${selectedDisplay} does not equal ${roll.display}. ${attemptsMsg} remaining.`, 'error');
+    }
 }
 
 function skipTurn() {
