@@ -28,10 +28,6 @@
     --color-fraction-selected: #1d4ed8;
     
     /* Decimal Game Colors */
-    --color-decimal-tenths: #8b5cf6;
-    --color-decimal-hundredths: #a78bfa;
-    --color-decimal-thousandths: #c4b5fd;
-    --color-decimal-shaded: #7c3aed;
     
     /* Typography */
     --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -503,11 +499,6 @@ main {
     75% { transform: rotate(15deg); }
 }
 
-.dice-decimal {
-    border-color: var(--color-secondary);
-    color: var(--color-secondary);
-}
-
 .game-info {
     display: flex;
     flex-wrap: wrap;
@@ -600,190 +591,21 @@ main {
     opacity: 0.5;
 }
 
-/* Decimat Sheet - 4-Section Layout (matches educational worksheet) */
-.decimats-container {
-    margin-bottom: var(--spacing-xl);
-}
-
-.decimats-container h3 {
-    text-align: center;
-    margin-bottom: var(--spacing-lg);
-    font-size: var(--font-size-xl);
-}
-
-.decimats-grid {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 0;
-    max-width: 860px;
-    margin: 0 auto;
-    padding: var(--spacing-lg);
-    background: var(--color-surface);
-    border: 3px solid #333;
-    border-radius: var(--radius-lg);
-}
-
-/* Each place value section */
-.decimat-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-}
-
-.decimat-section-label {
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: var(--color-text);
-    text-align: center;
-}
-
-.decimat-blank-line {
-    width: 80%;
-    height: 2px;
-    background: #333;
-    margin-top: 2px;
-}
-
-/* Decimal point between units and tenths */
-.decimat-dot {
-    display: flex;
-    align-items: flex-end;
-    padding-bottom: 36px;
-    font-size: 24px;
-    font-weight: bold;
-    color: #333;
-    margin: 0 6px;
-    user-select: none;
-    align-self: stretch;
-}
-
-/* Units section - single large square */
-.decimat-units-grid {
-    width: 160px;
-    height: 160px;
-    border: 2px solid #333;
-    background: #f9f9f9;
-}
-
-/* Tenths section - 1 col × 10 rows */
-.decimat-tenths-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(10, 1fr);
-    width: 160px;
-    height: 160px;
-    border: 2px solid #333;
-    gap: 0;
-}
-
-/* Hundredths section - 10 cols × 10 rows */
-.decimat-hundredths-grid {
-    display: grid;
-    grid-template-columns: repeat(10, 1fr);
-    grid-template-rows: repeat(10, 1fr);
-    width: 160px;
-    height: 160px;
-    border: 2px solid #333;
-    gap: 0;
-}
-
-/* Thousandths section - decorative fine grid */
-.decimat-thousandths-grid {
-    width: 160px;
-    height: 160px;
-    border: 2px solid #333;
-    background-color: #fff;
-    background-image:
-        repeating-linear-gradient(to right, #bbb 0px, #bbb 0.5px, transparent 0.5px, transparent 16px),
-        repeating-linear-gradient(to bottom, #bbb 0px, #bbb 0.5px, transparent 0.5px, transparent 16px),
-        repeating-linear-gradient(to right, #ddd 0px, #ddd 0.5px, transparent 0.5px, transparent 1.6px),
-        repeating-linear-gradient(to bottom, #ddd 0px, #ddd 0.5px, transparent 0.5px, transparent 1.6px);
-}
-
-/* Inline thousandths (replaces a decomposed hundredth) */
-.decimat-thousandths-inline {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(5, 1fr);
-    gap: 0;
-    width: 100%;
-    height: 100%;
-}
-
-/* ---- Decimat cell base ---- */
-.decimat-cell {
-    border: 1px solid #999;
-    cursor: pointer;
-    transition: background 0.15s ease, box-shadow 0.15s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    position: relative;
-    box-sizing: border-box;
-}
-
-/* Tenths cells - horizontal strips */
-.decimat-cell.tenths {
-    background: #fff;
-    border-color: #555;
-}
-
-/* Hundredths cells */
-.decimat-cell.hundredths {
-    background: #fff;
-    border-color: #999;
-}
-
-/* Thousandths cells (inline after decomposition) */
-.decimat-cell.thousandths {
-    background: #fff;
-    border-color: #bbb;
-    font-size: 0;
-    min-width: 0;
-    min-height: 0;
-}
-
-/* Hover states */
-.decimats-grid.selecting .decimat-cell:hover:not(.used):not(.decomposed) {
-    background: #c7d2fe !important;
-    box-shadow: inset 0 0 0 2px #6366f1;
-    z-index: 10;
-}
-
-/* Selected state - pencil-shading effect */
-.decimat-cell.selected {
-    background: repeating-linear-gradient(
-        -45deg,
-        #6366f1,
-        #6366f1 2px,
-        #818cf8 2px,
-        #818cf8 4px
-    ) !important;
-    border-color: #4338ca !important;
-    box-shadow: inset 0 0 0 1px #4338ca;
-}
-
-/* Used state - shaded gray like pencil marks */
-.decimat-cell.used {
-    background: repeating-linear-gradient(
-        -45deg,
-        #9ca3af,
-        #9ca3af 2px,
-        #b0b8c4 2px,
-        #b0b8c4 4px
-    ) !important;
-    cursor: not-allowed;
-    border-color: #6b7280 !important;
-}
-
-/* Decomposed hundredth */
-.decimat-cell.decomposed {
-    background: #f3f4f6 !important;
-    border-style: dashed;
+/* Disabled Game Card */
+.game-card-disabled {
     opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(0.8);
+}
+
+.btn-disabled {
+    display: inline-block;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: #9ca3af;
+    color: white;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: not-allowed;
 }
 
 /* Recording Tables */
@@ -958,10 +780,6 @@ main {
     width: 60px;
     height: 60px;
     font-size: var(--font-size-xl);
-}
-
-.dice.dice-decimal {
-    font-size: var(--font-size-lg);
 }
 
 /* Action Buttons */
@@ -1231,24 +1049,6 @@ main {
         flex-direction: column;
     }
     
-    .decimats-grid {
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: var(--spacing-md);
-    }
-
-    .decimat-units-grid,
-    .decimat-tenths-grid,
-    .decimat-hundredths-grid,
-    .decimat-thousandths-grid {
-        width: 120px;
-        height: 120px;
-    }
-    
-    .decimat-dot {
-        padding-top: 50px;
-        font-size: 22px;
-    }
 }
 
 @media (max-width: 480px) {
@@ -1299,27 +1099,6 @@ main {
         padding: var(--spacing-md);
     }
     
-    .decimats-grid {
-        padding: var(--spacing-sm);
-    }
-
-    .decimat-units-grid,
-    .decimat-tenths-grid,
-    .decimat-hundredths-grid,
-    .decimat-thousandths-grid {
-        width: 80px;
-        height: 80px;
-    }
-    
-    .decimat-dot {
-        padding-top: 30px;
-        font-size: 18px;
-        margin: 0 2px;
-    }
-    
-    .decimat-section-label {
-        font-size: 10px;
-    }
 }
 
 @media (max-width: 320px) {
@@ -1352,8 +1131,7 @@ main {
         page-break-after: always;
     }
     
-    .fraction-wall,
-    .decimats-grid {
+    .fraction-wall {
         border: 2px solid black;
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
@@ -1367,11 +1145,9 @@ main {
         --color-text: #000000;
         --color-border: #000000;
         --color-fraction-shaded: #0000ff;
-        --color-decimal-shaded: #0000ff;
     }
     
-    .fraction-cell,
-    .decimat-cell {
+    .fraction-cell {
         border-width: 2px;
     }
 }

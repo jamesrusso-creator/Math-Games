@@ -1,10 +1,9 @@
 /**
- * Math Games - Colour in Fractions & Decimats
+ * Math Games - Colour in Fractions
  * Interactive Educational Games
  * 
  * Features:
  * - Fraction Wall game with dice rolling
- * - Decimats game for decimal place values
  * - Custom dice configuration with persistence
  * - Accessibility support (keyboard navigation, screen readers)
  * - Responsive design
@@ -36,40 +35,12 @@ const GameState = {
         customIntDice: [1, 1, 2, 2, 3, 3],
         customFracDice: [4, 5, 6, 8, 10, 12]
     },
-    
-    // Decimats game state
-    decimats: {
-        currentRoll: null,
-        round: 1,
-        score: 0,
-        totalShaded: 0,
-        history: [],
-        selectedCells: [], // Currently selected cells in current round
-        isSelecting: false, // Whether user is in selection mode
-        isGameOver: false,
-        // Statistics
-        stats: {
-            correct: 0,
-            incorrect: 0,
-            skipped: 0
-        },
-        // Decimat decomposition state
-        decimatState: {
-            tenths: Array(10).fill({ used: false, decomposed: false }),
-            hundredths: Array(100).fill({ used: false, decomposed: false }),
-            thousandths: Array(1000).fill({ used: false })
-        },
-        // Custom dice values
-        customIntDice: [1, 2, 3, 4, 5, 6],
-        customDecDice: [0.001, 0.01, 0.1, 0.001, 0.01, 0.1]
-    }
 };
 
 // Default dice values
 const DEFAULT_FRACTION_INT_DICE = [1, 1, 2, 2, 3, 3];
 const DEFAULT_FRACTION_FRAC_DICE = [4, 5, 6, 8, 10, 12];
-const DEFAULT_DECIMAL_INT_DICE = [1, 2, 3, 4, 5, 6];
-const DEFAULT_DECIMAL_DEC_DICE = [0.001, 0.01, 0.1, 0.001, 0.01, 0.1];
+
 
 // ============================================
 // Utility Functions
@@ -109,9 +80,7 @@ function simplifyFraction(numerator, denominator) {
 
 const STORAGE_KEYS = {
     fractionIntDice: 'mathgames_fraction_int_dice',
-    fractionFracDice: 'mathgames_fraction_frac_dice',
-    decimalIntDice: 'mathgames_decimal_int_dice',
-    decimalDecDice: 'mathgames_decimal_dec_dice'
+    fractionFracDice: 'mathgames_fraction_frac_dice'
 };
 
 function saveCustomDice(game) {
@@ -119,9 +88,6 @@ function saveCustomDice(game) {
         if (game === 'fractions') {
             localStorage.setItem(STORAGE_KEYS.fractionIntDice, JSON.stringify(GameState.fractions.customIntDice));
             localStorage.setItem(STORAGE_KEYS.fractionFracDice, JSON.stringify(GameState.fractions.customFracDice));
-        } else if (game === 'decimats') {
-            localStorage.setItem(STORAGE_KEYS.decimalIntDice, JSON.stringify(GameState.decimats.customIntDice));
-            localStorage.setItem(STORAGE_KEYS.decimalDecDice, JSON.stringify(GameState.decimats.customDecDice));
         }
         return true;
     } catch (e) {
@@ -143,17 +109,6 @@ function loadCustomDice() {
             GameState.fractions.customFracDice = JSON.parse(fracFracDice);
         }
         
-        // Load decimal dice
-        const decIntDice = localStorage.getItem(STORAGE_KEYS.decimalIntDice);
-        const decDecDice = localStorage.getItem(STORAGE_KEYS.decimalDecDice);
-        
-        if (decIntDice) {
-            GameState.decimats.customIntDice = JSON.parse(decIntDice);
-        }
-        if (decDecDice) {
-            GameState.decimats.customDecDice = JSON.parse(decDecDice);
-        }
-        
         return true;
     } catch (e) {
         console.error('Error loading dice settings:', e);
@@ -168,11 +123,6 @@ function clearCustomDice(game) {
             localStorage.removeItem(STORAGE_KEYS.fractionFracDice);
             GameState.fractions.customIntDice = [...DEFAULT_FRACTION_INT_DICE];
             GameState.fractions.customFracDice = [...DEFAULT_FRACTION_FRAC_DICE];
-        } else if (game === 'decimats') {
-            localStorage.removeItem(STORAGE_KEYS.decimalIntDice);
-            localStorage.removeItem(STORAGE_KEYS.decimalDecDice);
-            GameState.decimats.customIntDice = [...DEFAULT_DECIMAL_INT_DICE];
-            GameState.decimats.customDecDice = [...DEFAULT_DECIMAL_DEC_DICE];
         }
         return true;
     } catch (e) {
@@ -229,7 +179,6 @@ function initNavigation() {
 
 function initPlayNowButtons() {
     const fractionsBtn = $('.play-fractions-btn');
-    const decimatsBtn = $('.play-decimats-btn');
     const navLinks = $$('.nav-link');
     const sections = $$('.section');
     
@@ -248,20 +197,6 @@ function initPlayNowButtons() {
         window.scrollTo(0, 0);
     });
     
-    decimatsBtn?.addEventListener('click', () => {
-        // Update nav active state
-        navLinks.forEach(l => l.classList.remove('active'));
-        const decimatsNav = $('.nav-link[href="#decimats"]');
-        if (decimatsNav) decimatsNav.classList.add('active');
-        
-        // Show decimats section
-        sections.forEach(section => {
-            section.hidden = section.id !== 'decimats';
-        });
-        
-        // Scroll to top
-        window.scrollTo(0, 0);
-    });
 }
 
 // ============================================
@@ -294,8 +229,6 @@ function initCustomDice() {
     // Initialize Fractions custom dice UI
     initFractionCustomDice();
     
-    // Initialize Decimats custom dice UI
-    initDecimalCustomDice();
 }
 
 function initFractionCustomDice() {
@@ -393,115 +326,6 @@ function validateFractionDice() {
     
     for (let i = 1; i <= 6; i++) {
         const intInput = $(`#frac-int-${i}`);
-        const value = parseInt(intInput.value);
-        
-        if (isNaN(value) || value < 1 || value > 6) {
-            errorMsg.textContent = `Face ${i}: Integer dice must be between 1 and 6.`;
-            errorMsg.hidden = false;
-            intInput.focus();
-            return false;
-        }
-    }
-    
-    errorMsg.hidden = true;
-    return true;
-}
-
-function initDecimalCustomDice() {
-    const toggle = $('.custom-dice-toggle[aria-controls="decimats-custom-dice-panel"]');
-    const panel = $('#decimats-custom-dice-panel');
-    const saveBtn = $('#save-decimal-dice');
-    const resetBtn = $('#reset-decimal-dice');
-    const errorMsg = $('#decimal-dice-error');
-    
-    // Toggle panel
-    toggle?.addEventListener('click', () => {
-        const expanded = toggle.getAttribute('aria-expanded') === 'true';
-        toggle.setAttribute('aria-expanded', !expanded);
-        panel.hidden = expanded;
-    });
-    
-    // Populate inputs with current values
-    populateDecimalDiceInputs();
-    
-    // Save button
-    saveBtn?.addEventListener('click', () => {
-        if (validateDecimalDice()) {
-            // Get values from inputs
-            const intValues = [];
-            const decValues = [];
-            
-            for (let i = 1; i <= 6; i++) {
-                const intInput = $(`#dec-int-${i}`);
-                const decSelect = $(`#dec-place-${i}`);
-                
-                intValues.push(parseInt(intInput.value));
-                decValues.push(parseFloat(decSelect.value));
-            }
-            
-            // Update game state
-            GameState.decimats.customIntDice = intValues;
-            GameState.decimats.customDecDice = decValues;
-            
-            // Save to localStorage
-            if (saveCustomDice('decimats')) {
-                errorMsg.textContent = 'Dice settings saved successfully!';
-                errorMsg.style.color = 'var(--color-success, #10b981)';
-                errorMsg.hidden = false;
-                
-                setTimeout(() => {
-                    errorMsg.hidden = true;
-                    errorMsg.style.color = '';
-                }, 2000);
-            } else {
-                errorMsg.textContent = 'Error saving dice settings. Please try again.';
-                errorMsg.hidden = false;
-            }
-        }
-    });
-    
-    // Reset button
-    resetBtn?.addEventListener('click', () => {
-        clearCustomDice('decimats');
-        populateDecimalDiceInputs();
-        errorMsg.textContent = 'Dice settings reset to default!';
-        errorMsg.style.color = 'var(--color-success, #10b981)';
-        errorMsg.hidden = false;
-        
-        setTimeout(() => {
-            errorMsg.hidden = true;
-            errorMsg.style.color = '';
-        }, 2000);
-    });
-    
-    // Add input validation listeners
-    for (let i = 1; i <= 6; i++) {
-        const intInput = $(`#dec-int-${i}`);
-        intInput?.addEventListener('input', () => {
-            validateIntegerInput(intInput, 1, 6);
-        });
-    }
-}
-
-function populateDecimalDiceInputs() {
-    for (let i = 1; i <= 6; i++) {
-        const intInput = $(`#dec-int-${i}`);
-        const decSelect = $(`#dec-place-${i}`);
-        
-        if (intInput) {
-            intInput.value = GameState.decimats.customIntDice[i - 1];
-        }
-        if (decSelect) {
-            decSelect.value = GameState.decimats.customDecDice[i - 1];
-        }
-    }
-}
-
-function validateDecimalDice() {
-    const errorMsg = $('#decimal-dice-error');
-    
-    for (let i = 1; i <= 6; i++) {
-        const intInput = $(`#dec-int-${i}`);
         const value = parseInt(intInput.value);
         
         if (isNaN(value) || value < 1 || value > 6) {
@@ -1020,531 +844,6 @@ function endFractionsGame() {
 }
 
 // ============================================
-// Decimats Game - New Logic
-// ============================================
-
-function initDecimatsGame() {
-    const rollBtn = $('#roll-decimal-btn');
-    const resetBtn = $('#reset-decimats-btn');
-    const checkBtn = $('#check-decimal-btn');
-    const skipBtn = $('#skip-decimal-btn');
-    const clearBtn = $('#clear-decimal-btn');
-    const decomposeBtn = $('#decompose-btn');
-    
-    rollBtn?.addEventListener('click', rollDecimalDice);
-    resetBtn?.addEventListener('click', resetDecimatsGame);
-    checkBtn?.addEventListener('click', checkDecimalResult);
-    skipBtn?.addEventListener('click', skipDecimalTurn);
-    clearBtn?.addEventListener('click', clearDecimalSelection);
-    decomposeBtn?.addEventListener('click', decomposeUnit);
-    
-    createDecimatsGrid();
-    resetDecimatsGame();
-}
-
-function createDecimatsGrid() {
-    const grid = $('#decimats-grid');
-    if (!grid) return;
-    
-    grid.innerHTML = '';
-
-    function makeCell(level, index, value) {
-        const cell = document.createElement('div');
-        cell.className = `decimat-cell ${level}`;
-        cell.dataset.level = level;
-        cell.dataset.index = index;
-        cell.dataset.value = String(value);
-        cell.tabIndex = 0;
-        cell.setAttribute('aria-label', `${level} unit ${index + 1}`);
-        cell.addEventListener('click', () => handleDecimatCellClick(level, index));
-        cell.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleDecimatCellClick(level, index);
-            }
-        });
-        return cell;
-    }
-
-    // Units section
-    const unitsSection = document.createElement('div');
-    unitsSection.className = 'decimat-section';
-    const unitsGrid = document.createElement('div');
-    unitsGrid.className = 'decimat-units-grid';
-    unitsSection.appendChild(unitsGrid);
-    const unitsLabel = document.createElement('div');
-    unitsLabel.className = 'decimat-section-label';
-    unitsLabel.textContent = 'units';
-    unitsSection.appendChild(unitsLabel);
-
-    // Decimal point
-    const dot = document.createElement('div');
-    dot.className = 'decimat-dot';
-    dot.innerHTML = '&#9679;';
-
-    // Tenths section (1 col × 10 rows)
-    const tenthsSection = document.createElement('div');
-    tenthsSection.className = 'decimat-section';
-    const tenthsGrid = document.createElement('div');
-    tenthsGrid.className = 'decimat-tenths-grid';
-    for (let i = 0; i < 10; i++) {
-        tenthsGrid.appendChild(makeCell('tenths', i, 0.1));
-    }
-    tenthsSection.appendChild(tenthsGrid);
-    const tenthsLabel = document.createElement('div');
-    tenthsLabel.className = 'decimat-section-label';
-    tenthsLabel.textContent = 'tenths';
-    tenthsSection.appendChild(tenthsLabel);
-
-    // Hundredths section (10 cols × 10 rows)
-    const hundredthsSection = document.createElement('div');
-    hundredthsSection.className = 'decimat-section';
-    const hundredthsGrid = document.createElement('div');
-    hundredthsGrid.className = 'decimat-hundredths-grid';
-    for (let i = 0; i < 100; i++) {
-        hundredthsGrid.appendChild(makeCell('hundredths', i, 0.01));
-    }
-    hundredthsSection.appendChild(hundredthsGrid);
-    const hundredthsLabel = document.createElement('div');
-    hundredthsLabel.className = 'decimat-section-label';
-    hundredthsLabel.textContent = 'hundredths';
-    hundredthsSection.appendChild(hundredthsLabel);
-
-    // Thousandths section (decorative fine grid, cells added via decomposition)
-    const thousandthsSection = document.createElement('div');
-    thousandthsSection.className = 'decimat-section';
-    const thousandthsGrid = document.createElement('div');
-    thousandthsGrid.className = 'decimat-thousandths-grid';
-    thousandthsGrid.id = 'decimat-thousandths-grid';
-    thousandthsSection.appendChild(thousandthsGrid);
-    const thousandthsLabel = document.createElement('div');
-    thousandthsLabel.className = 'decimat-section-label';
-    thousandthsLabel.textContent = 'thousandths';
-    thousandthsSection.appendChild(thousandthsLabel);
-
-    // Place value blank lines
-    const blanksRow = document.createElement('div');
-    blanksRow.className = 'decimat-blanks-row';
-    [unitsSection, tenthsSection, hundredthsSection, thousandthsSection].forEach(sec => {
-        const blank = document.createElement('div');
-        blank.className = 'decimat-blank-line';
-        sec.appendChild(blank);
-    });
-
-    grid.appendChild(unitsSection);
-    grid.appendChild(dot);
-    grid.appendChild(tenthsSection);
-    grid.appendChild(hundredthsSection);
-    grid.appendChild(thousandthsSection);
-}
-
-function resetDecimatsGame() {
-    GameState.decimats.currentRoll = null;
-    GameState.decimats.round = 1;
-    GameState.decimats.score = 0;
-    GameState.decimats.totalShaded = 0;
-    GameState.decimats.history = [];
-    GameState.decimats.selectedCells = [];
-    GameState.decimats.isSelecting = false;
-    GameState.decimats.isGameOver = false;
-    GameState.decimats.stats = { correct: 0, incorrect: 0, skipped: 0 };
-    
-    GameState.decimats.decimatState = {
-        tenths: Array(10).fill().map(() => ({ used: false, decomposed: false })),
-        hundredths: Array(100).fill().map(() => ({ used: false, decomposed: false })),
-        thousandths: Array(1000).fill().map(() => ({ used: false }))
-    };
-    
-    createDecimatsGrid();
-    
-    const tbody = $('#decimats-table tbody');
-    if (tbody) tbody.innerHTML = '';
-    
-    updateDecimalDisplay();
-    updateDecimalStatsDisplay();
-    hideDecimalFeedback();
-    
-    $('#decimal-dice .dice-face').textContent = '?';
-    $('#decimal-dice-int .dice-face').textContent = '?';
-    $('#current-decimal').textContent = '-';
-    
-    $('#decimal-action-buttons').hidden = true;
-    $('#decimats-grid').classList.remove('selecting');
-    $('#roll-decimal-btn').disabled = false;
-}
-
-function rollDecimalDice() {
-    if (GameState.decimats.isGameOver || GameState.decimats.isSelecting) return;
-    
-    const diceInt = $('#decimal-dice-int');
-    const diceDec = $('#decimal-dice');
-    const rollBtn = $('#roll-decimal-btn');
-    
-    rollBtn.disabled = true;
-    diceInt.classList.add('rolling');
-    diceDec.classList.add('rolling');
-    
-    setTimeout(() => {
-        const intIndex = Math.floor(Math.random() * 6);
-        const intValue = GameState.decimats.customIntDice[intIndex];
-        const placeValue = GameState.decimats.customDecDice[intIndex];
-        const decimalValue = intValue * placeValue;
-        
-        let displayValue;
-        if (placeValue === 0.1) {
-            displayValue = decimalValue.toFixed(1);
-        } else if (placeValue === 0.01) {
-            displayValue = decimalValue.toFixed(2);
-        } else {
-            displayValue = decimalValue.toFixed(3);
-        }
-        
-        const roll = {
-            value: decimalValue,
-            display: displayValue,
-            intValue: intValue,
-            placeValue: placeValue
-        };
-        
-        GameState.decimats.currentRoll = roll;
-        GameState.decimats.isSelecting = true;
-        GameState.decimats.selectedCells = [];
-        
-        $('#decimal-dice-int .dice-face').textContent = intValue;
-        $('#decimal-dice .dice-face').textContent = placeValue;
-        $('#current-decimal').textContent = roll.display;
-        
-        diceInt.classList.remove('rolling');
-        diceDec.classList.remove('rolling');
-        
-        $('#decimal-action-buttons').hidden = false;
-        $('#check-decimal-btn').disabled = true;
-        $('#decimats-grid').classList.add('selecting');
-        
-        showDecimalFeedback(`Select units that sum to ${roll.display}, then click "Check Result"`, 'info');
-        
-        updateDecimalDisplay();
-    }, 500);
-}
-
-function handleDecimatCellClick(level, index) {
-    if (!GameState.decimats.isSelecting || GameState.decimats.isGameOver) return;
-    
-    const state = GameState.decimats.decimatState;
-    
-    if (level === 'tenths' && state.tenths[index].used) return;
-    if (level === 'hundredths' && state.hundredths[index].used) return;
-    if (level === 'thousandths' && state.thousandths[index].used) return;
-    
-    const selectedIndex = GameState.decimats.selectedCells.findIndex(
-        item => item.level === level && item.index === index
-    );
-    
-    const cell = $(`.decimat-cell[data-level="${level}"][data-index="${index}"]`);
-    if (!cell) return;
-    
-    if (selectedIndex === -1) {
-        cell.classList.add('selected');
-        const value = parseFloat(cell.dataset.value);
-        GameState.decimats.selectedCells.push({ level: level, index: index, value: value });
-    } else {
-        cell.classList.remove('selected');
-        GameState.decimats.selectedCells.splice(selectedIndex, 1);
-    }
-    
-    $('#check-decimal-btn').disabled = GameState.decimats.selectedCells.length === 0;
-    
-    updateDecimalDisplay();
-}
-
-function clearDecimalSelection() {
-    GameState.decimats.selectedCells.forEach(item => {
-        const cell = $(`.decimat-cell[data-level="${item.level}"][data-index="${item.index}"]`);
-        if (cell) cell.classList.remove('selected');
-    });
-    
-    GameState.decimats.selectedCells = [];
-    $('#check-decimal-btn').disabled = true;
-    updateDecimalDisplay();
-}
-
-function checkDecimalResult() {
-    if (!GameState.decimats.isSelecting || !GameState.decimats.currentRoll) return;
-    
-    const targetValue = GameState.decimats.currentRoll.value;
-    const selectedValue = GameState.decimats.selectedCells.reduce((sum, item) => sum + item.value, 0);
-    
-    const isCorrect = Math.abs(selectedValue - targetValue) < 0.0001;
-    
-    if (isCorrect) {
-        handleCorrectDecimalAnswer();
-    } else {
-        handleIncorrectDecimalAnswer(selectedValue);
-    }
-}
-
-function handleCorrectDecimalAnswer() {
-    const roll = GameState.decimats.currentRoll;
-    const state = GameState.decimats.decimatState;
-    
-    GameState.decimats.selectedCells.forEach(item => {
-        const cell = $(`.decimat-cell[data-level="${item.level}"][data-index="${item.index}"]`);
-        if (cell) {
-            cell.classList.remove('selected');
-            cell.classList.add('used');
-        }
-        
-        if (item.level === 'tenths') {
-            state.tenths[item.index].used = true;
-        } else if (item.level === 'hundredths') {
-            state.hundredths[item.index].used = true;
-        } else {
-            state.thousandths[item.index].used = true;
-        }
-    });
-    
-    GameState.decimats.stats.correct++;
-    GameState.decimats.score += roll.intValue;
-    GameState.decimats.totalShaded += roll.value;
-    
-    const selectedDisplay = GameState.decimats.selectedCells.map(item => {
-        if (item.level === 'tenths') return '0.1';
-        if (item.level === 'hundredths') return '0.01';
-        return '0.001';
-    }).join(' + ');
-    
-    const historyEntry = {
-        round: GameState.decimats.round,
-        target: roll.display,
-        selection: selectedDisplay || roll.display,
-        result: 'Correct'
-    };
-    GameState.decimats.history.push(historyEntry);
-    addToDecimatsTable(historyEntry);
-    
-    showDecimalFeedback(`Correct! ${roll.display} = ${selectedDisplay}`, 'success');
-    
-    nextDecimalRound();
-}
-
-function handleIncorrectDecimalAnswer(selectedValue) {
-    const roll = GameState.decimats.currentRoll;
-    
-    GameState.decimats.stats.incorrect++;
-    
-    const selectedDisplay = GameState.decimats.selectedCells.map(item => {
-        if (item.level === 'tenths') return '0.1';
-        if (item.level === 'hundredths') return '0.01';
-        return '0.001';
-    }).join(' + ');
-    
-    const selectedSum = selectedValue.toFixed(3);
-    showDecimalFeedback(`Incorrect! Your selection: ${selectedDisplay} = ${selectedSum}, but target is ${roll.display}. Try again!`, 'error');
-    
-    clearDecimalSelection();
-    
-    updateDecimalStatsDisplay();
-}
-
-function skipDecimalTurn() {
-    if (!GameState.decimats.isSelecting || !GameState.decimats.currentRoll) return;
-    
-    const roll = GameState.decimats.currentRoll;
-    
-    if (canMakeDecimal(roll.value)) {
-        showDecimalFeedback('Please try again! It is possible to make this decimal.', 'warning');
-        return;
-    }
-    
-    GameState.decimats.stats.skipped++;
-    
-    const historyEntry = {
-        round: GameState.decimats.round,
-        target: roll.display,
-        selection: '-',
-        result: 'Skipped (Impossible)'
-    };
-    GameState.decimats.history.push(historyEntry);
-    addToDecimatsTable(historyEntry);
-    
-    showDecimalFeedback(`Skipped! ${roll.display} cannot be made with remaining units.`, 'warning');
-    
-    nextDecimalRound();
-}
-
-function canMakeDecimal(targetValue) {
-    const state = GameState.decimats.decimatState;
-    const availableUnits = [];
-    
-    for (let i = 0; i < 10; i++) {
-        if (!state.tenths[i].used) {
-            availableUnits.push({ value: 0.1, level: 'tenths', index: i });
-        }
-    }
-    
-    for (let i = 0; i < 100; i++) {
-        if (!state.hundredths[i].used && !state.hundredths[i].decomposed) {
-            availableUnits.push({ value: 0.01, level: 'hundredths', index: i });
-        }
-    }
-    
-    for (let i = 0; i < 1000; i++) {
-        const parentHundredth = Math.floor(i / 10);
-        if (state.hundredths[parentHundredth].decomposed && !state.thousandths[i].used) {
-            availableUnits.push({ value: 0.001, level: 'thousandths', index: i });
-        }
-    }
-    
-    return canMakeDecimalSum(availableUnits, targetValue, 0);
-}
-
-function canMakeDecimalSum(units, target, index) {
-    if (Math.abs(target) < 0.0001) return true;
-    if (target < 0 || index >= units.length) return false;
-    
-    if (canMakeDecimalSum(units, target - units[index].value, index + 1)) return true;
-    if (canMakeDecimalSum(units, target, index + 1)) return true;
-    
-    return false;
-}
-
-function decomposeUnit() {
-    const state = GameState.decimats.decimatState;
-    
-    for (let i = 0; i < 100; i++) {
-        if (!state.hundredths[i].used && !state.hundredths[i].decomposed) {
-            decomposeHundredth(i);
-            showDecimalFeedback('Decomposed 0.01 into 10 × 0.001!', 'info');
-            return;
-        }
-    }
-    
-    showDecimalFeedback('No units available to decompose!', 'warning');
-}
-
-function decomposeHundredth(hundredthIndex) {
-    const state = GameState.decimats.decimatState;
-    const hundredthCell = $(`.decimat-cell[data-level="hundredths"][data-index="${hundredthIndex}"]`);
-    
-    if (!hundredthCell) return;
-    
-    state.hundredths[hundredthIndex].decomposed = true;
-    hundredthCell.classList.add('decomposed');
-    hundredthCell.style.pointerEvents = 'none';
-    
-    const thousandthsContainer = document.createElement('div');
-    thousandthsContainer.className = 'decimat-thousandths-inline';
-    
-    for (let i = 0; i < 10; i++) {
-        const idx = hundredthIndex * 10 + i;
-        const thousandthCell = document.createElement('div');
-        thousandthCell.className = 'decimat-cell thousandths';
-        thousandthCell.dataset.level = 'thousandths';
-        thousandthCell.dataset.index = idx;
-        thousandthCell.dataset.value = '0.001';
-        thousandthCell.tabIndex = 0;
-        thousandthCell.setAttribute('aria-label', `Thousandth ${idx + 1}`);
-        
-        thousandthCell.addEventListener('click', () => handleDecimatCellClick('thousandths', idx));
-        thousandthCell.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleDecimatCellClick('thousandths', idx);
-            }
-        });
-        
-        thousandthsContainer.appendChild(thousandthCell);
-    }
-    
-    hundredthCell.replaceWith(thousandthsContainer);
-}
-
-function nextDecimalRound() {
-    GameState.decimats.round++;
-    GameState.decimats.currentRoll = null;
-    GameState.decimats.selectedCells = [];
-    GameState.decimats.isSelecting = false;
-    
-    $('#decimal-action-buttons').hidden = true;
-    $('#decimats-grid').classList.remove('selecting');
-    $('#roll-decimal-btn').disabled = false;
-    $('#decimal-dice .dice-face').textContent = '?';
-    $('#decimal-dice-int .dice-face').textContent = '?';
-    $('#current-decimal').textContent = '-';
-    
-    updateDecimalDisplay();
-    updateDecimalStatsDisplay();
-    
-    if (!hasAnyPossibleDecimal()) {
-        endDecimatsGame();
-    }
-}
-
-function hasAnyPossibleDecimal() {
-    for (let i = 0; i < 6; i++) {
-        const intValue = GameState.decimats.customIntDice[i];
-        const placeValue = GameState.decimats.customDecDice[i];
-        const value = intValue * placeValue;
-        
-        if (canMakeDecimal(value)) return true;
-    }
-    return false;
-}
-
-function showDecimalFeedback(message, type) {
-    const feedback = $('#decimal-feedback');
-    feedback.textContent = message;
-    feedback.className = `feedback-message ${type}`;
-    feedback.hidden = false;
-}
-
-function hideDecimalFeedback() {
-    $('#decimal-feedback').hidden = true;
-}
-
-function updateDecimalDisplay() {
-    const selectedValue = GameState.decimats.selectedCells.reduce((sum, item) => sum + item.value, 0);
-    $('#decimal-selected').textContent = selectedValue.toFixed(3);
-    $('#decimal-round').textContent = GameState.decimats.round;
-}
-
-function updateDecimalStatsDisplay() {
-    $('#decimal-correct-count').textContent = GameState.decimats.stats.correct;
-    $('#decimal-incorrect-count').textContent = GameState.decimats.stats.incorrect;
-    $('#decimal-skipped-count').textContent = GameState.decimats.stats.skipped;
-}
-
-function addToDecimatsTable(entry) {
-    const tbody = $('#decimats-table tbody');
-    if (!tbody) return;
-    
-    const row = document.createElement('tr');
-    row.innerHTML = `
-        <td>${entry.round}</td>
-        <td>${entry.target}</td>
-        <td>${entry.selection}</td>
-        <td>${entry.result}</td>
-    `;
-    tbody.appendChild(row);
-    
-    row.scrollIntoView({ behavior: 'smooth' });
-}
-
-function endDecimatsGame() {
-    GameState.decimats.isGameOver = true;
-    
-    const stats = GameState.decimats.stats;
-    const totalAttempts = stats.correct + stats.incorrect;
-    const accuracy = totalAttempts > 0 ? Math.round((stats.correct / totalAttempts) * 100) : 0;
-    
-    showModal(
-        'Game Over!',
-        `Game completed!\n\nCorrect: ${stats.correct}\nIncorrect: ${stats.incorrect}\nSkipped: ${stats.skipped}\nAccuracy: ${accuracy}%`,
-        resetDecimatsGame
-    );
-}
-
-// ============================================
 // Initialize Game
 // ============================================
 
@@ -1554,5 +853,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initInstructions();
     initCustomDice();
     initFractionsGame();
-    initDecimatsGame();
 });
