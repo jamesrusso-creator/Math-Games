@@ -74,6 +74,18 @@ function simplifyFraction(numerator, denominator) {
     };
 }
 
+function formatSelectedCells(cells) {
+    const counts = new Map();
+    cells.forEach(item => {
+        const cell = $(`.fraction-cell[data-row="${item.row}"][data-cell="${item.cell}"]`);
+        const denom = parseInt(cell.dataset.denominator);
+        counts.set(denom, (counts.get(denom) || 0) + 1);
+    });
+    return Array.from(counts.entries())
+        .map(([denom, count]) => formatFraction(count, denom))
+        .join(' + ');
+}
+
 // ============================================
 // Local Storage Functions
 // ============================================
@@ -650,11 +662,7 @@ function handleCorrectAnswer() {
     GameState.fractions.score += roll.numerator;
     GameState.fractions.totalShaded += roll.value;
     
-    // Add to history
-    const selectedDisplay = GameState.fractions.selectedCells.map(item => {
-        const cell = $(`.fraction-cell[data-row="${item.row}"][data-cell="${item.cell}"]`);
-        return formatFraction(1, parseInt(cell.dataset.denominator));
-    }).join(' + ');
+    const selectedDisplay = formatSelectedCells(GameState.fractions.selectedCells);
     
     const historyEntry = {
         round: GameState.fractions.round,
@@ -678,11 +686,7 @@ function handleIncorrectAnswer(selectedValue) {
     // Update stats
     GameState.fractions.stats.incorrect++;
     
-    // Show error feedback
-    const selectedDisplay = GameState.fractions.selectedCells.map(item => {
-        const cell = $(`.fraction-cell[data-row="${item.row}"][data-cell="${item.cell}"]`);
-        return formatFraction(1, parseInt(cell.dataset.denominator));
-    }).join(' + ');
+    const selectedDisplay = formatSelectedCells(GameState.fractions.selectedCells);
     
     const selectedSum = formatFraction(Math.round(selectedValue * 12), 12);
     showFeedback(`Incorrect! Your selection: ${selectedDisplay} = ${selectedSum}, but target is ${roll.display}. Try again!`, 'error');
