@@ -515,6 +515,7 @@ function resetFractionsGame() {
     $('#fraction-action-buttons').hidden = true;
     $('#fraction-wall').classList.remove('selecting');
     $('#roll-fraction-btn').disabled = false;
+    setDiceLocked(false);
 }
 
 function rollFractionDice() {
@@ -525,6 +526,7 @@ function rollFractionDice() {
     const diceFrac = $('#fraction-dice');
 
     $('#roll-fraction-btn').disabled = true;
+    setDiceLocked(true);
     diceInt.classList.add('rolling');
     diceFrac.classList.add('rolling');
 
@@ -743,6 +745,33 @@ function endFractionsGame(isWin) {
         stats: GameState.fractions.stats,
         onPlayAgain: resetFractionsGame
     });
+}
+
+// ============================================
+// Dice Lock
+// ============================================
+
+function setDiceLocked(locked) {
+    const panel = $('#fractions-custom-dice-panel');
+    if (!panel) return;
+
+    panel.querySelectorAll('input, select, button').forEach(el => {
+        el.disabled = locked;
+    });
+
+    let notice = panel.querySelector('.dice-locked-notice');
+    if (locked) {
+        if (!notice) {
+            notice = document.createElement('p');
+            notice.className = 'dice-locked-notice';
+            notice.setAttribute('role', 'alert');
+            notice.textContent = 'Dice settings cannot be changed during an active game. Start a new game to modify.';
+            panel.prepend(notice);
+        }
+        notice.hidden = false;
+    } else if (notice) {
+        notice.hidden = true;
+    }
 }
 
 // ============================================
