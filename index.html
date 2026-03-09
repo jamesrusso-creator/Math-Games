@@ -331,11 +331,13 @@
         </div>
     </div>
 
-    <!-- Game Over Modal -->
+    <!-- Game End Modal -->
     <div id="game-modal" class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true" hidden>
-        <div class="modal-content">
+        <div class="modal-content" id="modal-inner">
+            <div id="fireworks-container" class="fireworks-container" hidden></div>
+            <div id="modal-icon" class="modal-icon"></div>
             <h3 id="modal-title">Game Over!</h3>
-            <p id="modal-message"></p>
+            <div id="modal-stats" class="modal-stats"></div>
             <div class="modal-actions">
                 <button id="modal-play-again" class="btn btn-primary">Play Again</button>
                 <button id="modal-close" class="btn btn-secondary">Close</button>

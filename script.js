@@ -357,18 +357,60 @@ function validateIntegerInput(input, min, max) {
 // Modal
 // ============================================
 
-function showModal(title, message, onPlayAgain) {
+function showEndModal({ isWin, stats, onPlayAgain }) {
     const modal = $('#game-modal');
+    const inner = $('#modal-inner');
+    const fireworks = $('#fireworks-container');
+    const icon = $('#modal-icon');
+    const title = $('#modal-title');
+    const statsEl = $('#modal-stats');
     const playAgainBtn = $('#modal-play-again');
     const closeBtn = $('#modal-close');
 
-    $('#modal-title').textContent = title;
-    $('#modal-message').textContent = message;
+    inner.classList.remove('modal-win', 'modal-lose');
+    fireworks.hidden = true;
+    fireworks.innerHTML = '';
+
+    const totalAttempts = stats.correct + stats.incorrect;
+    const accuracy = totalAttempts > 0 ? Math.round((stats.correct / totalAttempts) * 100) : 0;
+
+    if (isWin) {
+        inner.classList.add('modal-win');
+        fireworks.hidden = false;
+        for (let i = 0; i < 24; i++) {
+            const spark = document.createElement('div');
+            spark.className = 'firework-spark';
+            spark.style.setProperty('--angle', `${(i / 24) * 360}deg`);
+            spark.style.setProperty('--delay', `${Math.random() * 0.4}s`);
+            spark.style.setProperty('--hue', `${Math.floor(Math.random() * 360)}`);
+            fireworks.appendChild(spark);
+        }
+        icon.textContent = '🎉';
+        title.textContent = 'You Win!';
+    } else {
+        inner.classList.add('modal-lose');
+        icon.textContent = '😔';
+        title.textContent = 'Game Over';
+    }
+
+    statsEl.innerHTML = `
+        <p class="modal-reason">${isWin
+            ? 'Congratulations! You filled the entire fraction wall!'
+            : 'No possible moves remaining with the current dice.'}</p>
+        <div class="modal-stat-grid">
+            <div class="modal-stat correct"><span class="modal-stat-value">${stats.correct}</span><span class="modal-stat-label">Correct</span></div>
+            <div class="modal-stat incorrect"><span class="modal-stat-value">${stats.incorrect}</span><span class="modal-stat-label">Incorrect</span></div>
+            <div class="modal-stat skipped"><span class="modal-stat-value">${stats.skipped}</span><span class="modal-stat-label">Skipped</span></div>
+            <div class="modal-stat accuracy"><span class="modal-stat-value">${accuracy}%</span><span class="modal-stat-label">Accuracy</span></div>
+        </div>
+    `;
+
     modal.hidden = false;
-    modal.querySelector('button').focus();
+    playAgainBtn.focus();
 
     const closeModal = () => {
         modal.hidden = true;
+        fireworks.innerHTML = '';
         playAgainBtn.onclick = null;
         closeBtn.onclick = null;
     };
@@ -666,6 +708,10 @@ function hasAnyPossibleFraction() {
 // Round & Game Flow
 // ============================================
 
+function isFractionWallFull() {
+    return $$('.fraction-cell:not(.used)').length === 0;
+}
+
 function nextRound() {
     const state = GameState.fractions;
     state.round++;
@@ -683,23 +729,20 @@ function nextRound() {
     updateFractionDisplay();
     updateStatsDisplay();
 
-    if (!hasAnyPossibleFraction()) {
-        endFractionsGame();
+    if (isFractionWallFull()) {
+        endFractionsGame(true);
+    } else if (!hasAnyPossibleFraction()) {
+        endFractionsGame(false);
     }
 }
 
-function endFractionsGame() {
+function endFractionsGame(isWin) {
     GameState.fractions.isGameOver = true;
-
-    const stats = GameState.fractions.stats;
-    const totalAttempts = stats.correct + stats.incorrect;
-    const accuracy = totalAttempts > 0 ? Math.round((stats.correct / totalAttempts) * 100) : 0;
-
-    showModal(
-        'Game Over!',
-        `Game completed!\n\nCorrect: ${stats.correct}\nIncorrect: ${stats.incorrect}\nSkipped: ${stats.skipped}\nAccuracy: ${accuracy}%`,
-        resetFractionsGame
-    );
+    showEndModal({
+        isWin,
+        stats: GameState.fractions.stats,
+        onPlayAgain: resetFractionsGame
+    });
 }
 
 // ============================================
