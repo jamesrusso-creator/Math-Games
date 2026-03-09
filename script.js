@@ -624,8 +624,9 @@ function rollFractionDice() {
     setTimeout(() => {
         // Roll using custom dice values
         const intIndex = Math.floor(Math.random() * 6);
+        const demonIndex = Math.floor(Math.random() * 6);
         const intValue = GameState.fractions.customIntDice[intIndex];
-        const denomValue = GameState.fractions.customFracDice[intIndex];
+        const denomValue = GameState.fractions.customFracDice[demonIndex];
         
         // Calculate fraction value
         const fractionValue = intValue / denomValue;
@@ -875,13 +876,13 @@ function nextRound() {
 }
 
 function hasAnyPossibleFraction() {
-    // Check if any custom dice combination can be made
     for (let i = 0; i < 6; i++) {
-        const numerator = GameState.fractions.customIntDice[i];
-        const denominator = GameState.fractions.customFracDice[i];
-        const value = numerator / denominator;
-        
-        if (canMakeFraction(value)) return true;
+        for (let j = 0; j < 6; j++) {
+            const numerator = GameState.fractions.customIntDice[i];
+            const denominator = GameState.fractions.customFracDice[j];
+            const value = numerator / denominator;
+            if (canMakeFraction(value)) return true;
+        }
     }
     return false;
 }
