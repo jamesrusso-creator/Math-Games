@@ -824,8 +824,8 @@ function addToFractionsTable(entry) {
         <td>${entry.selection}</td>
         <td>${entry.result}</td>
     `;
-    tbody.appendChild(row);
-    row.scrollIntoView({ behavior: 'smooth' });
+    tbody.prepend(row);
+    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // ============================================
