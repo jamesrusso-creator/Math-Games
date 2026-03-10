@@ -80,6 +80,13 @@ function formatFraction(numerator, denominator) {
     return `${numerator}/${denominator}`;
 }
 
+function setFracDiceDisplay(numerator, denominator) {
+    const num = $('#fraction-dice .frac-num');
+    const den = $('#fraction-dice .frac-den');
+    if (num) num.textContent = numerator;
+    if (den) den.textContent = denominator;
+}
+
 function formatSelectedCells(cells) {
     const counts = new Map();
     cells.forEach(item => {
@@ -509,7 +516,7 @@ function resetFractionsGame() {
     updateStatsDisplay();
     hideFeedback();
 
-    $('#fraction-dice .dice-face').textContent = '?';
+    setFracDiceDisplay('?', '?');
     $('#fraction-dice-int .dice-face').textContent = '?';
     $('#current-fraction').textContent = '-';
     $('#fraction-action-buttons').hidden = true;
@@ -545,7 +552,7 @@ function rollFractionDice() {
         state.attemptsLeft = 3;
 
         $('#fraction-dice-int .dice-face').textContent = intValue;
-        $('#fraction-dice .dice-face').textContent = denomValue;
+        setFracDiceDisplay(1, denomValue);
         $('#current-fraction').textContent = state.currentRoll.display;
 
         diceInt.classList.remove('rolling');
@@ -724,7 +731,7 @@ function nextRound() {
     $('#fraction-action-buttons').hidden = true;
     $('#fraction-wall').classList.remove('selecting');
     $('#roll-fraction-btn').disabled = false;
-    $('#fraction-dice .dice-face').textContent = '?';
+    setFracDiceDisplay('?', '?');
     $('#fraction-dice-int .dice-face').textContent = '?';
     $('#current-fraction').textContent = '-';
 
