@@ -250,15 +250,25 @@ function initPlayNowButtons() {
     $('.play-fractions-btn')?.addEventListener('click', () => navigateToFractions());
 }
 
-function initInstructions() {
-    $$('.instructions-toggle').forEach(toggle => {
-        toggle.addEventListener('click', () => {
-            const expanded = toggle.getAttribute('aria-expanded') === 'true';
-            const content = $(`#${toggle.getAttribute('aria-controls')}`);
-            toggle.setAttribute('aria-expanded', !expanded);
-            content.hidden = expanded;
-        });
+function initHowToPlay() {
+    const trigger = $('#how-to-play-trigger');
+    const modal = $('#how-to-play-modal');
+    const closeBtn = $('#how-to-play-close');
+
+    const closeModal = () => { modal.hidden = true; document.removeEventListener('keydown', onEscape); };
+
+    function onEscape(e) {
+        if (e.key === 'Escape') closeModal();
+    }
+
+    trigger?.addEventListener('click', () => {
+        modal.hidden = false;
+        closeBtn?.focus();
+        document.addEventListener('keydown', onEscape);
     });
+
+    closeBtn?.addEventListener('click', closeModal);
+    modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 }
 
 // ============================================
@@ -825,7 +835,8 @@ function addToFractionsTable(entry) {
         <td>${entry.result}</td>
     `;
     tbody.prepend(row);
-    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const scrollContainer = tbody.closest('.history-scroll');
+    if (scrollContainer) scrollContainer.scrollTop = 0;
 }
 
 // ============================================
@@ -835,7 +846,7 @@ function addToFractionsTable(entry) {
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initPlayNowButtons();
-    initInstructions();
+    initHowToPlay();
     initCustomDiceUI();
     initFractionsGame();
 });
