@@ -278,17 +278,26 @@ function initHowToPlay() {
 function initCustomDiceUI() {
     loadCustomDice();
 
-    const toggle = $('.custom-dice-toggle[aria-controls="fractions-custom-dice-panel"]');
-    const panel = $('#fractions-custom-dice-panel');
+    const trigger = $('#custom-dice-trigger');
+    const modal = $('#custom-dice-modal');
+    const closeBtn = $('#custom-dice-close');
     const saveBtn = $('#save-fraction-dice');
     const resetBtn = $('#reset-fraction-dice');
     const errorMsg = $('#fraction-dice-error');
 
-    toggle?.addEventListener('click', () => {
-        const expanded = toggle.getAttribute('aria-expanded') === 'true';
-        toggle.setAttribute('aria-expanded', !expanded);
-        panel.hidden = expanded;
+    const closeModal = () => {
+        modal.hidden = true;
+        document.removeEventListener('keydown', onEscape);
+    };
+    function onEscape(e) { if (e.key === 'Escape') closeModal(); }
+
+    trigger?.addEventListener('click', () => {
+        modal.hidden = false;
+        closeBtn?.focus();
+        document.addEventListener('keydown', onEscape);
     });
+    closeBtn?.addEventListener('click', closeModal);
+    modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
     populateFractionDiceInputs();
 

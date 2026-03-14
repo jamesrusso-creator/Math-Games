@@ -1432,7 +1432,7 @@ main {
 
 .game-console {
     padding: 0 var(--spacing-md);
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
@@ -1544,7 +1544,7 @@ main:has(.game-section:not([hidden])) {
     display: grid;
     grid-template-columns: 1fr 320px;
     gap: var(--spacing-lg);
-    align-items: start;
+    align-items: stretch;
     min-height: 0;
 }
 
@@ -1570,9 +1570,14 @@ main:has(.game-section:not([hidden])) {
     gap: var(--spacing-md);
     position: sticky;
     top: 110px;
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
     padding-bottom: var(--spacing-md);
+}
+
+.panel-bottom-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-top: auto;
 }
 
 .panel-card {
@@ -1630,20 +1635,25 @@ main:has(.game-section:not([hidden])) {
 
 .how-to-play-content {
     max-width: 360px;
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.how-to-play-content h3 {
+    margin-bottom: var(--spacing-sm);
 }
 
 .how-to-play-content ol {
     text-align: left;
     padding-left: var(--spacing-lg);
-    margin: var(--spacing-md) 0 var(--spacing-lg);
+    margin: var(--spacing-xs) 0 var(--spacing-xs);
     line-height: var(--line-height-relaxed);
 }
 
 .how-to-play-content li {
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: 0;
 }
 
-/* Panel action buttons: stacked vertically */
+/* Panel action buttons */
 .panel-actions {
     display: flex;
     flex-direction: column;
@@ -1651,13 +1661,31 @@ main:has(.game-section:not([hidden])) {
     margin-bottom: 0;
 }
 
-.panel-actions .btn {
+.panel-actions-row {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.panel-actions-row .btn {
+    flex: 1;
+    min-width: 0;
+    padding: var(--spacing-md) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+.panel-actions > .btn {
     width: 100%;
     padding: var(--spacing-sm) var(--spacing-md);
     font-size: var(--font-size-sm);
 }
 
 .btn-new-game {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+}
+
+.btn-dice-settings {
     width: 100%;
     padding: var(--spacing-sm) var(--spacing-md);
     font-size: var(--font-size-sm);
@@ -1787,6 +1815,31 @@ details.extras-panel[open] > .extras-summary::after {
     padding: var(--spacing-md);
 }
 
+.extras-history {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+}
+
+.extras-history .history-scroll {
+    max-height: 220px;
+}
+
+.custom-dice-modal-content {
+    max-width: 520px;
+    text-align: left;
+}
+
+.custom-dice-modal-content .custom-dice-panel {
+    padding: 0;
+}
+
+.modal-close-btn {
+    margin-top: var(--spacing-md);
+}
+
 /* ============================================
    Game Console Responsive Overrides
    ============================================ */
@@ -1830,7 +1883,12 @@ details.extras-panel[open] > .extras-summary::after {
         flex-wrap: wrap;
     }
 
-    .panel-actions .btn {
+    .panel-actions-row {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .panel-actions > .btn {
         flex: 1;
         min-width: 100px;
     }
@@ -1896,7 +1954,13 @@ details.extras-panel[open] > .extras-summary::after {
         height: 48px;
     }
 
-    .panel-actions .btn {
+    .panel-actions-row .btn {
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-sm);
+        min-width: 0;
+    }
+
+    .panel-actions > .btn {
         font-size: var(--font-size-xs);
         padding: var(--spacing-xs);
         min-width: 80px;

@@ -132,41 +132,59 @@
                         </div>
 
                         <div id="fraction-action-buttons" class="action-buttons panel-actions" hidden>
-                            <button id="check-result-btn" class="btn btn-primary" disabled>Check Result ✓</button>
-                            <button id="skip-turn-btn" class="btn btn-secondary">Skip Turn ⏭</button>
+                            <div class="panel-actions-row">
+                                <button id="check-result-btn" class="btn btn-primary" disabled>Check Result ✓</button>
+                                <button id="skip-turn-btn" class="btn btn-secondary">Skip Turn ⏭</button>
+                            </div>
                             <button id="clear-selection-btn" class="btn btn-tertiary">Clear Selection ✗</button>
                         </div>
 
-                        <button id="reset-fractions-btn" class="btn btn-secondary btn-new-game">New Game</button>
-
-                        <div class="panel-card history-card">
-                            <h4 class="panel-card-title">Game History</h4>
-                            <div class="history-scroll">
-                                <table id="fractions-table" class="recording-table compact-table">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Rd</th>
-                                            <th scope="col">Target</th>
-                                            <th scope="col">Selection</th>
-                                            <th scope="col">Result</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
-                            </div>
+                        <div class="panel-bottom-actions">
+                            <button id="reset-fractions-btn" class="btn btn-secondary btn-new-game">New Game</button>
+                            <button type="button" id="custom-dice-trigger" class="btn btn-secondary btn-dice-settings" aria-haspopup="dialog" aria-controls="custom-dice-modal">
+                                🎲 Custom Dice Settings
+                            </button>
                         </div>
                     </aside>
                 </div>
 
-                <!-- Bottom Collapsible Area -->
+                <!-- Bottom: Game History -->
                 <div class="game-extras">
-                    <div class="custom-dice-section extras-dice-section">
-                        <button class="custom-dice-toggle" aria-expanded="false" aria-controls="fractions-custom-dice-panel">
-                            <span>🎲 Custom Dice Settings</span>
-                            <span class="toggle-icon" aria-hidden="true">▼</span>
-                        </button>
-                        <div id="fractions-custom-dice-panel" class="custom-dice-panel" hidden>
-                            <div class="custom-dice-container">
+                    <div class="recording-table-container extras-history">
+                        <h4 class="panel-card-title">Game History</h4>
+                        <div class="history-scroll">
+                            <table id="fractions-table" class="recording-table compact-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Rd</th>
+                                        <th scope="col">Target</th>
+                                        <th scope="col">Selection</th>
+                                        <th scope="col">Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Colour in Decimats: Coming Soon -->
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2024 Math Games. Educational resources for learning fractions and decimals.</p>
+        </div>
+    </footer>
+
+    <!-- Custom Dice Settings Modal -->
+    <div id="custom-dice-modal" class="modal" role="dialog" aria-labelledby="custom-dice-modal-title" aria-modal="true" hidden>
+        <div class="modal-content custom-dice-modal-content">
+            <h3 id="custom-dice-modal-title">Custom Dice Settings</h3>
+            <div id="fractions-custom-dice-panel" class="custom-dice-panel">
+                                <div class="custom-dice-container">
                                 <div class="dice-config">
                                     <h4>Integer Dice (Numerator)</h4>
                                     <p class="dice-config-desc">Enter integer values (1-6) for each face:</p>
@@ -288,19 +306,9 @@
                             </div>
                             <p id="fraction-dice-error" class="dice-error" role="alert" hidden></p>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Colour in Decimats: Coming Soon -->
-    </main>
-
-    <footer class="site-footer">
-        <div class="container">
-            <p>&copy; 2024 Math Games. Educational resources for learning fractions and decimals.</p>
+            <button id="custom-dice-close" class="btn btn-secondary modal-close-btn">Close</button>
         </div>
-    </footer>
+    </div>
 
     <!-- How to Play Modal -->
     <div id="how-to-play-modal" class="modal" role="dialog" aria-labelledby="how-to-play-title" aria-modal="true" hidden>
