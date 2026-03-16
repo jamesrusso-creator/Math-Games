@@ -99,6 +99,11 @@ function formatSelectedCells(cells) {
         .join(' + ');
 }
 
+function attemptsToWords(n) {
+    const words = { 1: 'One attempt', 2: 'Two attempts', 3: 'Three attempts' };
+    return words[n] || `${n} attempts`;
+}
+
 // ============================================
 // Local Storage
 // ============================================
@@ -674,11 +679,11 @@ function handleIncorrectAnswer() {
     updateStatsDisplay();
 
     if (state.attemptsLeft <= 0) {
-        showFeedback('3 incorrect attempts! Round over. Roll the dice for a new round.', 'error');
+        showFeedback('No attempts remaining. Round over. Roll the dice for a new round.', 'error');
         nextRound();
     } else {
-        const attemptsMsg = state.attemptsLeft === 1 ? '1 attempt' : `${state.attemptsLeft} attempts`;
-        showFeedback(`Incorrect! ${selectedDisplay} does not equal ${roll.display}. ${attemptsMsg} remaining.`, 'error');
+        const attemptsMsg = attemptsToWords(state.attemptsLeft) + ' remaining';
+        showFeedback(`Check the size of the fraction pieces. Does ${selectedDisplay} equal ${roll.display}? Try selecting bars that match ${roll.display}. ${attemptsMsg}.`, 'error');
     }
 }
 
