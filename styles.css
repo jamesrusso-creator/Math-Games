@@ -695,6 +695,11 @@ main {
     border-left: 3px solid var(--color-warning, #f59e0b);
 }
 
+.recording-table tbody tr.result-skipped-possible {
+    background: #ffedd5;
+    border-left: 3px solid #ea580c;
+}
+
 .recording-table tbody tr.result-correct:hover {
     background: #a7f3d0;
 }
@@ -705,6 +710,10 @@ main {
 
 .recording-table tbody tr.result-skipped:hover {
     background: #fde68a;
+}
+
+.recording-table tbody tr.result-skipped-possible:hover {
+    background: #fed7aa;
 }
 
 /* Custom Dice Section */

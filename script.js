@@ -694,17 +694,56 @@ function skipTurn() {
     const roll = state.currentRoll;
 
     if (canMakeFraction(roll.value)) {
-        showFeedback('Please try again! It is possible to make this fraction.', 'warning');
+        showSkipConfirmModal(() => doSkipTurn('Skipped (Possible)'));
         return;
     }
 
+    doSkipTurn('Skipped (Impossible)');
+}
+
+function doSkipTurn(resultLabel) {
+    const state = GameState.fractions;
+    const roll = state.currentRoll;
+
     state.stats.skipped++;
-    const entry = { round: state.round, target: roll.display, selection: '-', result: 'Skipped (Impossible)' };
+    const entry = { round: state.round, target: roll.display, selection: '-', result: resultLabel };
     state.history.push(entry);
     addToFractionsTable(entry);
 
-    showFeedback(`Skipped! ${roll.display} cannot be made with remaining bars.`, 'warning');
+    if (resultLabel === 'Skipped (Possible)') {
+        showFeedback(`Skipped. ${roll.display} could have been made with remaining bars.`, 'warning');
+    } else {
+        showFeedback(`Skipped! ${roll.display} cannot be made with remaining bars.`, 'warning');
+    }
     nextRound();
+}
+
+function showSkipConfirmModal(onConfirm) {
+    const modal = $('#skip-confirm-modal');
+    const yesBtn = $('#skip-confirm-yes');
+    const cancelBtn = $('#skip-confirm-cancel');
+
+    modal.hidden = false;
+    cancelBtn.focus();
+
+    const closeModal = () => {
+        modal.hidden = true;
+        yesBtn.onclick = null;
+        cancelBtn.onclick = null;
+        document.removeEventListener('keydown', onEscape);
+    };
+
+    function onEscape(e) {
+        if (e.key === 'Escape') closeModal();
+    }
+
+    yesBtn.onclick = () => {
+        closeModal();
+        onConfirm();
+    };
+    cancelBtn.onclick = closeModal;
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', onEscape);
 }
 
 // ============================================
@@ -840,6 +879,7 @@ function addToFractionsTable(entry) {
     const row = document.createElement('tr');
     if (entry.result === 'Correct') row.className = 'result-correct';
     else if (entry.result === 'Incorrect') row.className = 'result-incorrect';
+    else if (entry.result === 'Skipped (Possible)') row.className = 'result-skipped-possible';
     else row.className = 'result-skipped';
 
     row.innerHTML = `
