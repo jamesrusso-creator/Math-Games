@@ -17,7 +17,7 @@ const GameState = {
         isSelecting: false,
         isGameOver: false,
         attemptsLeft: 3,
-        stats: { correct: 0, incorrect: 0, skipped: 0 },
+        stats: { correct: 0, incorrect: 0, skipped: 0, skippedPossible: 0 },
         customIntDice: null,
         customFracDice: null
     }
@@ -432,6 +432,7 @@ function showEndModal({ isWin, stats, onPlayAgain }) {
             <div class="modal-stat correct"><span class="modal-stat-value">${stats.correct}</span><span class="modal-stat-label">Correct</span></div>
             <div class="modal-stat incorrect"><span class="modal-stat-value">${stats.incorrect}</span><span class="modal-stat-label">Incorrect</span></div>
             <div class="modal-stat skipped"><span class="modal-stat-value">${stats.skipped}</span><span class="modal-stat-label">Skipped</span></div>
+            <div class="modal-stat skipped-possible"><span class="modal-stat-value">${stats.skippedPossible}</span><span class="modal-stat-label">Skipped (Possible)</span></div>
             <div class="modal-stat accuracy"><span class="modal-stat-value">${accuracy}%</span><span class="modal-stat-label">Accuracy</span></div>
         </div>
     `;
@@ -527,7 +528,7 @@ function resetFractionsGame() {
     state.isSelecting = false;
     state.isGameOver = false;
     state.attemptsLeft = 3;
-    state.stats = { correct: 0, incorrect: 0, skipped: 0 };
+    state.stats = { correct: 0, incorrect: 0, skipped: 0, skippedPossible: 0 };
 
     $$('.fraction-cell').forEach(cell => {
         cell.classList.remove('shaded', 'selected', 'disabled', 'used');
@@ -705,16 +706,18 @@ function doSkipTurn(resultLabel) {
     const state = GameState.fractions;
     const roll = state.currentRoll;
 
-    state.stats.skipped++;
+    if (resultLabel === 'Skipped (Possible)') {
+        state.stats.skippedPossible++;
+        showFeedback(`Skipped. ${roll.display} could have been made with remaining bars.`, 'skipped-possible');
+    } else {
+        state.stats.skipped++;
+        showFeedback(`Skipped! ${roll.display} cannot be made with remaining bars.`, 'warning');
+    }
+
     const entry = { round: state.round, target: roll.display, selection: '-', result: resultLabel };
     state.history.push(entry);
     addToFractionsTable(entry);
 
-    if (resultLabel === 'Skipped (Possible)') {
-        showFeedback(`Skipped. ${roll.display} could have been made with remaining bars.`, 'warning');
-    } else {
-        showFeedback(`Skipped! ${roll.display} cannot be made with remaining bars.`, 'warning');
-    }
     nextRound();
 }
 
@@ -870,6 +873,7 @@ function updateStatsDisplay() {
     $('#correct-count').textContent = stats.correct;
     $('#incorrect-count').textContent = stats.incorrect;
     $('#skipped-count').textContent = stats.skipped;
+    $('#skipped-possible-count').textContent = stats.skippedPossible;
 }
 
 function addToFractionsTable(entry) {

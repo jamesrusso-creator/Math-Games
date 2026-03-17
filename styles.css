@@ -966,6 +966,12 @@ main {
     border: 2px solid #f59e0b;
 }
 
+.feedback-message.skipped-possible {
+    background: linear-gradient(135deg, #ffedd5, #fed7aa);
+    color: #9a3412;
+    border: 2px solid #ea580c;
+}
+
 .feedback-message.info {
     background: linear-gradient(135deg, #dbeafe, #bfdbfe);
     color: #1e40af;
@@ -1111,7 +1117,7 @@ main {
 /* Stats grid inside modal */
 .modal-stat-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-lg);
 }
@@ -1124,6 +1130,7 @@ main {
 .modal-stat.correct   { background: #d1fae5; }
 .modal-stat.incorrect { background: #fee2e2; }
 .modal-stat.skipped   { background: #fef3c7; }
+.modal-stat.skipped-possible { background: #ffedd5; }
 .modal-stat.accuracy  { background: #e0e7ff; }
 
 .modal-stat-value {
@@ -1538,6 +1545,11 @@ main:has(.game-section:not([hidden])) {
 .stat-pill.skipped {
     background: #fef3c7;
     color: #92400e;
+}
+
+.stat-pill.skipped-possible {
+    background: #ffedd5;
+    color: #9a3412;
 }
 
 /* --- Feedback override for console layout --- */
