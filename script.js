@@ -388,7 +388,7 @@ function validateIntegerInput(input, min, max) {
 // Modal
 // ============================================
 
-function showEndModal({ isWin, stats, onPlayAgain }) {
+function showEndModal({ isWin, stats, roundsPlayed, onPlayAgain }) {
     const modal = $('#game-modal');
     const inner = $('#modal-inner');
     const fireworks = $('#fireworks-container');
@@ -428,6 +428,7 @@ function showEndModal({ isWin, stats, onPlayAgain }) {
         <p class="modal-reason">${isWin
             ? 'Congratulations! You filled the entire fraction wall!'
             : 'No possible moves remaining with the current dice.'}</p>
+        <p class="modal-rounds">Rounds played: ${roundsPlayed}</p>
         <div class="modal-stat-grid">
             <div class="modal-stat correct"><span class="modal-stat-value">${stats.correct}</span><span class="modal-stat-label">Correct</span></div>
             <div class="modal-stat incorrect"><span class="modal-stat-value">${stats.incorrect}</span><span class="modal-stat-label">Incorrect</span></div>
@@ -813,9 +814,11 @@ function nextRound() {
 
 function endFractionsGame(isWin) {
     GameState.fractions.isGameOver = true;
+    const roundsPlayed = GameState.fractions.round - 1;
     showEndModal({
         isWin,
         stats: GameState.fractions.stats,
+        roundsPlayed: Math.max(1, roundsPlayed),
         onPlayAgain: resetFractionsGame
     });
 }

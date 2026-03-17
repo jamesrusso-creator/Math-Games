@@ -1111,7 +1111,18 @@ main {
 .modal-reason {
     font-size: var(--font-size-base);
     color: var(--color-text-light);
+    margin-bottom: var(--spacing-sm) !important;
+}
+
+.modal-rounds {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--color-text);
     margin-bottom: var(--spacing-lg) !important;
+}
+
+.game-end-modal {
+    max-width: 600px;
 }
 
 /* Stats grid inside modal */
