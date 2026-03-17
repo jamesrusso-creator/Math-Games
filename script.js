@@ -432,7 +432,7 @@ function showEndModal({ isWin, stats, roundsPlayed, onPlayAgain }) {
         <div class="modal-stat-grid">
             <div class="modal-stat correct"><span class="modal-stat-value">${stats.correct}</span><span class="modal-stat-label">Correct</span></div>
             <div class="modal-stat incorrect"><span class="modal-stat-value">${stats.incorrect}</span><span class="modal-stat-label">Incorrect</span></div>
-            <div class="modal-stat skipped"><span class="modal-stat-value">${stats.skipped}</span><span class="modal-stat-label">Skipped</span></div>
+            <div class="modal-stat skipped"><span class="modal-stat-value">${stats.skipped}</span><span class="modal-stat-label">Skipped (Impossible)</span></div>
             <div class="modal-stat skipped-possible"><span class="modal-stat-value">${stats.skippedPossible}</span><span class="modal-stat-label">Skipped (Possible)</span></div>
             <div class="modal-stat accuracy"><span class="modal-stat-value">${accuracy}%</span><span class="modal-stat-label">Accuracy</span></div>
         </div>
