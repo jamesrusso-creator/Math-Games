@@ -11,8 +11,6 @@ const GameState = {
     fractions: {
         currentRoll: null,
         round: 1,
-        history: [],
-        rowStates: [],
         selectedCells: [],
         isSelecting: false,
         isGameOver: false,
@@ -492,7 +490,6 @@ function createFractionWall() {
         rowDiv.setAttribute('role', 'row');
         rowDiv.dataset.rowIndex = rowIndex;
         rowDiv.dataset.denominator = row.denominator;
-        rowDiv.dataset.value = row.value;
 
         for (let i = 0; i < row.cells; i++) {
             const cell = document.createElement('div');
@@ -515,16 +512,12 @@ function createFractionWall() {
         }
         wall.appendChild(rowDiv);
     });
-
-    GameState.fractions.rowStates = rows.map(() => []);
 }
 
 function resetFractionsGame() {
     const state = GameState.fractions;
     state.currentRoll = null;
     state.round = 1;
-    state.history = [];
-    state.rowStates = state.rowStates.map(() => []);
     state.selectedCells = [];
     state.isSelecting = false;
     state.isGameOver = false;
@@ -532,7 +525,7 @@ function resetFractionsGame() {
     state.stats = { correct: 0, incorrect: 0, skipped: 0, skippedPossible: 0 };
 
     $$('.fraction-cell').forEach(cell => {
-        cell.classList.remove('shaded', 'selected', 'disabled', 'used');
+        cell.classList.remove('selected', 'used');
     });
 
     const tbody = $('#fractions-table tbody');
@@ -651,14 +644,12 @@ function handleCorrectAnswer() {
             cell.classList.remove('selected');
             cell.classList.add('used');
         }
-        state.rowStates[item.row].push(item.cell);
     });
 
     state.stats.correct++;
 
     const selectedDisplay = formatSelectedCells(state.selectedCells);
     const entry = { round: state.round, target: roll.display, selection: selectedDisplay || roll.display, result: 'Correct' };
-    state.history.push(entry);
     addToFractionsTable(entry);
 
     showFeedback(`Correct! ${roll.display} = ${selectedDisplay}`, 'success');
@@ -674,7 +665,6 @@ function handleIncorrectAnswer() {
 
     const selectedDisplay = formatSelectedCells(state.selectedCells);
     const entry = { round: state.round, target: roll.display, selection: selectedDisplay, result: 'Incorrect' };
-    state.history.push(entry);
     addToFractionsTable(entry);
 
     clearSelection();
@@ -716,7 +706,6 @@ function doSkipTurn(resultLabel) {
     }
 
     const entry = { round: state.round, target: roll.display, selection: '-', result: resultLabel };
-    state.history.push(entry);
     addToFractionsTable(entry);
 
     nextRound();

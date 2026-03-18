@@ -23,7 +23,6 @@
     --color-shadow: rgba(0, 0, 0, 0.1);
     
     /* Fraction Game Colors */
-    --color-fraction-shaded: #3b82f6;
     --color-fraction-hover: #93c5fd;
     --color-fraction-selected: #1d4ed8;
     
@@ -606,17 +605,8 @@ main {
     background-color: var(--color-fraction-hover);
 }
 
-.fraction-cell.shaded {
-    background-color: var(--color-fraction-shaded);
-}
-
 .fraction-cell.selected {
     background-color: var(--color-fraction-selected);
-}
-
-.fraction-cell.disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
 }
 
 /* Disabled Game Card */
@@ -1419,7 +1409,6 @@ main {
         --color-primary: #0000ff;
         --color-text: #000000;
         --color-border: #000000;
-        --color-fraction-shaded: #0000ff;
     }
     
     .fraction-cell {
