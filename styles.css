@@ -397,74 +397,6 @@ main {
     background: linear-gradient(135deg, var(--color-primary-dark), var(--color-secondary-dark));
 }
 
-/* Game Instructions */
-.game-instructions {
-    margin-bottom: var(--spacing-xl);
-}
-
-.instructions-toggle {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--spacing-md);
-    background: var(--color-surface);
-    border: 2px solid var(--color-border);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    font-size: var(--font-size-lg);
-    font-weight: 600;
-    transition: background-color var(--transition-fast);
-}
-
-.instructions-toggle:hover {
-    background: var(--color-background);
-}
-
-.instructions-toggle:focus {
-    outline: none;
-    box-shadow: var(--focus-ring);
-}
-
-.toggle-icon {
-    transition: transform var(--transition-fast);
-}
-
-.instructions-toggle[aria-expanded="true"] .toggle-icon {
-    transform: rotate(180deg);
-}
-
-.instructions-content {
-    background: var(--color-surface);
-    border: 2px solid var(--color-border);
-    border-top: none;
-    border-radius: 0 0 var(--radius-md) var(--radius-md);
-    padding: var(--spacing-md);
-}
-
-.instructions-content ol {
-    padding-left: var(--spacing-lg);
-}
-
-.instructions-content li {
-    margin-bottom: var(--spacing-sm);
-    line-height: var(--line-height-relaxed);
-}
-
-/* Game Controls */
-.game-controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-xl);
-    padding: var(--spacing-lg);
-    background: var(--color-surface);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-sm);
-}
-
 .dice-container {
     display: flex;
     flex-direction: column;
@@ -524,34 +456,6 @@ main {
     0%, 100% { transform: rotate(0deg); }
     25% { transform: rotate(-15deg); }
     75% { transform: rotate(15deg); }
-}
-
-.game-info {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-md);
-}
-
-.info-box {
-    background: var(--color-background);
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-radius: var(--radius-md);
-    text-align: center;
-    min-width: 120px;
-}
-
-.info-label {
-    display: block;
-    font-size: var(--font-size-sm);
-    color: var(--color-text-light);
-    margin-bottom: var(--spacing-xs);
-}
-
-.info-value {
-    display: block;
-    font-size: var(--font-size-xl);
-    font-weight: 700;
-    color: var(--color-text);
 }
 
 /* Fraction Wall */
@@ -629,18 +533,6 @@ main {
 /* Recording Tables */
 .recording-table-container {
     margin-bottom: var(--spacing-xl);
-}
-
-.recording-table-container h3 {
-    text-align: center;
-    margin-bottom: var(--spacing-lg);
-    font-size: var(--font-size-xl);
-}
-
-.table-wrapper {
-    overflow-x: auto;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
 }
 
 .recording-table {
@@ -876,55 +768,6 @@ main {
 
 .btn-tertiary:hover {
     background: var(--color-text);
-}
-
-/* Game Stats */
-.game-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-xl);
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.stat-box {
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-md);
-    text-align: center;
-    box-shadow: var(--shadow-sm);
-    border: 2px solid transparent;
-}
-
-.stat-box.correct {
-    border-color: var(--color-success, #10b981);
-    background: linear-gradient(135deg, #d1fae5, #ecfdf5);
-}
-
-.stat-box.incorrect {
-    border-color: var(--color-error, #ef4444);
-    background: linear-gradient(135deg, #fee2e2, #fef2f2);
-}
-
-.stat-box.skipped {
-    border-color: var(--color-warning, #f59e0b);
-    background: linear-gradient(135deg, #fef3c7, #fffbeb);
-}
-
-.stat-box .stat-label {
-    display: block;
-    font-size: var(--font-size-sm);
-    color: var(--color-text-light);
-    margin-bottom: var(--spacing-xs);
-}
-
-.stat-box .stat-value {
-    display: block;
-    font-size: var(--font-size-2xl);
-    font-weight: 700;
-    color: var(--color-text);
 }
 
 /* Feedback Message */
@@ -1295,18 +1138,6 @@ main {
         font-size: var(--font-size-2xl);
     }
     
-    .game-controls {
-        flex-direction: column;
-    }
-    
-    .game-info {
-        justify-content: center;
-    }
-    
-    .stats {
-        grid-template-columns: 1fr;
-    }
-    
     .modal-actions {
         flex-direction: column;
     }
@@ -1341,12 +1172,6 @@ main {
         font-size: var(--font-size-lg);
     }
     
-    /* Game stats responsive */
-    .game-stats {
-        grid-template-columns: 1fr;
-        max-width: 200px;
-    }
-    
     /* Action buttons responsive */
     .action-buttons {
         flex-direction: column;
@@ -1371,11 +1196,6 @@ main {
         font-size: var(--font-size-lg);
     }
     
-    .info-box {
-        min-width: 100px;
-        padding: var(--spacing-sm);
-    }
-    
     .fraction-cell {
         font-size: 8px;
     }
@@ -1384,7 +1204,6 @@ main {
 /* Print Styles */
 @media print {
     .site-header,
-    .game-controls,
     .mobile-menu-toggle,
     .btn,
     .modal {
