@@ -111,6 +111,22 @@ const STORAGE_KEYS = {
     fractionFracDice: 'mathgames_fraction_frac_dice'
 };
 
+const FRACTION_DICE_FACE_COUNT = 6;
+
+function forEachFractionDiceFace(callback) {
+    for (let face = 1; face <= FRACTION_DICE_FACE_COUNT; face++) {
+        callback({
+            face,
+            intInput: $(`#frac-int-${face}`),
+            fracSelect: $(`#frac-denom-${face}`)
+        });
+    }
+}
+
+function pickRandomValue(values) {
+    return values[Math.floor(Math.random() * values.length)];
+}
+
 function saveCustomDice() {
     try {
         localStorage.setItem(STORAGE_KEYS.fractionIntDice, JSON.stringify(GameState.fractions.customIntDice));
@@ -309,10 +325,10 @@ function initCustomDiceUI() {
 
         const intValues = [];
         const fracValues = [];
-        for (let i = 1; i <= 6; i++) {
-            intValues.push(parseInt($(`#frac-int-${i}`).value));
-            fracValues.push(parseInt($(`#frac-denom-${i}`).value));
-        }
+        forEachFractionDiceFace(({ intInput, fracSelect }) => {
+            intValues.push(parseInt(intInput.value, 10));
+            fracValues.push(parseInt(fracSelect.value, 10));
+        });
 
         GameState.fractions.customIntDice = intValues;
         GameState.fractions.customFracDice = fracValues;
@@ -331,10 +347,9 @@ function initCustomDiceUI() {
         showDiceMessage(errorMsg, 'Dice settings reset to default!', true);
     });
 
-    for (let i = 1; i <= 6; i++) {
-        const input = $(`#frac-int-${i}`);
+    forEachFractionDiceFace(({ intInput: input }) => {
         input?.addEventListener('input', () => validateIntegerInput(input, 1, 6));
-    }
+    });
 }
 
 function showDiceMessage(el, text, autoHide) {
@@ -347,32 +362,38 @@ function showDiceMessage(el, text, autoHide) {
 }
 
 function populateFractionDiceInputs() {
-    for (let i = 1; i <= 6; i++) {
-        const intInput = $(`#frac-int-${i}`);
-        const fracSelect = $(`#frac-denom-${i}`);
-        if (intInput) intInput.value = GameState.fractions.customIntDice[i - 1];
-        if (fracSelect) fracSelect.value = GameState.fractions.customFracDice[i - 1];
-    }
+    forEachFractionDiceFace(({ face, intInput, fracSelect }) => {
+        if (intInput) intInput.value = GameState.fractions.customIntDice[face - 1];
+        if (fracSelect) fracSelect.value = GameState.fractions.customFracDice[face - 1];
+    });
 }
 
 function validateFractionDice() {
     const errorMsg = $('#fraction-dice-error');
-    for (let i = 1; i <= 6; i++) {
-        const input = $(`#frac-int-${i}`);
-        const value = parseInt(input.value);
+    let invalidFace = null;
+
+    forEachFractionDiceFace(({ face, intInput }) => {
+        if (invalidFace) return;
+
+        const value = parseInt(intInput.value, 10);
         if (isNaN(value) || value < 1 || value > 6) {
-            errorMsg.textContent = `Face ${i}: Integer dice must be between 1 and 6.`;
-            errorMsg.hidden = false;
-            input.focus();
-            return false;
+            invalidFace = { face, input: intInput };
         }
+    });
+
+    if (invalidFace) {
+        errorMsg.textContent = `Face ${invalidFace.face}: Integer dice must be between 1 and 6.`;
+        errorMsg.hidden = false;
+        invalidFace.input.focus();
+        return false;
     }
+
     errorMsg.hidden = true;
     return true;
 }
 
 function validateIntegerInput(input, min, max) {
-    const value = parseInt(input.value);
+    const value = parseInt(input.value, 10);
     if (isNaN(value) || value < min || value > max) {
         input.classList.add('invalid');
         input.setCustomValidity(`Value must be between ${min} and ${max}`);
@@ -557,8 +578,8 @@ function rollFractionDice() {
     diceFrac.classList.add('rolling');
 
     setTimeout(() => {
-        const intValue = state.customIntDice[Math.floor(Math.random() * 6)];
-        const denomValue = state.customFracDice[Math.floor(Math.random() * 6)];
+        const intValue = pickRandomValue(state.customIntDice);
+        const denomValue = pickRandomValue(state.customFracDice);
 
         state.currentRoll = {
             numerator: intValue,
@@ -760,9 +781,9 @@ function canMakeSum(bars, target, index) {
 
 function hasAnyPossibleFraction() {
     const state = GameState.fractions;
-    for (let i = 0; i < 6; i++) {
-        for (let j = 0; j < 6; j++) {
-            const value = state.customIntDice[i] / state.customFracDice[j];
+    for (const numerator of state.customIntDice) {
+        for (const denominator of state.customFracDice) {
+            const value = numerator / denominator;
             if (canMakeFraction(value)) return true;
         }
     }
