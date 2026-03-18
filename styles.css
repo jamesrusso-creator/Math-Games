@@ -463,12 +463,6 @@ main {
     margin-bottom: var(--spacing-xl);
 }
 
-.fraction-wall-container h3 {
-    text-align: center;
-    margin-bottom: var(--spacing-lg);
-    font-size: var(--font-size-xl);
-}
-
 .fraction-wall {
     background: var(--color-surface);
     border: 3px solid var(--color-border);
@@ -621,37 +615,6 @@ main {
 .custom-dice-panel button:disabled {
     opacity: 0.45;
     cursor: not-allowed;
-}
-
-.custom-dice-section {
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    margin-bottom: var(--spacing-xl);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-}
-
-.custom-dice-toggle {
-    width: 100%;
-    padding: var(--spacing-md) var(--spacing-lg);
-    background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
-    color: white;
-    border: none;
-    font-size: var(--font-size-lg);
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: background var(--transition-fast);
-}
-
-.custom-dice-toggle:hover {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-}
-
-.custom-dice-toggle[aria-expanded="true"] .toggle-icon {
-    transform: rotate(180deg);
 }
 
 .custom-dice-panel {
@@ -1156,9 +1119,7 @@ main {
         padding: 0 var(--spacing-sm);
     }
     
-    .game-card,
-    .progress-card,
-    .resource-card {
+    .game-card {
         padding: var(--spacing-lg);
     }
     
@@ -1531,14 +1492,6 @@ main:has(.game-section:not([hidden])) {
     font-size: var(--font-size-sm);
 }
 
-/* History card */
-.history-card {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-}
-
 .history-scroll {
     max-height: 200px;
     overflow-y: auto;
@@ -1562,10 +1515,6 @@ main:has(.game-section:not([hidden])) {
     font-size: 0.7rem;
 }
 
-.game-panel-left .fraction-wall-container h3 {
-    display: none;
-}
-
 .wall-hint {
     font-size: var(--font-size-sm);
     color: var(--color-text-light);
@@ -1581,78 +1530,6 @@ main:has(.game-section:not([hidden])) {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
-}
-
-.extras-panel {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-}
-
-.extras-summary {
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-weight: 600;
-    font-size: var(--font-size-sm);
-    cursor: pointer;
-    user-select: none;
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.extras-summary::-webkit-details-marker {
-    display: none;
-}
-
-.extras-summary::after {
-    content: '▼';
-    font-size: 0.6rem;
-    margin-left: auto;
-    transition: transform var(--transition-fast);
-}
-
-details.extras-panel[open] > .extras-summary::after {
-    transform: rotate(180deg);
-}
-
-.extras-content {
-    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
-    font-size: var(--font-size-sm);
-}
-
-.extras-content ol {
-    padding-left: var(--spacing-lg);
-    margin: 0;
-}
-
-.extras-content li {
-    margin-bottom: var(--spacing-xs);
-    line-height: var(--line-height-normal);
-}
-
-.extras-dice-section {
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    margin-bottom: 0;
-}
-
-.extras-dice-section .custom-dice-toggle {
-    font-size: var(--font-size-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
-}
-
-.extras-dice-section .custom-dice-panel {
-    padding: var(--spacing-md);
-}
-
-.extras-dice-section .custom-dice-container {
-    gap: var(--spacing-md);
-}
-
-.extras-dice-section .dice-config {
-    padding: var(--spacing-md);
 }
 
 .extras-history {
