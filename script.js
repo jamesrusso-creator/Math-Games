@@ -800,6 +800,10 @@ function isFractionWallFull() {
 
 function nextRound() {
     const state = GameState.fractions;
+    if (state.selectedCells.length > 0) {
+        clearSelection();
+    }
+
     state.round++;
     state.currentRoll = null;
     state.selectedCells = [];
