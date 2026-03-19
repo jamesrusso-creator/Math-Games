@@ -1103,13 +1103,36 @@ select,
 }
 
 .game-end-modal {
-    width: min(100%, 720px);
+    width: min(100%, 760px);
+    padding: 1.65rem 1.6rem 1.85rem;
+    text-align: center;
+}
+
+.game-end-modal > *:not(.fireworks-container) {
+    position: relative;
+    z-index: 1;
+}
+
+.game-end-modal h3 {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 2.7rem);
+    line-height: 1.05;
 }
 
 .modal-icon {
-    font-size: 3.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.85rem;
+    padding: 0.36rem 0.9rem;
+    border: 2px solid var(--paper-ink);
+    border-radius: var(--radius-chip);
+    background: rgba(255, 253, 246, 0.82);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     line-height: 1;
-    margin-bottom: 0.35rem;
+    text-transform: uppercase;
 }
 
 .modal-win {
@@ -1124,26 +1147,73 @@ select,
         linear-gradient(180deg, rgba(255, 253, 246, 0.98), rgba(247, 219, 212, 0.55));
 }
 
+.modal-win .modal-icon {
+    background: rgba(220, 234, 215, 0.95);
+}
+
+.modal-lose .modal-icon {
+    background: rgba(247, 219, 212, 0.95);
+}
+
+.modal-stats {
+    margin-top: 1rem;
+}
+
+.modal-summary {
+    display: grid;
+    justify-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.2rem;
+}
+
 .modal-reason {
-    font-size: 1rem;
+    max-width: 33rem;
+    margin: 0;
+    font-size: 1.04rem;
+    line-height: 1.6;
 }
 
 .modal-rounds {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0.45rem 0.95rem;
+    border: 2px dashed rgba(65, 64, 62, 0.5);
+    border-radius: var(--radius-chip);
+    background: rgba(255, 253, 246, 0.74);
+}
+
+.modal-rounds-label {
+    font-size: 0.78rem;
     font-weight: 700;
-    color: var(--paper-ink) !important;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--paper-muted);
+}
+
+.modal-rounds-value {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--paper-ink);
 }
 
 .modal-stat-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.9rem;
 }
 
 .modal-stat {
-    padding: 0.7rem 0.55rem;
+    min-height: 6.4rem;
+    padding: 0.95rem 0.75rem 0.85rem;
     border: 2px solid rgba(65, 64, 62, 0.55);
     border-radius: var(--radius-paper-tight);
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.25rem;
 }
 
 .modal-stat.correct {
@@ -1168,15 +1238,26 @@ select,
 
 .modal-stat-value {
     display: block;
-    font-size: 1.35rem;
+    font-size: 2rem;
     font-weight: 700;
+    line-height: 1;
 }
 
 .modal-stat-label {
     display: block;
-    margin-top: 0.15rem;
-    font-size: 0.78rem;
+    margin-top: 0;
+    font-size: 0.8rem;
+    line-height: 1.28;
     color: var(--paper-muted);
+}
+
+.game-end-modal .modal-actions {
+    margin-top: 1.35rem;
+    gap: 1rem;
+}
+
+.game-end-modal .modal-actions .btn {
+    min-width: 10rem;
 }
 
 .fireworks-container {
@@ -1330,6 +1411,19 @@ select,
         flex-direction: column;
     }
 
+    .game-end-modal {
+        padding: 1.25rem 1rem 1.35rem;
+    }
+
+    .game-end-modal .modal-actions .btn {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .modal-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .dice-faces {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -1379,6 +1473,10 @@ select,
     .status-item,
     .stat-pill {
         font-size: 0.72rem;
+    }
+
+    .modal-stat-grid {
+        grid-template-columns: 1fr;
     }
 
     #fractions-table th,

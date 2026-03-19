@@ -435,19 +435,24 @@ function showEndModal({ isWin, stats, roundsPlayed, onPlayAgain }) {
             spark.style.setProperty('--hue', `${Math.floor(Math.random() * 360)}`);
             fireworks.appendChild(spark);
         }
-        icon.textContent = '🎉';
-        title.textContent = 'You Win!';
+        icon.textContent = 'Victory';
+        title.textContent = 'Fraction Wall Complete';
     } else {
         inner.classList.add('modal-lose');
-        icon.textContent = '😔';
-        title.textContent = 'Game Over';
+        icon.textContent = 'Round Ended';
+        title.textContent = 'No Moves Left';
     }
 
     statsEl.innerHTML = `
-        <p class="modal-reason">${isWin
-            ? 'Congratulations! You filled the entire fraction wall!'
-            : 'No possible moves remaining with the current dice.'}</p>
-        <p class="modal-rounds">Rounds played: ${roundsPlayed}</p>
+        <div class="modal-summary">
+            <p class="modal-reason">${isWin
+                ? 'You filled the entire fraction wall and cleared every possible space.'
+                : 'No more fractions can be made with the bars that remain.'}</p>
+            <p class="modal-rounds">
+                <span class="modal-rounds-label">Rounds played</span>
+                <span class="modal-rounds-value">${roundsPlayed}</span>
+            </p>
+        </div>
         <div class="modal-stat-grid">
             <div class="modal-stat correct"><span class="modal-stat-value">${stats.correct}</span><span class="modal-stat-label">Correct</span></div>
             <div class="modal-stat incorrect"><span class="modal-stat-value">${stats.incorrect}</span><span class="modal-stat-label">Incorrect</span></div>
