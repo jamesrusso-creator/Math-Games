@@ -106,7 +106,6 @@ body.paper-theme::before {
     --decor-stagger-x: 50%;
 }
 
-.site-header,
 main,
 .site-footer {
     position: relative;
@@ -238,11 +237,6 @@ img {
 .openmoji-icon--button {
     width: 1.55rem;
     height: 1.55rem;
-}
-
-.openmoji-icon--pill {
-    width: 1.05rem;
-    height: 1.05rem;
 }
 
 .nav-brand h1 {
@@ -965,6 +959,7 @@ select:disabled {
     width: 100%;
     margin: 0;
     background: #fffdf8;
+    font-size: 0.84rem;
 }
 
 #fractions-table th,
@@ -993,10 +988,6 @@ select:disabled {
 
 #fractions-table tbody tr.result-skipped-possible {
     background: rgba(236, 227, 244, 0.88);
-}
-
-#fractions-table {
-    font-size: 0.84rem;
 }
 
 .custom-dice-panel {

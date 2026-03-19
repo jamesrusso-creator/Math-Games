@@ -102,7 +102,7 @@
         </section>
 
         <!-- Colour in Fractions Game -->
-        <section id="fractions" class="section game-section" aria-labelledby="fractions-title" hidden>
+        <section id="fractions" class="section" aria-labelledby="fractions-title" hidden>
             <div class="game-console container-lg">
                 <!-- Sticky Status Bar -->
                 <div class="game-status-bar paper-panel">
@@ -146,7 +146,7 @@
 
                     <!-- Right Panel: Controls -->
                     <aside class="game-panel-right">
-                        <div class="panel-card dice-card paper-panel">
+                        <div class="panel-card paper-panel">
                             <div class="dice-container">
                                 <div class="dice-pair">
                                     <div class="dice small" id="fraction-dice-int" role="img" aria-label="Integer dice">
@@ -194,7 +194,7 @@
 
                 <!-- Bottom: Game History -->
                 <div class="game-extras">
-                    <div class="recording-table-container extras-history paper-panel">
+                    <div class="extras-history paper-panel">
                         <h4 class="panel-card-title">Game History</h4>
                         <div class="history-scroll">
                             <table id="fractions-table" class="table-hover table-alternating">
@@ -237,27 +237,27 @@
                         <div class="dice-faces">
                             <div class="dice-face-input">
                                 <label for="frac-int-1">Face 1:</label>
-                                <input type="number" id="frac-int-1" class="dice-input int-dice" min="1" max="6" value="1">
+                                <input type="number" id="frac-int-1" class="dice-input" min="1" max="6" value="1">
                             </div>
                             <div class="dice-face-input">
                                 <label for="frac-int-2">Face 2:</label>
-                                <input type="number" id="frac-int-2" class="dice-input int-dice" min="1" max="6" value="1">
+                                <input type="number" id="frac-int-2" class="dice-input" min="1" max="6" value="1">
                             </div>
                             <div class="dice-face-input">
                                 <label for="frac-int-3">Face 3:</label>
-                                <input type="number" id="frac-int-3" class="dice-input int-dice" min="1" max="6" value="2">
+                                <input type="number" id="frac-int-3" class="dice-input" min="1" max="6" value="2">
                             </div>
                             <div class="dice-face-input">
                                 <label for="frac-int-4">Face 4:</label>
-                                <input type="number" id="frac-int-4" class="dice-input int-dice" min="1" max="6" value="2">
+                                <input type="number" id="frac-int-4" class="dice-input" min="1" max="6" value="2">
                             </div>
                             <div class="dice-face-input">
                                 <label for="frac-int-5">Face 5:</label>
-                                <input type="number" id="frac-int-5" class="dice-input int-dice" min="1" max="6" value="3">
+                                <input type="number" id="frac-int-5" class="dice-input" min="1" max="6" value="3">
                             </div>
                             <div class="dice-face-input">
                                 <label for="frac-int-6">Face 6:</label>
-                                <input type="number" id="frac-int-6" class="dice-input int-dice" min="1" max="6" value="3">
+                                <input type="number" id="frac-int-6" class="dice-input" min="1" max="6" value="3">
                             </div>
                         </div>
                     </div>
@@ -267,7 +267,7 @@
                         <div class="dice-faces">
                             <div class="dice-face-input">
                                 <label for="frac-denom-1">Face 1:</label>
-                                <select id="frac-denom-1" class="dice-select frac-dice">
+                                <select id="frac-denom-1" class="dice-select">
                                     <option value="2">1/2</option>
                                     <option value="3">1/3</option>
                                     <option value="4" selected>1/4</option>
@@ -280,7 +280,7 @@
                             </div>
                             <div class="dice-face-input">
                                 <label for="frac-denom-2">Face 2:</label>
-                                <select id="frac-denom-2" class="dice-select frac-dice">
+                                <select id="frac-denom-2" class="dice-select">
                                     <option value="2">1/2</option>
                                     <option value="3">1/3</option>
                                     <option value="4">1/4</option>
@@ -293,7 +293,7 @@
                             </div>
                             <div class="dice-face-input">
                                 <label for="frac-denom-3">Face 3:</label>
-                                <select id="frac-denom-3" class="dice-select frac-dice">
+                                <select id="frac-denom-3" class="dice-select">
                                     <option value="2">1/2</option>
                                     <option value="3">1/3</option>
                                     <option value="4">1/4</option>
@@ -306,7 +306,7 @@
                             </div>
                             <div class="dice-face-input">
                                 <label for="frac-denom-4">Face 4:</label>
-                                <select id="frac-denom-4" class="dice-select frac-dice">
+                                <select id="frac-denom-4" class="dice-select">
                                     <option value="2">1/2</option>
                                     <option value="3">1/3</option>
                                     <option value="4">1/4</option>
@@ -319,7 +319,7 @@
                             </div>
                             <div class="dice-face-input">
                                 <label for="frac-denom-5">Face 5:</label>
-                                <select id="frac-denom-5" class="dice-select frac-dice">
+                                <select id="frac-denom-5" class="dice-select">
                                     <option value="2">1/2</option>
                                     <option value="3">1/3</option>
                                     <option value="4">1/4</option>
@@ -332,7 +332,7 @@
                             </div>
                             <div class="dice-face-input">
                                 <label for="frac-denom-6">Face 6:</label>
-                                <select id="frac-denom-6" class="dice-select frac-dice">
+                                <select id="frac-denom-6" class="dice-select">
                                     <option value="2">1/2</option>
                                     <option value="3">1/3</option>
                                     <option value="4">1/4</option>

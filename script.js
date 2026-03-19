@@ -31,14 +31,14 @@ const VERSIONS = {
         intDice: [1, 1, 2, 2, 3, 3],
         fracDice: [4, 5, 6, 8, 10, 12],
         wallRows: [
-            { denominator: 2, cells: 2, value: 1/2 },
-            { denominator: 3, cells: 3, value: 1/3 },
-            { denominator: 4, cells: 4, value: 1/4 },
-            { denominator: 5, cells: 5, value: 1/5 },
-            { denominator: 6, cells: 6, value: 1/6 },
-            { denominator: 8, cells: 8, value: 1/8 },
-            { denominator: 10, cells: 10, value: 1/10 },
-            { denominator: 12, cells: 12, value: 1/12 }
+            { denominator: 2, cells: 2 },
+            { denominator: 3, cells: 3 },
+            { denominator: 4, cells: 4 },
+            { denominator: 5, cells: 5 },
+            { denominator: 6, cells: 6 },
+            { denominator: 8, cells: 8 },
+            { denominator: 10, cells: 10 },
+            { denominator: 12, cells: 12 }
         ]
     },
     improper: {
@@ -46,17 +46,22 @@ const VERSIONS = {
         intDice: [1, 2, 2, 3, 3, 4],
         fracDice: [2, 3, 4, 6, 8, 12],
         wallRows: [
-            { denominator: 2, cells: 2, value: 1/2 },
-            { denominator: 3, cells: 3, value: 1/3 },
-            { denominator: 4, cells: 4, value: 1/4 },
-            { denominator: 6, cells: 6, value: 1/6 },
-            { denominator: 8, cells: 8, value: 1/8 },
-            { denominator: 12, cells: 12, value: 1/12 }
+            { denominator: 2, cells: 2 },
+            { denominator: 3, cells: 3 },
+            { denominator: 4, cells: 4 },
+            { denominator: 6, cells: 6 },
+            { denominator: 8, cells: 8 },
+            { denominator: 12, cells: 12 }
         ]
     }
 };
 
 let currentVersion = 'proper';
+
+const FEEDBACK_HIDE_DELAY_MS = 2000;
+const DICE_ROLL_DURATION_MS = 500;
+// 120 is the least common multiple of all supported denominators.
+const FRACTION_UNIT_SCALE = 120;
 
 const BACKGROUND_DECOR_ICONS = [
     '2797', // divide
@@ -75,6 +80,12 @@ const BACKGROUND_DECOR_ICONS = [
 ];
 
 const BACKGROUND_DECOR_COUNT = 16;
+const RESULT_ROW_CLASS_NAMES = {
+    Correct: 'result-correct',
+    Incorrect: 'result-incorrect',
+    'Skipped (Possible)': 'result-skipped-possible',
+    'Skipped (Impossible)': 'result-skipped'
+};
 
 // Sync initial dice values from default version
 GameState.fractions.customIntDice = [...VERSIONS.proper.intDice];
@@ -96,6 +107,14 @@ function formatFraction(numerator, denominator) {
     return `${numerator}/${denominator}`;
 }
 
+function fractionToUnits(numerator, denominator) {
+    return Math.round((numerator * FRACTION_UNIT_SCALE) / denominator);
+}
+
+function formatFractionValue(units) {
+    return (units / FRACTION_UNIT_SCALE).toFixed(3);
+}
+
 function setFracDiceDisplay(numerator, denominator) {
     const num = $('#fraction-dice .frac-num');
     const den = $('#fraction-dice .frac-den');
@@ -103,11 +122,16 @@ function setFracDiceDisplay(numerator, denominator) {
     if (den) den.textContent = denominator;
 }
 
+function getFractionCell(rowIndex, cellIndex) {
+    return $(`.fraction-cell[data-row="${rowIndex}"][data-cell="${cellIndex}"]`);
+}
+
 function formatSelectedCells(cells) {
     const counts = new Map();
     cells.forEach(item => {
-        const cell = $(`.fraction-cell[data-row="${item.row}"][data-cell="${item.cell}"]`);
-        const denom = parseInt(cell.dataset.denominator);
+        const cell = getFractionCell(item.row, item.cell);
+        if (!cell) return;
+        const denom = parseInt(cell.dataset.denominator, 10);
         counts.set(denom, (counts.get(denom) || 0) + 1);
     });
     return Array.from(counts.entries())
@@ -118,6 +142,59 @@ function formatSelectedCells(cells) {
 function attemptsToWords(n) {
     const words = { 1: 'One attempt', 2: 'Two attempts', 3: 'Three attempts' };
     return words[n] || `${n} attempts`;
+}
+
+function createEmptyFractionStats() {
+    return { correct: 0, incorrect: 0, skipped: 0, skippedPossible: 0 };
+}
+
+function getCurrentVersionConfig() {
+    return VERSIONS[currentVersion] || VERSIONS.proper;
+}
+
+function clearFractionDiceStorage() {
+    localStorage.removeItem(STORAGE_KEYS.fractionIntDice);
+    localStorage.removeItem(STORAGE_KEYS.fractionFracDice);
+}
+
+function addModalDismissHandlers(modal, onDismiss) {
+    function handleBackdrop(e) {
+        if (e.target === modal) onDismiss();
+    }
+
+    function handleEscape(e) {
+        if (e.key === 'Escape') onDismiss();
+    }
+
+    modal.addEventListener('click', handleBackdrop);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+        modal.removeEventListener('click', handleBackdrop);
+        document.removeEventListener('keydown', handleEscape);
+    };
+}
+
+function bindModalTrigger({ trigger, modal, closeButtons = [], initialFocus = null }) {
+    let cleanupDismissHandlers = () => {};
+
+    const closeModal = () => {
+        modal.hidden = true;
+        cleanupDismissHandlers();
+        cleanupDismissHandlers = () => {};
+    };
+
+    const openModal = () => {
+        cleanupDismissHandlers();
+        modal.hidden = false;
+        initialFocus?.focus();
+        cleanupDismissHandlers = addModalDismissHandlers(modal, closeModal);
+    };
+
+    trigger?.addEventListener('click', openModal);
+    closeButtons.forEach(button => button?.addEventListener('click', closeModal));
+
+    return { openModal, closeModal };
 }
 
 function shuffleArray(values) {
@@ -208,9 +285,8 @@ function loadCustomDice() {
 }
 
 function resetCustomDice() {
-    localStorage.removeItem(STORAGE_KEYS.fractionIntDice);
-    localStorage.removeItem(STORAGE_KEYS.fractionFracDice);
-    const v = VERSIONS[currentVersion] || VERSIONS.proper;
+    clearFractionDiceStorage();
+    const v = getCurrentVersionConfig();
     GameState.fractions.customIntDice = [...v.intDice];
     GameState.fractions.customFracDice = [...v.fracDice];
 }
@@ -224,16 +300,17 @@ function showVersionPicker() {
         const modal = $('#version-modal');
         const cancelBtn = $('#version-modal-cancel');
         const options = $$('.version-option');
+        let cleanupDismissHandlers = () => {};
 
         modal.hidden = false;
-        modal.querySelector('.version-option').focus();
+        modal.querySelector('.version-option')?.focus();
 
         function cleanup() {
             modal.hidden = true;
+            cleanupDismissHandlers();
+            cleanupDismissHandlers = () => {};
             options.forEach(o => o.removeEventListener('click', onPick));
             cancelBtn.removeEventListener('click', onCancel);
-            modal.removeEventListener('click', onBackdrop);
-            document.removeEventListener('keydown', onEscape);
         }
 
         function onPick(e) {
@@ -241,25 +318,21 @@ function showVersionPicker() {
             resolve(e.currentTarget.dataset.version);
         }
         function onCancel() { cleanup(); resolve(null); }
-        function onBackdrop(e) { if (e.target === modal) { cleanup(); resolve(null); } }
-        function onEscape(e) { if (e.key === 'Escape') { cleanup(); resolve(null); } }
 
         options.forEach(o => o.addEventListener('click', onPick));
         cancelBtn.addEventListener('click', onCancel);
-        modal.addEventListener('click', onBackdrop);
-        document.addEventListener('keydown', onEscape);
+        cleanupDismissHandlers = addModalDismissHandlers(modal, onCancel);
     });
 }
 
 function applyVersion(version) {
     currentVersion = version;
-    const v = VERSIONS[version];
+    const v = getCurrentVersionConfig();
 
     GameState.fractions.customIntDice = [...v.intDice];
     GameState.fractions.customFracDice = [...v.fracDice];
 
-    localStorage.removeItem(STORAGE_KEYS.fractionIntDice);
-    localStorage.removeItem(STORAGE_KEYS.fractionFracDice);
+    clearFractionDiceStorage();
 
     createFractionWall();
     resetFractionsGame();
@@ -331,21 +404,12 @@ function initHowToPlay() {
     const trigger = $('#how-to-play-trigger');
     const modal = $('#how-to-play-modal');
     const closeBtn = $('#how-to-play-close');
-
-    const closeModal = () => { modal.hidden = true; document.removeEventListener('keydown', onEscape); };
-
-    function onEscape(e) {
-        if (e.key === 'Escape') closeModal();
-    }
-
-    trigger?.addEventListener('click', () => {
-        modal.hidden = false;
-        closeBtn?.focus();
-        document.addEventListener('keydown', onEscape);
+    bindModalTrigger({
+        trigger,
+        modal,
+        closeButtons: [closeBtn],
+        initialFocus: closeBtn
     });
-
-    closeBtn?.addEventListener('click', closeModal);
-    modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 }
 
 // ============================================
@@ -361,20 +425,12 @@ function initCustomDiceUI() {
     const saveBtn = $('#save-fraction-dice');
     const resetBtn = $('#reset-fraction-dice');
     const errorMsg = $('#fraction-dice-error');
-
-    const closeModal = () => {
-        modal.hidden = true;
-        document.removeEventListener('keydown', onEscape);
-    };
-    function onEscape(e) { if (e.key === 'Escape') closeModal(); }
-
-    trigger?.addEventListener('click', () => {
-        modal.hidden = false;
-        closeBtn?.focus();
-        document.addEventListener('keydown', onEscape);
+    bindModalTrigger({
+        trigger,
+        modal,
+        closeButtons: [closeBtn],
+        initialFocus: closeBtn
     });
-    closeBtn?.addEventListener('click', closeModal);
-    modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
     populateFractionDiceInputs();
 
@@ -415,7 +471,7 @@ function showDiceMessage(el, text, autoHide) {
     el.style.color = 'var(--color-success, #10b981)';
     el.hidden = false;
     if (autoHide) {
-        setTimeout(() => { el.hidden = true; el.style.color = ''; }, 2000);
+        setTimeout(() => { el.hidden = true; el.style.color = ''; }, FEEDBACK_HIDE_DELAY_MS);
     }
 }
 
@@ -474,6 +530,7 @@ function showEndModal({ isWin, stats, roundsPlayed, onPlayAgain }) {
     const statsEl = $('#modal-stats');
     const playAgainBtn = $('#modal-play-again');
     const closeBtn = $('#modal-close');
+    let cleanupDismissHandlers = () => {};
 
     inner.classList.remove('modal-win', 'modal-lose');
     fireworks.hidden = true;
@@ -528,22 +585,13 @@ function showEndModal({ isWin, stats, roundsPlayed, onPlayAgain }) {
         fireworks.innerHTML = '';
         playAgainBtn.onclick = null;
         closeBtn.onclick = null;
+        cleanupDismissHandlers();
+        cleanupDismissHandlers = () => {};
     };
 
     playAgainBtn.onclick = () => { closeModal(); onPlayAgain(); };
     closeBtn.onclick = closeModal;
-
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
-
-    const handleEscape = (e) => {
-        if (e.key === 'Escape') {
-            closeModal();
-            document.removeEventListener('keydown', handleEscape);
-        }
-    };
-    document.addEventListener('keydown', handleEscape);
+    cleanupDismissHandlers = addModalDismissHandlers(modal, closeModal);
 }
 
 // ============================================
@@ -566,7 +614,7 @@ function createFractionWall() {
     if (!wall) return;
 
     wall.innerHTML = '';
-    const rows = (VERSIONS[currentVersion] || VERSIONS.proper).wallRows;
+    const rows = getCurrentVersionConfig().wallRows;
 
     rows.forEach((row, rowIndex) => {
         const rowDiv = document.createElement('div');
@@ -582,7 +630,7 @@ function createFractionWall() {
             cell.dataset.row = rowIndex;
             cell.dataset.cell = i;
             cell.dataset.denominator = row.denominator;
-            cell.dataset.value = row.value;
+            cell.dataset.units = fractionToUnits(1, row.denominator);
             cell.tabIndex = 0;
             cell.setAttribute('aria-label', `1/${row.denominator} bar, cell ${i + 1} of ${row.cells}`);
             cell.addEventListener('click', () => handleCellSelection(rowIndex, i));
@@ -598,15 +646,20 @@ function createFractionWall() {
     });
 }
 
+function resetActiveFractionRound() {
+    const state = GameState.fractions;
+    deselectSelectedCells();
+    state.currentRoll = null;
+    state.isSelecting = false;
+    state.attemptsLeft = 3;
+}
+
 function resetFractionsGame() {
     const state = GameState.fractions;
-    state.currentRoll = null;
     state.round = 1;
-    state.selectedCells = [];
-    state.isSelecting = false;
     state.isGameOver = false;
-    state.attemptsLeft = 3;
-    state.stats = { correct: 0, incorrect: 0, skipped: 0, skippedPossible: 0 };
+    state.stats = createEmptyFractionStats();
+    resetActiveFractionRound();
 
     $$('.fraction-cell').forEach(cell => {
         cell.classList.remove('selected', 'used');
@@ -619,12 +672,7 @@ function resetFractionsGame() {
     updateStatsDisplay();
     hideFeedback();
 
-    setFracDiceDisplay('?', '?');
-    $('#fraction-dice-int .dice-face').textContent = '?';
-    $('#current-fraction').textContent = '-';
-    $('#fraction-action-buttons').hidden = true;
-    $('#fraction-wall').classList.remove('selecting');
-    $('#roll-fraction-btn').disabled = false;
+    resetRoundUI();
     setDiceLocked(false);
 }
 
@@ -648,7 +696,7 @@ function rollFractionDice() {
             numerator: intValue,
             denominator: denomValue,
             display: formatFraction(intValue, denomValue),
-            value: intValue / denomValue
+            units: fractionToUnits(intValue, denomValue)
         };
         state.isSelecting = true;
         state.selectedCells = [];
@@ -667,14 +715,14 @@ function rollFractionDice() {
 
         showFeedback(`Select bars that sum to ${state.currentRoll.display}, then click "Check Result"`, 'info');
         updateFractionDisplay();
-    }, 500);
+    }, DICE_ROLL_DURATION_MS);
 }
 
 function handleCellSelection(rowIndex, cellIndex) {
     const state = GameState.fractions;
     if (!state.isSelecting || state.isGameOver) return;
 
-    const cell = $(`.fraction-cell[data-row="${rowIndex}"][data-cell="${cellIndex}"]`);
+    const cell = getFractionCell(rowIndex, cellIndex);
     if (!cell || cell.classList.contains('used')) return;
 
     const selectedIndex = state.selectedCells.findIndex(
@@ -683,7 +731,11 @@ function handleCellSelection(rowIndex, cellIndex) {
 
     if (selectedIndex === -1) {
         cell.classList.add('selected');
-        state.selectedCells.push({ row: rowIndex, cell: cellIndex, value: parseFloat(cell.dataset.value) });
+        state.selectedCells.push({
+            row: rowIndex,
+            cell: cellIndex,
+            units: parseInt(cell.dataset.units, 10)
+        });
     } else {
         cell.classList.remove('selected');
         state.selectedCells.splice(selectedIndex, 1);
@@ -694,24 +746,32 @@ function handleCellSelection(rowIndex, cellIndex) {
 }
 
 function clearSelection() {
+    deselectSelectedCells();
+    $('#check-result-btn').disabled = true;
+    updateFractionDisplay();
+}
+
+function deselectSelectedCells() {
     const state = GameState.fractions;
     state.selectedCells.forEach(item => {
-        const cell = $(`.fraction-cell[data-row="${item.row}"][data-cell="${item.cell}"]`);
+        const cell = getFractionCell(item.row, item.cell);
         if (cell) cell.classList.remove('selected');
     });
     state.selectedCells = [];
-    $('#check-result-btn').disabled = true;
-    updateFractionDisplay();
+}
+
+function getSelectedUnits() {
+    return GameState.fractions.selectedCells.reduce((sum, item) => sum + item.units, 0);
 }
 
 function checkResult() {
     const state = GameState.fractions;
     if (!state.isSelecting || !state.currentRoll) return;
 
-    const targetValue = state.currentRoll.value;
-    const selectedValue = state.selectedCells.reduce((sum, item) => sum + item.value, 0);
+    const targetUnits = state.currentRoll.units;
+    const selectedUnits = getSelectedUnits();
 
-    if (Math.abs(selectedValue - targetValue) < 0.0001) {
+    if (selectedUnits === targetUnits) {
         handleCorrectAnswer();
     } else {
         handleIncorrectAnswer();
@@ -723,7 +783,7 @@ function handleCorrectAnswer() {
     const roll = state.currentRoll;
 
     state.selectedCells.forEach(item => {
-        const cell = $(`.fraction-cell[data-row="${item.row}"][data-cell="${item.cell}"]`);
+        const cell = getFractionCell(item.row, item.cell);
         if (cell) {
             cell.classList.remove('selected');
             cell.classList.add('used');
@@ -769,7 +829,7 @@ function skipTurn() {
 
     const roll = state.currentRoll;
 
-    if (canMakeFraction(roll.value)) {
+    if (canMakeFraction(roll.units)) {
         showSkipConfirmModal(() => doSkipTurn('Skipped (Possible)'));
         return;
     }
@@ -800,57 +860,69 @@ function showSkipConfirmModal(onConfirm) {
     const yesBtn = $('#skip-confirm-yes');
     const cancelBtn = $('#skip-confirm-cancel');
 
-    modal.hidden = false;
-    cancelBtn.focus();
+    let cleanupDismissHandlers = () => {};
 
     const closeModal = () => {
         modal.hidden = true;
+        cleanupDismissHandlers();
+        cleanupDismissHandlers = () => {};
         yesBtn.onclick = null;
         cancelBtn.onclick = null;
-        document.removeEventListener('keydown', onEscape);
     };
 
-    function onEscape(e) {
-        if (e.key === 'Escape') closeModal();
-    }
+    modal.hidden = false;
+    cancelBtn.focus();
 
     yesBtn.onclick = () => {
         closeModal();
         onConfirm();
     };
     cancelBtn.onclick = closeModal;
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-    document.addEventListener('keydown', onEscape);
+    cleanupDismissHandlers = addModalDismissHandlers(modal, closeModal);
 }
 
 // ============================================
 // Fraction Possibility Check (subset sum)
 // ============================================
 
-function canMakeFraction(targetValue) {
-    const availableBars = [];
-    $$('.fraction-cell:not(.used)').forEach(cell => {
-        availableBars.push({ value: parseFloat(cell.dataset.value) });
-    });
-    return canMakeSum(availableBars, targetValue, 0);
+function getAvailableFractionUnits() {
+    return Array.from($$('.fraction-cell:not(.used)'), (cell) => parseInt(cell.dataset.units, 10));
 }
 
-function canMakeSum(bars, target, index) {
-    if (Math.abs(target) < 0.0001) return true;
-    if (target < 0 || index >= bars.length) return false;
-    return canMakeSum(bars, target - bars[index].value, index + 1)
-        || canMakeSum(bars, target, index + 1);
+function buildReachableFractionSums(maxTargetUnits) {
+    const reachable = new Uint8Array(maxTargetUnits + 1);
+    reachable[0] = 1;
+
+    getAvailableFractionUnits().forEach((units) => {
+        for (let sum = maxTargetUnits - units; sum >= 0; sum--) {
+            if (reachable[sum]) {
+                reachable[sum + units] = 1;
+            }
+        }
+    });
+
+    return reachable;
+}
+
+function canMakeFraction(targetUnits) {
+    if (targetUnits <= 0) return true;
+    const reachable = buildReachableFractionSums(targetUnits);
+    return reachable[targetUnits] === 1;
 }
 
 function hasAnyPossibleFraction() {
     const state = GameState.fractions;
+    const targetUnits = new Set();
+
     for (const numerator of state.customIntDice) {
         for (const denominator of state.customFracDice) {
-            const value = numerator / denominator;
-            if (canMakeFraction(value)) return true;
+            targetUnits.add(fractionToUnits(numerator, denominator));
         }
     }
-    return false;
+
+    const maxTargetUnits = Math.max(...targetUnits);
+    const reachable = buildReachableFractionSums(maxTargetUnits);
+    return Array.from(targetUnits).some((units) => reachable[units] === 1);
 }
 
 // ============================================
@@ -863,21 +935,10 @@ function isFractionWallFull() {
 
 function nextRound() {
     const state = GameState.fractions;
-    if (state.selectedCells.length > 0) {
-        clearSelection();
-    }
-
     state.round++;
-    state.currentRoll = null;
-    state.selectedCells = [];
-    state.isSelecting = false;
+    resetActiveFractionRound();
 
-    $('#fraction-action-buttons').hidden = true;
-    $('#fraction-wall').classList.remove('selecting');
-    $('#roll-fraction-btn').disabled = false;
-    setFracDiceDisplay('?', '?');
-    $('#fraction-dice-int .dice-face').textContent = '?';
-    $('#current-fraction').textContent = '-';
+    resetRoundUI();
 
     updateFractionDisplay();
     updateStatsDisplay();
@@ -887,6 +948,16 @@ function nextRound() {
     } else if (!hasAnyPossibleFraction()) {
         endFractionsGame(false);
     }
+}
+
+function resetRoundUI() {
+    $('#fraction-action-buttons').hidden = true;
+    $('#check-result-btn').disabled = true;
+    $('#fraction-wall').classList.remove('selecting');
+    $('#roll-fraction-btn').disabled = false;
+    setFracDiceDisplay('?', '?');
+    $('#fraction-dice-int .dice-face').textContent = '?';
+    $('#current-fraction').textContent = '-';
 }
 
 function endFractionsGame(isWin) {
@@ -943,8 +1014,7 @@ function hideFeedback() {
 }
 
 function updateFractionDisplay() {
-    const selectedValue = GameState.fractions.selectedCells.reduce((sum, item) => sum + item.value, 0);
-    $('#fraction-selected').textContent = selectedValue.toFixed(3);
+    $('#fraction-selected').textContent = formatFractionValue(getSelectedUnits());
     $('#fraction-round').textContent = GameState.fractions.round;
 }
 
@@ -961,10 +1031,7 @@ function addToFractionsTable(entry) {
     if (!tbody) return;
 
     const row = document.createElement('tr');
-    if (entry.result === 'Correct') row.className = 'result-correct';
-    else if (entry.result === 'Incorrect') row.className = 'result-incorrect';
-    else if (entry.result === 'Skipped (Possible)') row.className = 'result-skipped-possible';
-    else row.className = 'result-skipped';
+    row.className = RESULT_ROW_CLASS_NAMES[entry.result] || '';
 
     row.innerHTML = `
         <td>${entry.round}</td>
