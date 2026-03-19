@@ -579,6 +579,7 @@ select:disabled {
     border-radius: var(--radius-chip);
     font-size: 0.76rem;
     font-weight: 700;
+    color: #000 !important;
     box-shadow: 1.5px 1.5px 0 rgba(65, 64, 62, 0.9);
 }
 
