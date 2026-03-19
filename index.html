@@ -14,7 +14,9 @@
     <header class="site-header">
         <nav class="main-nav border" aria-label="Main navigation">
             <div class="nav-brand">
-                <span class="logo" aria-hidden="true">🎲</span>
+                <span class="logo" aria-hidden="true">
+                    <img class="openmoji-icon openmoji-icon--logo" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F3B2.svg" alt="">
+                </span>
                 <h1>Math Games</h1>
             </div>
             <button class="mobile-menu-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Toggle navigation menu">
@@ -38,7 +40,9 @@
                 <div class="games-grid">
                     <article class="game-card card">
                         <div class="card-body">
-                            <div class="game-icon" aria-hidden="true">🟦</div>
+                            <div class="game-icon" aria-hidden="true">
+                                <img class="openmoji-icon openmoji-icon--game" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F7E6.svg" alt="">
+                            </div>
                             <h3 class="card-title">Colour in Fractions</h3>
                             <p class="card-text">Roll the dice and shade fractions on the fraction wall. Build understanding of equivalent fractions and fraction addition.</p>
                             <button class="btn btn-primary play-fractions-btn">Play Now</button>
@@ -47,7 +51,9 @@
                     
                     <article class="game-card card game-card-disabled" aria-disabled="true">
                         <div class="card-body">
-                            <div class="game-icon" aria-hidden="true">🔢</div>
+                            <div class="game-icon" aria-hidden="true">
+                                <img class="openmoji-icon openmoji-icon--game" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F522.svg" alt="">
+                            </div>
                             <h3 class="card-title">Colour in Decimats</h3>
                             <p class="card-text">Explore decimal place values with the Decimats grid. Roll decimal dice and visualize tenths, hundredths, and thousandths.</p>
                             <span class="paper-btn disabled btn-disabled">Coming Soon</span>
@@ -110,10 +116,10 @@
                             <span id="fraction-selected" class="status-value">0</span>
                         </div>
                         <div class="status-pills">
-                            <span class="stat-pill badge success correct"><span id="correct-count">0</span> ✓</span>
-                            <span class="stat-pill badge danger incorrect"><span id="incorrect-count">0</span> ✗</span>
-                            <span class="stat-pill badge warning skipped"><span id="skipped-count">0</span> ⏭</span>
-                            <span class="stat-pill badge secondary skipped-possible"><span id="skipped-possible-count">0</span> ⊘</span>
+                            <span class="stat-pill badge success correct"><span id="correct-count">0</span><span class="stat-pill-symbol" aria-hidden="true">&#10003;</span></span>
+                            <span class="stat-pill badge danger incorrect"><span id="incorrect-count">0</span><span class="stat-pill-symbol" aria-hidden="true">&#10005;</span></span>
+                            <span class="stat-pill badge warning skipped"><span id="skipped-count">0</span><span class="stat-pill-symbol" aria-hidden="true">&#9197;</span></span>
+                            <span class="stat-pill badge secondary skipped-possible"><span id="skipped-possible-count">0</span><span class="stat-pill-symbol" aria-hidden="true">&#8856;</span></span>
                         </div>
                     </div>
                 </div>
@@ -152,7 +158,8 @@
                                     </div>
                                 </div>
                                 <button id="roll-fraction-btn" class="btn btn-dice btn-roll-full" aria-label="Roll the fraction dice">
-                                    Roll Dice 🎲
+                                    Roll Dice
+                                    <img class="openmoji-icon openmoji-icon--button" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F3B2.svg" alt="">
                                 </button>
                                 <button type="button" id="how-to-play-trigger" class="how-to-play-hint" aria-haspopup="dialog" aria-controls="how-to-play-modal">
                                     How to Play
@@ -162,16 +169,17 @@
 
                         <div id="fraction-action-buttons" class="action-buttons panel-actions paper-panel" hidden>
                             <div class="panel-actions-row">
-                                <button id="check-result-btn" class="btn btn-primary" disabled>Check Result ✓</button>
-                                <button id="skip-turn-btn" class="btn btn-secondary">Skip Turn ⏭</button>
+                                <button id="check-result-btn" class="btn btn-primary" disabled>Check Result <img class="openmoji-icon openmoji-icon--button" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/2705.svg" alt=""></button>
+                                <button id="skip-turn-btn" class="btn btn-secondary">Skip Turn <img class="openmoji-icon openmoji-icon--button" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/21AA.svg" alt=""></button>
                             </div>
-                            <button id="clear-selection-btn" class="btn btn-tertiary">Clear Selection ✗</button>
+                            <button id="clear-selection-btn" class="btn btn-tertiary">Clear Selection <img class="openmoji-icon openmoji-icon--button" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/274C.svg" alt=""></button>
                         </div>
 
                         <div class="panel-bottom-actions">
                             <button id="reset-fractions-btn" class="btn btn-secondary btn-new-game">New Game</button>
                             <button type="button" id="custom-dice-trigger" class="btn btn-secondary btn-dice-settings" aria-haspopup="dialog" aria-controls="custom-dice-modal">
-                                🎲 Custom Dice Settings
+                                <img class="openmoji-icon openmoji-icon--button" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F3B2.svg" alt="">
+                                Custom Dice Settings
                             </button>
                         </div>
                     </aside>
@@ -206,6 +214,7 @@
         <div class="container container-lg footer-shell">
             <p>&copy; 2026 Math Games. An educational research prototype for learning fractions and decimals.</p>
             <p>For research and educational purposes only.</p>
+            <p>Icons by <a href="https://openmoji.org/" target="_blank" rel="noopener noreferrer">OpenMoji</a>, licensed under CC BY-SA 4.0.</p>
         </div>
     </footer>
 
