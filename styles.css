@@ -849,52 +849,47 @@ select:disabled {
 .history-scroll {
     max-height: 250px;
     overflow: auto;
+    padding: 0.35rem;
     border: 2px solid rgba(65, 64, 62, 0.22);
     border-radius: var(--radius-paper-tight);
-    background: rgba(255, 253, 246, 0.85);
+    background: rgba(255, 253, 246, 0.92);
 }
 
-.recording-table {
+#fractions-table {
     width: 100%;
-    border-collapse: collapse;
-    background: transparent;
+    margin: 0;
+    background: #fffdf8;
 }
 
-.recording-table th,
-.recording-table td {
-    padding: 0.6rem 0.55rem;
+#fractions-table th,
+#fractions-table td {
     text-align: center;
-    border: 2px solid rgba(65, 64, 62, 0.45);
 }
 
-.recording-table th {
+#fractions-table th {
     position: sticky;
     top: 0;
     z-index: 1;
     background: #f3dfb6;
 }
 
-.recording-table tbody tr.result-correct {
-    background: rgba(220, 234, 215, 0.9);
+#fractions-table tbody tr.result-correct {
+    background: rgba(220, 234, 215, 0.88);
 }
 
-.recording-table tbody tr.result-incorrect {
-    background: rgba(247, 219, 212, 0.9);
+#fractions-table tbody tr.result-incorrect {
+    background: rgba(247, 219, 212, 0.88);
 }
 
-.recording-table tbody tr.result-skipped {
-    background: rgba(255, 243, 191, 0.9);
+#fractions-table tbody tr.result-skipped {
+    background: rgba(255, 243, 191, 0.88);
 }
 
-.recording-table tbody tr.result-skipped-possible {
-    background: rgba(236, 227, 244, 0.9);
+#fractions-table tbody tr.result-skipped-possible {
+    background: rgba(236, 227, 244, 0.88);
 }
 
-.recording-table tbody tr:hover {
-    background: rgba(216, 231, 242, 0.75);
-}
-
-.compact-table {
+#fractions-table {
     font-size: 0.84rem;
 }
 
@@ -1386,8 +1381,8 @@ select,
         font-size: 0.72rem;
     }
 
-    .compact-table th,
-    .compact-table td {
+    #fractions-table th,
+    #fractions-table td {
         padding: 0.5rem 0.35rem;
     }
 }
