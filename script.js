@@ -58,6 +58,24 @@ const VERSIONS = {
 
 let currentVersion = 'proper';
 
+const BACKGROUND_DECOR_ICONS = [
+    '2797', // divide
+    '1F7F0', // heavy equals sign
+    '267E', // infinity
+    '2716', // multiply
+    '2795', // plus
+    '2796', // minus
+    '1F3B2', // game die
+    '1F3AE', // video game
+    '1F579', // joystick
+    '1F9E9', // puzzle piece
+    '1F9F8', // teddy bear
+    '1F4CF', // straight ruler
+    '1F4D0' // triangular ruler
+];
+
+const BACKGROUND_DECOR_COUNT = 16;
+
 // Sync initial dice values from default version
 GameState.fractions.customIntDice = [...VERSIONS.proper.intDice];
 GameState.fractions.customFracDice = [...VERSIONS.proper.fracDice];
@@ -100,6 +118,46 @@ function formatSelectedCells(cells) {
 function attemptsToWords(n) {
     const words = { 1: 'One attempt', 2: 'Two attempts', 3: 'Three attempts' };
     return words[n] || `${n} attempts`;
+}
+
+function shuffleArray(values) {
+    const copy = [...values];
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+}
+
+function initBackgroundDecor() {
+    const decor = $('#background-decor');
+    if (!decor) return;
+
+    const pool = [];
+    while (pool.length < BACKGROUND_DECOR_COUNT) {
+        pool.push(...BACKGROUND_DECOR_ICONS);
+    }
+
+    const icons = shuffleArray(pool).slice(0, BACKGROUND_DECOR_COUNT);
+    decor.innerHTML = '';
+
+    icons.forEach((code) => {
+        const cell = document.createElement('span');
+        cell.className = 'background-decor-cell';
+        cell.style.setProperty('--decor-rotate', `${Math.round((Math.random() * 16) - 8)}deg`);
+        cell.style.setProperty('--decor-scale', (0.88 + Math.random() * 0.28).toFixed(2));
+        cell.style.setProperty('--decor-shift-x', `${Math.round((Math.random() * 22) - 11)}px`);
+        cell.style.setProperty('--decor-shift-y', `${Math.round((Math.random() * 18) - 9)}px`);
+
+        const img = document.createElement('img');
+        img.className = 'background-decor-icon';
+        img.alt = '';
+        // OpenMoji background decor icon, see BACKGROUND_DECOR_ICONS comments above.
+        img.src = `https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/${code}.svg`;
+
+        cell.appendChild(img);
+        decor.appendChild(cell);
+    });
 }
 
 // ============================================
@@ -924,6 +982,7 @@ function addToFractionsTable(entry) {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    initBackgroundDecor();
     initNavigation();
     initPlayNowButtons();
     initHowToPlay();

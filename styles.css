@@ -57,11 +57,60 @@ body.paper-theme::before {
     position: fixed;
     inset: 0;
     pointer-events: none;
+    z-index: 0;
     opacity: 0.08;
     background-image:
         linear-gradient(90deg, transparent 0, transparent 97%, rgba(65, 64, 62, 0.35) 100%),
         linear-gradient(0deg, transparent 0, transparent 97%, rgba(65, 64, 62, 0.35) 100%);
     background-size: 18px 18px;
+}
+
+.background-decor {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: minmax(205px, 1fr);
+    align-content: space-evenly;
+    justify-items: center;
+    gap: clamp(1.25rem, 3vw, 2.75rem);
+    padding: 5.75rem 3.5rem 3.25rem;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.background-decor-cell {
+    display: grid;
+    place-items: center;
+    width: min(100%, 185px);
+    --decor-stagger-x: 0px;
+    transform:
+        translate(calc(var(--decor-stagger-x) + var(--decor-shift-x, 0px)), var(--decor-shift-y, 0px))
+        rotate(var(--decor-rotate, 0deg))
+        scale(var(--decor-scale, 1));
+    opacity: 0.15;
+}
+
+.background-decor-icon {
+    width: clamp(4.35rem, 7vw, 6.15rem);
+    height: clamp(4.35rem, 7vw, 6.15rem);
+    object-fit: contain;
+    filter: grayscale(0.16) saturate(0.18) brightness(1.02);
+}
+
+.background-decor-cell:nth-child(8n + 5),
+.background-decor-cell:nth-child(8n + 6),
+.background-decor-cell:nth-child(8n + 7),
+.background-decor-cell:nth-child(8n + 8) {
+    --decor-stagger-x: 50%;
+}
+
+.site-header,
+main,
+.site-footer {
+    position: relative;
+    z-index: 1;
 }
 
 main {
@@ -1382,6 +1431,22 @@ select,
 }
 
 @media (max-width: 980px) {
+    .background-decor {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-auto-rows: minmax(190px, 1fr);
+        padding-inline: 2.6rem;
+    }
+
+    .background-decor-cell:nth-child(n) {
+        --decor-stagger-x: 0px;
+    }
+
+    .background-decor-cell:nth-child(6n + 4),
+    .background-decor-cell:nth-child(6n + 5),
+    .background-decor-cell:nth-child(6n + 6) {
+        --decor-stagger-x: 50%;
+    }
+
     .game-layout {
         grid-template-columns: 1fr;
     }
@@ -1402,6 +1467,22 @@ select,
 @media (max-width: 768px) {
     :root {
         --header-offset: 5.85rem;
+    }
+
+    .background-decor {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: minmax(160px, 1fr);
+        padding-top: 5rem;
+        padding-inline: 1.25rem;
+    }
+
+    .background-decor-cell:nth-child(n) {
+        --decor-stagger-x: 0px;
+    }
+
+    .background-decor-cell:nth-child(4n + 3),
+    .background-decor-cell:nth-child(4n + 4) {
+        --decor-stagger-x: 50%;
     }
 
     .site-header {
@@ -1491,6 +1572,21 @@ select,
         font-size: 15px;
     }
 
+    .background-decor {
+        gap: 1.1rem;
+        padding-inline: 0.6rem;
+    }
+
+    .background-decor-cell {
+        width: min(100%, 120px);
+        opacity: 0.12;
+    }
+
+    .background-decor-icon {
+        width: clamp(3rem, 13vw, 4.25rem);
+        height: clamp(3rem, 13vw, 4.25rem);
+    }
+
     .section-title {
         font-size: 2rem;
     }
@@ -1556,6 +1652,7 @@ select,
 @media print {
     .site-header,
     .modal,
+    .background-decor,
     .btn,
     .paper-btn,
     .mobile-menu-toggle,
