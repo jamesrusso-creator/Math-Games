@@ -5,27 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Interactive educational math games for learning fractions and decimals">
     <title>Math Games - Colour in Fractions</title>
-    <link rel="stylesheet" href="https://unpkg.com/papercss@1.9.2/dist/paper.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="paper-theme">
+<body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    <!-- OpenMoji background decor is generated in script.js -->
-    <div id="background-decor" class="background-decor" aria-hidden="true"></div>
     
     <header class="site-header">
-        <nav class="main-nav border" aria-label="Main navigation">
+        <nav class="main-nav" aria-label="Main navigation">
             <div class="nav-brand">
-                <span class="logo" aria-hidden="true">
-                    <!-- OpenMoji: game die -->
-                    <img class="openmoji-icon openmoji-icon--logo" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F3B2.svg" alt="">
-                </span>
+                <span class="logo" aria-hidden="true">🎲</span>
                 <h1>Math Games</h1>
             </div>
             <button class="mobile-menu-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Toggle navigation menu">
                 <span class="hamburger"></span>
             </button>
-            <ul id="nav-menu" class="nav-menu inline" role="menubar">
+            <ul id="nav-menu" class="nav-menu" role="menubar">
                 <li role="none"><a href="#home" class="nav-link active" role="menuitem">Home</a></li>
                 <li role="none"><a href="#fractions" class="nav-link" role="menuitem">Colour in Fractions</a></li>
                 <!-- Colour in Decimats: Coming Soon -->
@@ -36,76 +30,43 @@
     <main id="main-content">
         <!-- Home Section -->
         <section id="home" class="section home-section" aria-labelledby="home-title">
-            <div class="container container-lg home-shell">
+            <div class="container">
                 <h2 id="home-title" class="section-title">Welcome to Math Games</h2>
                 <p class="section-intro">Learn fractions and decimals through interactive, engaging games!</p>
                 
                 <div class="games-grid">
-                    <article class="game-card card">
-                        <div class="card-body">
-                            <div class="game-icon" aria-hidden="true">
-                                <!-- OpenMoji: blue square -->
-                                <img class="openmoji-icon openmoji-icon--game" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F7E6.svg" alt="">
-                            </div>
-                            <h3 class="card-title">Colour in Fractions</h3>
-                            <p class="card-text">Roll the dice and shade fractions on the fraction wall. Build understanding of equivalent fractions and fraction addition.</p>
-                            <button class="btn btn-primary play-fractions-btn">Play Now</button>
-                        </div>
+                    <article class="game-card">
+                        <div class="game-icon" aria-hidden="true">🟦</div>
+                        <h3>Colour in Fractions</h3>
+                        <p>Roll the dice and shade fractions on the fraction wall. Build understanding of equivalent fractions and fraction addition.</p>
+                        <button class="btn btn-primary play-fractions-btn">Play Now</button>
                     </article>
                     
-                    <article class="game-card card game-card-disabled" aria-disabled="true">
-                        <div class="card-body">
-                            <div class="game-icon" aria-hidden="true">
-                                <!-- OpenMoji: input numbers -->
-                                <img class="openmoji-icon openmoji-icon--game" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F522.svg" alt="">
-                            </div>
-                            <h3 class="card-title">Colour in Decimats</h3>
-                            <p class="card-text">Explore decimal place values with the Decimats grid. Roll decimal dice and visualize tenths, hundredths, and thousandths.</p>
-                            <span class="paper-btn disabled btn-disabled">Coming Soon</span>
-                        </div>
+                    <article class="game-card game-card-disabled" aria-disabled="true">
+                        <div class="game-icon" aria-hidden="true">🔢</div>
+                        <h3>Colour in Decimats</h3>
+                        <p>Explore decimal place values with the Decimats grid. Roll decimal dice and visualize tenths, hundredths, and thousandths.</p>
+                        <span class="btn btn-disabled">Coming Soon</span>
                     </article>
                 </div>
 
-                <div class="features-overview paper-panel">
-                    <div class="features-header">
-                        <h3>What You'll Learn</h3>
-                        <p class="features-intro">Each round is designed to build number sense, visual reasoning, and flexible problem solving.</p>
-                    </div>
-                    <div class="features-grid" aria-label="Learning outcomes">
-                        <article class="feature-card">
-                            <span class="feature-card-step" aria-hidden="true">01</span>
-                            <h4>Equivalent Fractions</h4>
-                            <p>See how different bars can still represent the same amount, and compare sizes with confidence.</p>
-                            <span class="feature-card-tag">Fraction walls</span>
-                        </article>
-                        <article class="feature-card">
-                            <span class="feature-card-step" aria-hidden="true">02</span>
-                            <h4>Place Value Thinking</h4>
-                            <p>Connect visual models to tenths, hundredths, and other decimal ideas as new games are added.</p>
-                            <span class="feature-card-tag">Decimals next</span>
-                        </article>
-                        <article class="feature-card">
-                            <span class="feature-card-step" aria-hidden="true">03</span>
-                            <h4>Flexible Addition</h4>
-                            <p>Combine pieces in different ways to hit the target exactly, instead of relying on one method.</p>
-                            <span class="feature-card-tag">Multiple strategies</span>
-                        </article>
-                        <article class="feature-card">
-                            <span class="feature-card-step" aria-hidden="true">04</span>
-                            <h4>Mathematical Intuition</h4>
-                            <p>Estimate first, check your choice, and build a feel for what makes a move possible.</p>
-                            <span class="feature-card-tag">Learn by play</span>
-                        </article>
-                    </div>
+                <div class="features-overview">
+                    <h3>What You'll Learn</h3>
+                    <ul class="features-list">
+                        <li>Visualize fractions and their equivalents</li>
+                        <li>Understand decimal place value</li>
+                        <li>Practice addition with fractions and decimals</li>
+                        <li>Build mathematical intuition through play</li>
+                    </ul>
                 </div>
             </div>
         </section>
 
         <!-- Colour in Fractions Game -->
-        <section id="fractions" class="section" aria-labelledby="fractions-title" hidden>
-            <div class="game-console container-lg">
+        <section id="fractions" class="section game-section" aria-labelledby="fractions-title" hidden>
+            <div class="game-console">
                 <!-- Sticky Status Bar -->
-                <div class="game-status-bar paper-panel">
+                <div class="game-status-bar">
                     <h2 id="fractions-title" class="game-title">Colour in Fractions</h2>
                     <div class="status-items">
                         <div class="status-item">
@@ -121,10 +82,10 @@
                             <span id="fraction-selected" class="status-value">0</span>
                         </div>
                         <div class="status-pills">
-                            <span class="stat-pill badge success correct"><span id="correct-count">0</span><span class="stat-pill-symbol" aria-hidden="true">&#10003;</span></span>
-                            <span class="stat-pill badge danger incorrect"><span id="incorrect-count">0</span><span class="stat-pill-symbol" aria-hidden="true">&#10005;</span></span>
-                            <span class="stat-pill badge warning skipped"><span id="skipped-count">0</span><span class="stat-pill-symbol" aria-hidden="true">&#9197;</span></span>
-                            <span class="stat-pill badge secondary skipped-possible"><span id="skipped-possible-count">0</span><span class="stat-pill-symbol" aria-hidden="true">&#8856;</span></span>
+                            <span class="stat-pill correct"><span id="correct-count">0</span> ✓</span>
+                            <span class="stat-pill incorrect"><span id="incorrect-count">0</span> ✗</span>
+                            <span class="stat-pill skipped"><span id="skipped-count">0</span> ⏭</span>
+                            <span class="stat-pill skipped-possible"><span id="skipped-possible-count">0</span> ⊘</span>
                         </div>
                     </div>
                 </div>
@@ -136,7 +97,7 @@
                 <div class="game-layout">
                     <!-- Left Panel: Fraction Wall -->
                     <div class="game-panel-left">
-                        <div class="fraction-wall-container paper-panel">
+                        <div class="fraction-wall-container">
                             <p class="wall-hint">Select bars to match the target fraction</p>
                             <div id="fraction-wall" class="fraction-wall" role="grid" aria-label="Fraction wall grid">
                                 <!-- Generated by JavaScript -->
@@ -146,7 +107,7 @@
 
                     <!-- Right Panel: Controls -->
                     <aside class="game-panel-right">
-                        <div class="panel-card paper-panel">
+                        <div class="panel-card dice-card">
                             <div class="dice-container">
                                 <div class="dice-pair">
                                     <div class="dice small" id="fraction-dice-int" role="img" aria-label="Integer dice">
@@ -163,9 +124,7 @@
                                     </div>
                                 </div>
                                 <button id="roll-fraction-btn" class="btn btn-dice btn-roll-full" aria-label="Roll the fraction dice">
-                                    Roll Dice
-                                    <!-- OpenMoji: game die -->
-                                    <img class="openmoji-icon openmoji-icon--button" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F3B2.svg" alt="">
+                                    Roll Dice 🎲
                                 </button>
                                 <button type="button" id="how-to-play-trigger" class="how-to-play-hint" aria-haspopup="dialog" aria-controls="how-to-play-modal">
                                     How to Play
@@ -173,20 +132,18 @@
                             </div>
                         </div>
 
-                        <div id="fraction-action-buttons" class="action-buttons panel-actions paper-panel" hidden>
+                        <div id="fraction-action-buttons" class="action-buttons panel-actions" hidden>
                             <div class="panel-actions-row">
-                                <button id="check-result-btn" class="btn btn-primary" disabled>Check Result <!-- OpenMoji: check mark --><img class="openmoji-icon openmoji-icon--button" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/2705.svg" alt=""></button>
-                                <button id="skip-turn-btn" class="btn btn-secondary">Skip Turn <!-- OpenMoji: left arrow curving right --><img class="openmoji-icon openmoji-icon--button" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/21AA.svg" alt=""></button>
+                                <button id="check-result-btn" class="btn btn-primary" disabled>Check Result ✓</button>
+                                <button id="skip-turn-btn" class="btn btn-secondary">Skip Turn ⏭</button>
                             </div>
-                            <button id="clear-selection-btn" class="btn btn-tertiary">Clear Selection <!-- OpenMoji: cross mark --><img class="openmoji-icon openmoji-icon--button" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/274C.svg" alt=""></button>
+                            <button id="clear-selection-btn" class="btn btn-tertiary">Clear Selection ✗</button>
                         </div>
 
                         <div class="panel-bottom-actions">
                             <button id="reset-fractions-btn" class="btn btn-secondary btn-new-game">New Game</button>
                             <button type="button" id="custom-dice-trigger" class="btn btn-secondary btn-dice-settings" aria-haspopup="dialog" aria-controls="custom-dice-modal">
-                                <!-- OpenMoji: game die -->
-                                <img class="openmoji-icon openmoji-icon--button" src="https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/1F3B2.svg" alt="">
-                                Custom Dice Settings
+                                🎲 Custom Dice Settings
                             </button>
                         </div>
                     </aside>
@@ -194,10 +151,10 @@
 
                 <!-- Bottom: Game History -->
                 <div class="game-extras">
-                    <div class="extras-history paper-panel">
+                    <div class="recording-table-container extras-history">
                         <h4 class="panel-card-title">Game History</h4>
                         <div class="history-scroll">
-                            <table id="fractions-table" class="table-hover table-alternating">
+                            <table id="fractions-table" class="recording-table compact-table">
                                 <thead>
                                     <tr>
                                         <th scope="col">Rd</th>
@@ -218,147 +175,146 @@
     </main>
 
     <footer class="site-footer">
-        <div class="container container-lg footer-shell">
+        <div class="container">
             <p>&copy; 2026 Math Games. An educational research prototype for learning fractions and decimals.</p>
             <p>For research and educational purposes only.</p>
-            <p>Icons by <a href="https://openmoji.org/" target="_blank" rel="noopener noreferrer">OpenMoji</a>, licensed under CC BY-SA 4.0.</p>
         </div>
     </footer>
 
     <!-- Custom Dice Settings Modal -->
     <div id="custom-dice-modal" class="modal" role="dialog" aria-labelledby="custom-dice-modal-title" aria-modal="true" hidden>
-        <div class="modal-content custom-dice-modal-content paper-panel">
+        <div class="modal-content custom-dice-modal-content">
             <h3 id="custom-dice-modal-title">Custom Dice Settings</h3>
             <div id="fractions-custom-dice-panel" class="custom-dice-panel">
-                <div class="custom-dice-container">
-                    <div class="dice-config paper-panel">
-                        <h4>Integer Dice (Numerator)</h4>
-                        <p class="dice-config-desc">Enter integer values (1-6) for each face:</p>
-                        <div class="dice-faces">
-                            <div class="dice-face-input">
-                                <label for="frac-int-1">Face 1:</label>
-                                <input type="number" id="frac-int-1" class="dice-input" min="1" max="6" value="1">
+                                <div class="custom-dice-container">
+                                <div class="dice-config">
+                                    <h4>Integer Dice (Numerator)</h4>
+                                    <p class="dice-config-desc">Enter integer values (1-6) for each face:</p>
+                                    <div class="dice-faces">
+                                        <div class="dice-face-input">
+                                            <label for="frac-int-1">Face 1:</label>
+                                            <input type="number" id="frac-int-1" class="dice-input int-dice" min="1" max="6" value="1">
+                                        </div>
+                                        <div class="dice-face-input">
+                                            <label for="frac-int-2">Face 2:</label>
+                                            <input type="number" id="frac-int-2" class="dice-input int-dice" min="1" max="6" value="1">
+                                        </div>
+                                        <div class="dice-face-input">
+                                            <label for="frac-int-3">Face 3:</label>
+                                            <input type="number" id="frac-int-3" class="dice-input int-dice" min="1" max="6" value="2">
+                                        </div>
+                                        <div class="dice-face-input">
+                                            <label for="frac-int-4">Face 4:</label>
+                                            <input type="number" id="frac-int-4" class="dice-input int-dice" min="1" max="6" value="2">
+                                        </div>
+                                        <div class="dice-face-input">
+                                            <label for="frac-int-5">Face 5:</label>
+                                            <input type="number" id="frac-int-5" class="dice-input int-dice" min="1" max="6" value="3">
+                                        </div>
+                                        <div class="dice-face-input">
+                                            <label for="frac-int-6">Face 6:</label>
+                                            <input type="number" id="frac-int-6" class="dice-input int-dice" min="1" max="6" value="3">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="dice-config">
+                                    <h4>Fraction Dice</h4>
+                                    <p class="dice-config-desc">Select fraction for each face:</p>
+                                    <div class="dice-faces">
+                                        <div class="dice-face-input">
+                                            <label for="frac-denom-1">Face 1:</label>
+                                            <select id="frac-denom-1" class="dice-select frac-dice">
+                                                <option value="2">1/2</option>
+                                                <option value="3">1/3</option>
+                                                <option value="4" selected>1/4</option>
+                                                <option value="5">1/5</option>
+                                                <option value="6">1/6</option>
+                                                <option value="8">1/8</option>
+                                                <option value="10">1/10</option>
+                                                <option value="12">1/12</option>
+                                            </select>
+                                        </div>
+                                        <div class="dice-face-input">
+                                            <label for="frac-denom-2">Face 2:</label>
+                                            <select id="frac-denom-2" class="dice-select frac-dice">
+                                                <option value="2">1/2</option>
+                                                <option value="3">1/3</option>
+                                                <option value="4">1/4</option>
+                                                <option value="5" selected>1/5</option>
+                                                <option value="6">1/6</option>
+                                                <option value="8">1/8</option>
+                                                <option value="10">1/10</option>
+                                                <option value="12">1/12</option>
+                                            </select>
+                                        </div>
+                                        <div class="dice-face-input">
+                                            <label for="frac-denom-3">Face 3:</label>
+                                            <select id="frac-denom-3" class="dice-select frac-dice">
+                                                <option value="2">1/2</option>
+                                                <option value="3">1/3</option>
+                                                <option value="4">1/4</option>
+                                                <option value="5">1/5</option>
+                                                <option value="6" selected>1/6</option>
+                                                <option value="8">1/8</option>
+                                                <option value="10">1/10</option>
+                                                <option value="12">1/12</option>
+                                            </select>
+                                        </div>
+                                        <div class="dice-face-input">
+                                            <label for="frac-denom-4">Face 4:</label>
+                                            <select id="frac-denom-4" class="dice-select frac-dice">
+                                                <option value="2">1/2</option>
+                                                <option value="3">1/3</option>
+                                                <option value="4">1/4</option>
+                                                <option value="5">1/5</option>
+                                                <option value="6">1/6</option>
+                                                <option value="8" selected>1/8</option>
+                                                <option value="10">1/10</option>
+                                                <option value="12">1/12</option>
+                                            </select>
+                                        </div>
+                                        <div class="dice-face-input">
+                                            <label for="frac-denom-5">Face 5:</label>
+                                            <select id="frac-denom-5" class="dice-select frac-dice">
+                                                <option value="2">1/2</option>
+                                                <option value="3">1/3</option>
+                                                <option value="4">1/4</option>
+                                                <option value="5">1/5</option>
+                                                <option value="6">1/6</option>
+                                                <option value="8">1/8</option>
+                                                <option value="10" selected>1/10</option>
+                                                <option value="12">1/12</option>
+                                            </select>
+                                        </div>
+                                        <div class="dice-face-input">
+                                            <label for="frac-denom-6">Face 6:</label>
+                                            <select id="frac-denom-6" class="dice-select frac-dice">
+                                                <option value="2">1/2</option>
+                                                <option value="3">1/3</option>
+                                                <option value="4">1/4</option>
+                                                <option value="5">1/5</option>
+                                                <option value="6">1/6</option>
+                                                <option value="8">1/8</option>
+                                                <option value="10">1/10</option>
+                                                <option value="12" selected>1/12</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="dice-face-input">
-                                <label for="frac-int-2">Face 2:</label>
-                                <input type="number" id="frac-int-2" class="dice-input" min="1" max="6" value="1">
+                            <div class="custom-dice-actions">
+                                <button id="save-fraction-dice" class="btn btn-primary">Save Dice Settings</button>
+                                <button id="reset-fraction-dice" class="btn btn-secondary">Reset to Default</button>
                             </div>
-                            <div class="dice-face-input">
-                                <label for="frac-int-3">Face 3:</label>
-                                <input type="number" id="frac-int-3" class="dice-input" min="1" max="6" value="2">
-                            </div>
-                            <div class="dice-face-input">
-                                <label for="frac-int-4">Face 4:</label>
-                                <input type="number" id="frac-int-4" class="dice-input" min="1" max="6" value="2">
-                            </div>
-                            <div class="dice-face-input">
-                                <label for="frac-int-5">Face 5:</label>
-                                <input type="number" id="frac-int-5" class="dice-input" min="1" max="6" value="3">
-                            </div>
-                            <div class="dice-face-input">
-                                <label for="frac-int-6">Face 6:</label>
-                                <input type="number" id="frac-int-6" class="dice-input" min="1" max="6" value="3">
-                            </div>
+                            <p id="fraction-dice-error" class="dice-error" role="alert" hidden></p>
                         </div>
-                    </div>
-                    <div class="dice-config paper-panel">
-                        <h4>Fraction Dice</h4>
-                        <p class="dice-config-desc">Select fraction for each face:</p>
-                        <div class="dice-faces">
-                            <div class="dice-face-input">
-                                <label for="frac-denom-1">Face 1:</label>
-                                <select id="frac-denom-1" class="dice-select">
-                                    <option value="2">1/2</option>
-                                    <option value="3">1/3</option>
-                                    <option value="4" selected>1/4</option>
-                                    <option value="5">1/5</option>
-                                    <option value="6">1/6</option>
-                                    <option value="8">1/8</option>
-                                    <option value="10">1/10</option>
-                                    <option value="12">1/12</option>
-                                </select>
-                            </div>
-                            <div class="dice-face-input">
-                                <label for="frac-denom-2">Face 2:</label>
-                                <select id="frac-denom-2" class="dice-select">
-                                    <option value="2">1/2</option>
-                                    <option value="3">1/3</option>
-                                    <option value="4">1/4</option>
-                                    <option value="5" selected>1/5</option>
-                                    <option value="6">1/6</option>
-                                    <option value="8">1/8</option>
-                                    <option value="10">1/10</option>
-                                    <option value="12">1/12</option>
-                                </select>
-                            </div>
-                            <div class="dice-face-input">
-                                <label for="frac-denom-3">Face 3:</label>
-                                <select id="frac-denom-3" class="dice-select">
-                                    <option value="2">1/2</option>
-                                    <option value="3">1/3</option>
-                                    <option value="4">1/4</option>
-                                    <option value="5">1/5</option>
-                                    <option value="6" selected>1/6</option>
-                                    <option value="8">1/8</option>
-                                    <option value="10">1/10</option>
-                                    <option value="12">1/12</option>
-                                </select>
-                            </div>
-                            <div class="dice-face-input">
-                                <label for="frac-denom-4">Face 4:</label>
-                                <select id="frac-denom-4" class="dice-select">
-                                    <option value="2">1/2</option>
-                                    <option value="3">1/3</option>
-                                    <option value="4">1/4</option>
-                                    <option value="5">1/5</option>
-                                    <option value="6">1/6</option>
-                                    <option value="8" selected>1/8</option>
-                                    <option value="10">1/10</option>
-                                    <option value="12">1/12</option>
-                                </select>
-                            </div>
-                            <div class="dice-face-input">
-                                <label for="frac-denom-5">Face 5:</label>
-                                <select id="frac-denom-5" class="dice-select">
-                                    <option value="2">1/2</option>
-                                    <option value="3">1/3</option>
-                                    <option value="4">1/4</option>
-                                    <option value="5">1/5</option>
-                                    <option value="6">1/6</option>
-                                    <option value="8">1/8</option>
-                                    <option value="10" selected>1/10</option>
-                                    <option value="12">1/12</option>
-                                </select>
-                            </div>
-                            <div class="dice-face-input">
-                                <label for="frac-denom-6">Face 6:</label>
-                                <select id="frac-denom-6" class="dice-select">
-                                    <option value="2">1/2</option>
-                                    <option value="3">1/3</option>
-                                    <option value="4">1/4</option>
-                                    <option value="5">1/5</option>
-                                    <option value="6">1/6</option>
-                                    <option value="8">1/8</option>
-                                    <option value="10">1/10</option>
-                                    <option value="12" selected>1/12</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="custom-dice-actions">
-                    <button id="save-fraction-dice" class="btn btn-primary">Save Dice Settings</button>
-                    <button id="reset-fraction-dice" class="btn btn-secondary">Reset to Default</button>
-                </div>
-                <p id="fraction-dice-error" class="dice-error" role="alert" hidden></p>
-            </div>
             <button id="custom-dice-close" class="btn btn-secondary modal-close-btn">Close</button>
         </div>
     </div>
 
     <!-- How to Play Modal -->
     <div id="how-to-play-modal" class="modal" role="dialog" aria-labelledby="how-to-play-title" aria-modal="true" hidden>
-        <div class="modal-content how-to-play-content paper-panel">
+        <div class="modal-content how-to-play-content">
             <h3 id="how-to-play-title">How to Play</h3>
             <ol>
                 <li>Roll the dice to get a fraction</li>
@@ -373,7 +329,7 @@
 
     <!-- Skip Confirmation Modal -->
     <div id="skip-confirm-modal" class="modal" role="dialog" aria-labelledby="skip-confirm-title" aria-modal="true" hidden>
-        <div class="modal-content paper-panel">
+        <div class="modal-content">
             <h3 id="skip-confirm-title">Skip Turn?</h3>
             <p>Are you sure you want to skip your turn? It is possible to make this fraction.</p>
             <div class="modal-actions">
@@ -385,7 +341,7 @@
 
     <!-- Version Picker Modal -->
     <div id="version-modal" class="modal" role="dialog" aria-labelledby="version-modal-title" aria-modal="true" hidden>
-        <div class="modal-content version-picker paper-panel">
+        <div class="modal-content version-picker">
             <h3 id="version-modal-title">Choose a Version</h3>
             <p class="version-picker-desc">Select which version of Colour in Fractions you'd like to play:</p>
             <div class="version-options">
@@ -406,7 +362,7 @@
 
     <!-- Game End Modal -->
     <div id="game-modal" class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true" hidden>
-        <div class="modal-content game-end-modal paper-panel" id="modal-inner">
+        <div class="modal-content game-end-modal" id="modal-inner">
             <div id="fireworks-container" class="fireworks-container" hidden></div>
             <div id="modal-icon" class="modal-icon"></div>
             <h3 id="modal-title">Game Over!</h3>
