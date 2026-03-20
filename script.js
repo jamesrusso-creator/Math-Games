@@ -1521,13 +1521,16 @@ function hasAnyPossibleDecimatRoll() {
     return getPossibleDecimatRollUnits().some(units => units <= remainingUnits);
 }
 
-function clearPendingDecimatRoll() {
+function clearPendingDecimatRoll(options = {}) {
+    const { preserveDiceDisplay = false } = options;
     const state = GameState.decimats;
     state.currentRoll = null;
     state.selectedCellIds = [];
     state.isSelecting = false;
     state.attemptsLeft = 3;
-    resetDecimatDiceDisplay();
+    if (!preserveDiceDisplay) {
+        resetDecimatDiceDisplay();
+    }
     $('#roll-decimat-btn').disabled = GameState.decimats.isGameOver;
     updateDecimatActionState();
     $('#decimat-action-buttons').hidden = true;
@@ -1627,7 +1630,7 @@ function rollDecimatDice() {
                 `${state.currentRoll.decimalDisplay} is greater than the remaining ${formatDecimalFromUnits(remainingUnits, 3, true)}. This round is a missed turn.`,
                 'warning'
             );
-            nextDecimatRound();
+            nextDecimatRound({ preserveDiceDisplay: true });
             return;
         }
 
@@ -1676,7 +1679,9 @@ function endDecimatsGame(isWin) {
     });
 }
 
-function nextDecimatRound() {
+function nextDecimatRound(options = {}) {
+    const { preserveDiceDisplay = false } = options;
+
     if (GameState.decimats.totalUnits >= 1000) {
         endDecimatsGame(true);
         return;
@@ -1688,7 +1693,7 @@ function nextDecimatRound() {
     }
 
     GameState.decimats.round += 1;
-    clearPendingDecimatRoll();
+    clearPendingDecimatRoll({ preserveDiceDisplay });
 }
 
 function checkDecimatResult() {
