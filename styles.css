@@ -1729,8 +1729,14 @@ main:has(.game-section:not([hidden])) {
 }
 
 .custom-dice-modal-content {
-    max-width: 520px;
+    max-width: 680px;
     text-align: left;
+}
+
+.custom-dice-modal-subtitle {
+    margin: 0 0 var(--spacing-md);
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
 }
 
 .custom-dice-modal-content .custom-dice-panel {

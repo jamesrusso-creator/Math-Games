@@ -142,7 +142,7 @@
 
                         <div class="panel-bottom-actions">
                             <button id="reset-fractions-btn" class="btn btn-secondary btn-new-game">New Game</button>
-                            <button type="button" id="custom-dice-trigger" class="btn btn-secondary btn-dice-settings" aria-haspopup="dialog" aria-controls="custom-dice-modal">
+                            <button type="button" id="custom-dice-trigger" class="btn btn-secondary btn-dice-settings" aria-haspopup="dialog" aria-controls="custom-dice-modal" data-dice-config-target="fractions">
                                 🎲 Custom Dice Settings
                             </button>
                         </div>
@@ -250,7 +250,7 @@
                                 <button id="roll-decimat-btn" class="btn btn-dice btn-roll-full" aria-label="Roll the Decimats dice">
                                     Roll Dice 🎲
                                 </button>
-                                <p class="decimat-dice-note">Place-value die faces: 1/10, 1/100, 1/100, 1/1000, 1/1000, 1/1000.</p>
+                                <p class="decimat-dice-note">Default place-value die faces: 1/10, 1/100, 1/100, 1/1000, 1/1000, 1/1000. Use Custom Dice Settings to change them.</p>
                             </div>
                         </div>
 
@@ -274,6 +274,9 @@
 
                         <div class="panel-bottom-actions">
                             <button id="reset-decimats-btn" class="btn btn-secondary btn-new-game">New Game</button>
+                            <button type="button" id="custom-decimat-dice-trigger" class="btn btn-secondary btn-dice-settings" aria-haspopup="dialog" aria-controls="custom-dice-modal" data-dice-config-target="decimats">
+                                🎲 Custom Dice Settings
+                            </button>
                         </div>
                     </aside>
                 </div>
@@ -319,129 +322,223 @@
     <div id="custom-dice-modal" class="modal" role="dialog" aria-labelledby="custom-dice-modal-title" aria-modal="true" hidden>
         <div class="modal-content custom-dice-modal-content">
             <h3 id="custom-dice-modal-title">Custom Dice Settings</h3>
+            <p id="custom-dice-modal-subtitle" class="custom-dice-modal-subtitle">Adjust the dice faces for the selected game.</p>
             <div id="fractions-custom-dice-panel" class="custom-dice-panel">
-                                <div class="custom-dice-container">
-                                <div class="dice-config">
-                                    <h4>Integer Dice (Numerator)</h4>
-                                    <p class="dice-config-desc">Enter integer values (1-6) for each face:</p>
-                                    <div class="dice-faces">
-                                        <div class="dice-face-input">
-                                            <label for="frac-int-1">Face 1:</label>
-                                            <input type="number" id="frac-int-1" class="dice-input int-dice" min="1" max="6" value="1">
-                                        </div>
-                                        <div class="dice-face-input">
-                                            <label for="frac-int-2">Face 2:</label>
-                                            <input type="number" id="frac-int-2" class="dice-input int-dice" min="1" max="6" value="1">
-                                        </div>
-                                        <div class="dice-face-input">
-                                            <label for="frac-int-3">Face 3:</label>
-                                            <input type="number" id="frac-int-3" class="dice-input int-dice" min="1" max="6" value="2">
-                                        </div>
-                                        <div class="dice-face-input">
-                                            <label for="frac-int-4">Face 4:</label>
-                                            <input type="number" id="frac-int-4" class="dice-input int-dice" min="1" max="6" value="2">
-                                        </div>
-                                        <div class="dice-face-input">
-                                            <label for="frac-int-5">Face 5:</label>
-                                            <input type="number" id="frac-int-5" class="dice-input int-dice" min="1" max="6" value="3">
-                                        </div>
-                                        <div class="dice-face-input">
-                                            <label for="frac-int-6">Face 6:</label>
-                                            <input type="number" id="frac-int-6" class="dice-input int-dice" min="1" max="6" value="3">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="dice-config">
-                                    <h4>Fraction Dice</h4>
-                                    <p class="dice-config-desc">Select fraction for each face:</p>
-                                    <div class="dice-faces">
-                                        <div class="dice-face-input">
-                                            <label for="frac-denom-1">Face 1:</label>
-                                            <select id="frac-denom-1" class="dice-select frac-dice">
-                                                <option value="2">1/2</option>
-                                                <option value="3">1/3</option>
-                                                <option value="4" selected>1/4</option>
-                                                <option value="5">1/5</option>
-                                                <option value="6">1/6</option>
-                                                <option value="8">1/8</option>
-                                                <option value="10">1/10</option>
-                                                <option value="12">1/12</option>
-                                            </select>
-                                        </div>
-                                        <div class="dice-face-input">
-                                            <label for="frac-denom-2">Face 2:</label>
-                                            <select id="frac-denom-2" class="dice-select frac-dice">
-                                                <option value="2">1/2</option>
-                                                <option value="3">1/3</option>
-                                                <option value="4">1/4</option>
-                                                <option value="5" selected>1/5</option>
-                                                <option value="6">1/6</option>
-                                                <option value="8">1/8</option>
-                                                <option value="10">1/10</option>
-                                                <option value="12">1/12</option>
-                                            </select>
-                                        </div>
-                                        <div class="dice-face-input">
-                                            <label for="frac-denom-3">Face 3:</label>
-                                            <select id="frac-denom-3" class="dice-select frac-dice">
-                                                <option value="2">1/2</option>
-                                                <option value="3">1/3</option>
-                                                <option value="4">1/4</option>
-                                                <option value="5">1/5</option>
-                                                <option value="6" selected>1/6</option>
-                                                <option value="8">1/8</option>
-                                                <option value="10">1/10</option>
-                                                <option value="12">1/12</option>
-                                            </select>
-                                        </div>
-                                        <div class="dice-face-input">
-                                            <label for="frac-denom-4">Face 4:</label>
-                                            <select id="frac-denom-4" class="dice-select frac-dice">
-                                                <option value="2">1/2</option>
-                                                <option value="3">1/3</option>
-                                                <option value="4">1/4</option>
-                                                <option value="5">1/5</option>
-                                                <option value="6">1/6</option>
-                                                <option value="8" selected>1/8</option>
-                                                <option value="10">1/10</option>
-                                                <option value="12">1/12</option>
-                                            </select>
-                                        </div>
-                                        <div class="dice-face-input">
-                                            <label for="frac-denom-5">Face 5:</label>
-                                            <select id="frac-denom-5" class="dice-select frac-dice">
-                                                <option value="2">1/2</option>
-                                                <option value="3">1/3</option>
-                                                <option value="4">1/4</option>
-                                                <option value="5">1/5</option>
-                                                <option value="6">1/6</option>
-                                                <option value="8">1/8</option>
-                                                <option value="10" selected>1/10</option>
-                                                <option value="12">1/12</option>
-                                            </select>
-                                        </div>
-                                        <div class="dice-face-input">
-                                            <label for="frac-denom-6">Face 6:</label>
-                                            <select id="frac-denom-6" class="dice-select frac-dice">
-                                                <option value="2">1/2</option>
-                                                <option value="3">1/3</option>
-                                                <option value="4">1/4</option>
-                                                <option value="5">1/5</option>
-                                                <option value="6">1/6</option>
-                                                <option value="8">1/8</option>
-                                                <option value="10">1/10</option>
-                                                <option value="12" selected>1/12</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
+                <div class="custom-dice-container">
+                    <div class="dice-config">
+                        <h4>Integer Dice (Numerator)</h4>
+                        <p class="dice-config-desc">Enter integer values (1-6) for each face:</p>
+                        <div class="dice-faces">
+                            <div class="dice-face-input">
+                                <label for="frac-int-1">Face 1:</label>
+                                <input type="number" id="frac-int-1" class="dice-input int-dice" min="1" max="6" value="1">
                             </div>
-                            <div class="custom-dice-actions">
-                                <button id="save-fraction-dice" class="btn btn-primary">Save Dice Settings</button>
-                                <button id="reset-fraction-dice" class="btn btn-secondary">Reset to Default</button>
+                            <div class="dice-face-input">
+                                <label for="frac-int-2">Face 2:</label>
+                                <input type="number" id="frac-int-2" class="dice-input int-dice" min="1" max="6" value="1">
                             </div>
-                            <p id="fraction-dice-error" class="dice-error" role="alert" hidden></p>
+                            <div class="dice-face-input">
+                                <label for="frac-int-3">Face 3:</label>
+                                <input type="number" id="frac-int-3" class="dice-input int-dice" min="1" max="6" value="2">
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="frac-int-4">Face 4:</label>
+                                <input type="number" id="frac-int-4" class="dice-input int-dice" min="1" max="6" value="2">
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="frac-int-5">Face 5:</label>
+                                <input type="number" id="frac-int-5" class="dice-input int-dice" min="1" max="6" value="3">
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="frac-int-6">Face 6:</label>
+                                <input type="number" id="frac-int-6" class="dice-input int-dice" min="1" max="6" value="3">
+                            </div>
                         </div>
+                    </div>
+                    <div class="dice-config">
+                        <h4>Fraction Dice</h4>
+                        <p class="dice-config-desc">Select fraction for each face:</p>
+                        <div class="dice-faces">
+                            <div class="dice-face-input">
+                                <label for="frac-denom-1">Face 1:</label>
+                                <select id="frac-denom-1" class="dice-select frac-dice">
+                                    <option value="2">1/2</option>
+                                    <option value="3">1/3</option>
+                                    <option value="4" selected>1/4</option>
+                                    <option value="5">1/5</option>
+                                    <option value="6">1/6</option>
+                                    <option value="8">1/8</option>
+                                    <option value="10">1/10</option>
+                                    <option value="12">1/12</option>
+                                </select>
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="frac-denom-2">Face 2:</label>
+                                <select id="frac-denom-2" class="dice-select frac-dice">
+                                    <option value="2">1/2</option>
+                                    <option value="3">1/3</option>
+                                    <option value="4">1/4</option>
+                                    <option value="5" selected>1/5</option>
+                                    <option value="6">1/6</option>
+                                    <option value="8">1/8</option>
+                                    <option value="10">1/10</option>
+                                    <option value="12">1/12</option>
+                                </select>
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="frac-denom-3">Face 3:</label>
+                                <select id="frac-denom-3" class="dice-select frac-dice">
+                                    <option value="2">1/2</option>
+                                    <option value="3">1/3</option>
+                                    <option value="4">1/4</option>
+                                    <option value="5">1/5</option>
+                                    <option value="6" selected>1/6</option>
+                                    <option value="8">1/8</option>
+                                    <option value="10">1/10</option>
+                                    <option value="12">1/12</option>
+                                </select>
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="frac-denom-4">Face 4:</label>
+                                <select id="frac-denom-4" class="dice-select frac-dice">
+                                    <option value="2">1/2</option>
+                                    <option value="3">1/3</option>
+                                    <option value="4">1/4</option>
+                                    <option value="5">1/5</option>
+                                    <option value="6">1/6</option>
+                                    <option value="8" selected>1/8</option>
+                                    <option value="10">1/10</option>
+                                    <option value="12">1/12</option>
+                                </select>
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="frac-denom-5">Face 5:</label>
+                                <select id="frac-denom-5" class="dice-select frac-dice">
+                                    <option value="2">1/2</option>
+                                    <option value="3">1/3</option>
+                                    <option value="4">1/4</option>
+                                    <option value="5">1/5</option>
+                                    <option value="6">1/6</option>
+                                    <option value="8">1/8</option>
+                                    <option value="10" selected>1/10</option>
+                                    <option value="12">1/12</option>
+                                </select>
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="frac-denom-6">Face 6:</label>
+                                <select id="frac-denom-6" class="dice-select frac-dice">
+                                    <option value="2">1/2</option>
+                                    <option value="3">1/3</option>
+                                    <option value="4">1/4</option>
+                                    <option value="5">1/5</option>
+                                    <option value="6">1/6</option>
+                                    <option value="8">1/8</option>
+                                    <option value="10">1/10</option>
+                                    <option value="12" selected>1/12</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="custom-dice-actions">
+                    <button id="save-fraction-dice" class="btn btn-primary">Save Dice Settings</button>
+                    <button id="reset-fraction-dice" class="btn btn-secondary">Reset to Default</button>
+                </div>
+                <p id="fraction-dice-error" class="dice-error" role="alert" hidden></p>
+            </div>
+            <div id="decimats-custom-dice-panel" class="custom-dice-panel" hidden>
+                <div class="custom-dice-container">
+                    <div class="dice-config">
+                        <h4>Number Dice</h4>
+                        <p class="dice-config-desc">Enter number values (1-6) for each face:</p>
+                        <div class="dice-faces">
+                            <div class="dice-face-input">
+                                <label for="decimat-int-1">Face 1:</label>
+                                <input type="number" id="decimat-int-1" class="dice-input decimat-int-dice" min="1" max="6" value="1">
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="decimat-int-2">Face 2:</label>
+                                <input type="number" id="decimat-int-2" class="dice-input decimat-int-dice" min="1" max="6" value="2">
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="decimat-int-3">Face 3:</label>
+                                <input type="number" id="decimat-int-3" class="dice-input decimat-int-dice" min="1" max="6" value="3">
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="decimat-int-4">Face 4:</label>
+                                <input type="number" id="decimat-int-4" class="dice-input decimat-int-dice" min="1" max="6" value="4">
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="decimat-int-5">Face 5:</label>
+                                <input type="number" id="decimat-int-5" class="dice-input decimat-int-dice" min="1" max="6" value="5">
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="decimat-int-6">Face 6:</label>
+                                <input type="number" id="decimat-int-6" class="dice-input decimat-int-dice" min="1" max="6" value="6">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dice-config">
+                        <h4>Place-Value Dice</h4>
+                        <p class="dice-config-desc">Select the decimal place value for each face:</p>
+                        <div class="dice-faces">
+                            <div class="dice-face-input">
+                                <label for="decimat-place-1">Face 1:</label>
+                                <select id="decimat-place-1" class="dice-select decimat-place-dice">
+                                    <option value="10" selected>1/10</option>
+                                    <option value="100">1/100</option>
+                                    <option value="1000">1/1000</option>
+                                </select>
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="decimat-place-2">Face 2:</label>
+                                <select id="decimat-place-2" class="dice-select decimat-place-dice">
+                                    <option value="10">1/10</option>
+                                    <option value="100" selected>1/100</option>
+                                    <option value="1000">1/1000</option>
+                                </select>
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="decimat-place-3">Face 3:</label>
+                                <select id="decimat-place-3" class="dice-select decimat-place-dice">
+                                    <option value="10">1/10</option>
+                                    <option value="100" selected>1/100</option>
+                                    <option value="1000">1/1000</option>
+                                </select>
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="decimat-place-4">Face 4:</label>
+                                <select id="decimat-place-4" class="dice-select decimat-place-dice">
+                                    <option value="10">1/10</option>
+                                    <option value="100">1/100</option>
+                                    <option value="1000" selected>1/1000</option>
+                                </select>
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="decimat-place-5">Face 5:</label>
+                                <select id="decimat-place-5" class="dice-select decimat-place-dice">
+                                    <option value="10">1/10</option>
+                                    <option value="100">1/100</option>
+                                    <option value="1000" selected>1/1000</option>
+                                </select>
+                            </div>
+                            <div class="dice-face-input">
+                                <label for="decimat-place-6">Face 6:</label>
+                                <select id="decimat-place-6" class="dice-select decimat-place-dice">
+                                    <option value="10">1/10</option>
+                                    <option value="100">1/100</option>
+                                    <option value="1000" selected>1/1000</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="custom-dice-actions">
+                    <button id="save-decimat-dice" class="btn btn-primary">Save Dice Settings</button>
+                    <button id="reset-decimat-dice" class="btn btn-secondary">Reset to Default</button>
+                </div>
+                <p id="decimat-dice-error" class="dice-error" role="alert" hidden></p>
+            </div>
             <button id="custom-dice-close" class="btn btn-secondary modal-close-btn">Close</button>
         </div>
     </div>

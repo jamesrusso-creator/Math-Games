@@ -18,14 +18,14 @@ The fractions game supports two modes:
 
 - Fraction wall with visual bar selection
 - Two game versions with different dice and wall configurations
-- Custom dice settings with localStorage persistence
+- Custom dice settings for Fractions and Decimats with localStorage persistence
 - Up to 3 attempts per round with game history tracking
 - Colour-coded result history (correct / incorrect / skipped)
 - Skip turn detection (only allowed when no valid selection exists)
 - Decimat board for tenths, hundredths, and thousandths
-- Fixed Decimats dice based on the PDF activity sheet
-- Click-to-shade Decimats gameplay with result checking and round history
-- Automatic splitting of tenths and hundredths into smaller decimal place-value pieces when needed
+- Decimats dice defaults based on the PDF activity sheet, with optional custom faces
+- Click-to-select Decimats gameplay with result checking and round history
+- Double-click breakdown of tenths and hundredths into smaller decimal place-value pieces
 - Responsive design for mobile and desktop
 - Keyboard navigation and screen reader support
 
