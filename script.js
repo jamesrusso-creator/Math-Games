@@ -1061,6 +1061,27 @@ function formatDecimatSelectionLabel(cells) {
     return `${selectionFraction} (${selectionDecimal})`;
 }
 
+function getDecimatCellAriaLabel(cell) {
+    const valueLabel = formatDecimalFromUnits(cell.units, 3, true);
+
+    if (cell.level === 'tenth') {
+        return `tenth block worth ${valueLabel}. Click to select or deselect. Double-click to split into hundredths.`;
+    }
+
+    if (cell.level === 'hundredth') {
+        return `hundredth block worth ${valueLabel}. Click to select or deselect. Double-click to split into thousandths.`;
+    }
+
+    return `thousandth block worth ${valueLabel}. Click to select or deselect.`;
+}
+
+function updateDecimatCellSelectionUI(element, isSelected) {
+    if (!element) return;
+
+    element.classList.toggle('decimat-cell-selected', isSelected);
+    element.classList.toggle('decimat-cell-selectable', !isSelected);
+}
+
 function renderDecimatCell(cell) {
     const state = GameState.decimats;
     const element = document.createElement('div');
@@ -1094,12 +1115,26 @@ function renderDecimatCell(cell) {
 
     if (isSelectable) {
         element.tabIndex = 0;
-        element.setAttribute('aria-label', `${cell.level} block worth ${formatDecimalFromUnits(cell.units, 3, true)}`);
-        element.addEventListener('click', () => handleDecimatCellSelection(cell.id));
+        element.setAttribute('aria-label', getDecimatCellAriaLabel(cell));
+        element.addEventListener('click', (event) => {
+            if (event.detail !== 1) return;
+            handleDecimatCellSelection(cell.id, element);
+        });
+        element.addEventListener('dblclick', (event) => {
+            event.preventDefault();
+            handleDecimatCellBreakdown(cell.id);
+        });
         element.addEventListener('keydown', (e) => {
+            if ((e.key === 'Enter' && e.shiftKey) || e.key.toLowerCase() === 'b') {
+                if (cell.level === 'thousandth') return;
+                e.preventDefault();
+                handleDecimatCellBreakdown(cell.id);
+                return;
+            }
+
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                handleDecimatCellSelection(cell.id);
+                handleDecimatCellSelection(cell.id, element);
             }
         });
     } else {
@@ -1221,7 +1256,7 @@ function clearPendingDecimatRoll() {
     updateDecimatDisplay();
 }
 
-function handleDecimatCellSelection(cellId) {
+function handleDecimatCellSelection(cellId, element = null) {
     const state = GameState.decimats;
     if (!state.isSelecting || !state.currentRoll || state.isGameOver) return;
 
@@ -1231,29 +1266,39 @@ function handleDecimatCellSelection(cellId) {
     const selectedIndex = state.selectedCellIds.indexOf(cellId);
     if (selectedIndex !== -1) {
         state.selectedCellIds.splice(selectedIndex, 1);
-        renderDecimatBoard();
+        updateDecimatCellSelectionUI(element, false);
         updateDecimatDisplay();
         updateDecimatActionState();
-        return;
-    }
-
-    const remainingTarget = state.currentRoll.units - getDecimatSelectedUnits();
-    if (remainingTarget > 0 && cell.units > remainingTarget && cell.level !== 'thousandth') {
-        splitDecimatCell(cell);
-        renderDecimatBoard();
-        updateDecimatDisplay();
-        updateDecimatActionState();
-        showDecimatFeedback(
-            `That block is larger than the remaining target, so it was split into ${cell.level === 'tenth' ? 'hundredths' : 'thousandths'}.`,
-            'info'
-        );
         return;
     }
 
     state.selectedCellIds.push(cellId);
+    updateDecimatCellSelectionUI(element, true);
+    updateDecimatDisplay();
+    updateDecimatActionState();
+}
+
+function handleDecimatCellBreakdown(cellId) {
+    const state = GameState.decimats;
+    if (!state.isSelecting || !state.currentRoll || state.isGameOver) return;
+
+    const cell = findDecimatCellById(cellId);
+    if (!cell || cell.state !== 'empty' || cell.level === 'thousandth') return;
+
+    const selectedIndex = state.selectedCellIds.indexOf(cellId);
+    if (selectedIndex !== -1) {
+        state.selectedCellIds.splice(selectedIndex, 1);
+    }
+
+    if (!splitDecimatCell(cell)) return;
+
     renderDecimatBoard();
     updateDecimatDisplay();
     updateDecimatActionState();
+    showDecimatFeedback(
+        `Split the ${cell.level} into ${cell.level === 'tenth' ? 'hundredths' : 'thousandths'}.`,
+        'info'
+    );
 }
 
 function rollDecimatDice() {
@@ -1312,7 +1357,7 @@ function rollDecimatDice() {
         renderDecimatBoard();
 
         showDecimatFeedback(
-            `Roll ${state.currentRoll.fractionDisplay} = ${state.currentRoll.decimalDisplay}. Click blocks to shade that amount, then use "Check Result".`,
+            `Roll ${state.currentRoll.fractionDisplay} = ${state.currentRoll.decimalDisplay}. Single-click blocks to select them, double-click a tenth or hundredth to break it down, then use "Check Result".`,
             'info'
         );
         updateDecimatDisplay();
