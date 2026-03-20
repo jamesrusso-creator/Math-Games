@@ -647,26 +647,6 @@ main {
     border-radius: 999px;
 }
 
-.decimat-dice-note {
-    font-size: var(--font-size-xs);
-    line-height: var(--line-height-relaxed);
-    text-align: center;
-    color: var(--color-text-light);
-    margin: 0;
-}
-
-.decimat-rules {
-    padding-left: var(--spacing-lg);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    color: var(--color-text);
-}
-
-.decimat-rules li {
-    line-height: var(--line-height-normal);
-}
-
 /* Disabled Game Card */
 .game-card-disabled {
     opacity: 0.5;

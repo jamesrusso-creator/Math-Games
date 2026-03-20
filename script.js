@@ -72,6 +72,7 @@ const VERSIONS = {
 let currentVersion = 'proper';
 const FRACTION_DENOMINATOR_OPTIONS = [2, 3, 4, 5, 6, 8, 10, 12];
 const DEFAULT_DECIMAT_INT_DICE = [1, 2, 3, 4, 5, 6];
+const DECIMAT_PLACE_VALUE_OPTIONS = [10, 100, 1000];
 const DEFAULT_DECIMAT_PLACE_DICE = [10, 100, 100, 1000, 1000, 1000];
 let decimatCellCounter = 0;
 
@@ -240,7 +241,7 @@ function loadDecimatCustomDice() {
 
         if (placeDice) {
             const parsedPlaceDice = JSON.parse(placeDice);
-            if (isValidDiceArray(parsedPlaceDice, DECIMAT_DICE_FACE_COUNT, value => DEFAULT_DECIMAT_PLACE_DICE.includes(value))) {
+            if (isValidDiceArray(parsedPlaceDice, DECIMAT_DICE_FACE_COUNT, value => DECIMAT_PLACE_VALUE_OPTIONS.includes(value))) {
                 GameState.decimats.customPlaceDice = parsedPlaceDice;
             }
         }
@@ -572,11 +573,20 @@ function initCustomDiceUI() {
 function showDiceMessage(el, text, autoHide, isSuccess = true) {
     if (!el) return;
 
+    if (el._hideTimer) {
+        window.clearTimeout(el._hideTimer);
+        el._hideTimer = null;
+    }
+
     el.textContent = text;
     el.style.color = isSuccess ? 'var(--color-success, #10b981)' : 'var(--color-error, #ef4444)';
     el.hidden = false;
     if (autoHide) {
-        setTimeout(() => { el.hidden = true; el.style.color = ''; }, 2000);
+        el._hideTimer = window.setTimeout(() => {
+            el.hidden = true;
+            el.style.color = '';
+            el._hideTimer = null;
+        }, 2000);
     }
 }
 
@@ -633,7 +643,7 @@ function validateDecimatDice() {
         }
 
         const placeValue = parseInt(placeSelect.value, 10);
-        if (![10, 100, 1000].includes(placeValue)) {
+        if (!DECIMAT_PLACE_VALUE_OPTIONS.includes(placeValue)) {
             invalidPlaceFace = { face, input: placeSelect };
         }
     });
@@ -1014,6 +1024,7 @@ function showSkipConfirmModal(onConfirm) {
         modal.hidden = true;
         yesBtn.onclick = null;
         cancelBtn.onclick = null;
+        modal.removeEventListener('click', onBackdrop);
         document.removeEventListener('keydown', onEscape);
     };
 
@@ -1021,12 +1032,16 @@ function showSkipConfirmModal(onConfirm) {
         if (e.key === 'Escape') closeModal();
     }
 
+    function onBackdrop(e) {
+        if (e.target === modal) closeModal();
+    }
+
     yesBtn.onclick = () => {
         closeModal();
         onConfirm();
     };
     cancelBtn.onclick = closeModal;
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    modal.addEventListener('click', onBackdrop);
     document.addEventListener('keydown', onEscape);
 }
 
@@ -1589,7 +1604,7 @@ function rollDecimatDice() {
 
     const diceInt = $('#decimat-dice-int');
     const dicePlace = $('#decimat-dice-place');
-    const remainingUnits = 1000 - state.totalUnits;
+    const remainingUnits = getDecimatRemainingUnits();
 
     $('#roll-decimat-btn').disabled = true;
     setDecimatDiceLocked(true);
