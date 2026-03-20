@@ -523,33 +523,13 @@ main {
     border-color: rgba(139, 92, 246, 0.25);
 }
 
-.decimat-sheet-header {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-    margin-bottom: var(--spacing-lg);
-}
-
-.decimat-sheet-kicker {
-    margin: 0;
-    font-size: 0.7rem;
-    color: var(--color-secondary-dark);
-    text-transform: none;
-}
-
-.decimat-sheet-title {
-    margin: 0;
-    font-size: clamp(1.35rem, 2.2vw, 1.9rem);
-    line-height: 1.1;
-    color: #5b21b6;
-}
-
 .decimat-board {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(2, minmax(120px, 1fr));
-    aspect-ratio: 2.25 / 1;
+    grid-template-rows: repeat(2, minmax(160px, 1fr));
+    aspect-ratio: 1.75 / 1;
     width: 100%;
+    min-height: 360px;
     border: 2px solid var(--color-decimat-border);
     background: white;
     overflow: hidden;
@@ -577,28 +557,40 @@ main {
 
 .decimat-tenth-split {
     display: grid;
-    grid-template-rows: repeat(10, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(5, 1fr);
 }
 
 .decimat-tenth-split > .decimat-cell {
+    border-right: 1px solid var(--color-decimat-border);
     border-bottom: 1px solid var(--color-decimat-border);
 }
 
-.decimat-tenth-split > .decimat-cell:last-child {
+.decimat-tenth-split > .decimat-cell:nth-child(2n) {
+    border-right: none;
+}
+
+.decimat-tenth-split > .decimat-cell:nth-child(n + 9) {
     border-bottom: none;
 }
 
 .decimat-hundredth-split {
     display: grid;
-    grid-template-columns: repeat(10, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(5, 1fr);
 }
 
 .decimat-hundredth-split > .decimat-cell {
     border-right: 1px solid var(--color-decimat-border);
+    border-bottom: 1px solid var(--color-decimat-border);
 }
 
-.decimat-hundredth-split > .decimat-cell:last-child {
+.decimat-hundredth-split > .decimat-cell:nth-child(2n) {
     border-right: none;
+}
+
+.decimat-hundredth-split > .decimat-cell:nth-child(n + 9) {
+    border-bottom: none;
 }
 
 .decimat-board.selecting .decimat-cell-selectable {
@@ -1740,7 +1732,8 @@ main:has(.game-section:not([hidden])) {
     }
 
     .decimat-board {
-        grid-template-rows: repeat(2, minmax(100px, 1fr));
+        grid-template-rows: repeat(2, minmax(140px, 1fr));
+        min-height: 320px;
     }
 
     .decimat-scale,
@@ -1835,10 +1828,6 @@ main:has(.game-section:not([hidden])) {
 
     .panel-card {
         padding: var(--spacing-sm);
-    }
-
-    .decimat-sheet-title {
-        font-size: 1.1rem;
     }
 
     .decimat-scale {
