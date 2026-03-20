@@ -393,9 +393,33 @@ function initPlayNowButtons() {
 }
 
 function initHowToPlay() {
-    const trigger = $('#how-to-play-trigger');
+    const triggers = $$('[data-how-to-play-target]');
     const modal = $('#how-to-play-modal');
+    const title = $('#how-to-play-title');
+    const list = $('#how-to-play-list');
     const closeBtn = $('#how-to-play-close');
+    const HOW_TO_PLAY_CONTENT = {
+        fractions: {
+            title: 'How to Play',
+            steps: [
+                'Roll the dice to get a fraction',
+                'Click on the fraction wall to shade in that fraction',
+                'Try to fill rows completely without going over',
+                'Record your rolls in the table',
+                'The game ends when you can\'t fit the rolled fraction'
+            ]
+        },
+        decimats: {
+            title: 'How to Play',
+            steps: [
+                'Roll the number die and the place-value die',
+                'Single-click Decimat blocks to select or unselect the matching decimal amount',
+                'Double-click a tenth or hundredth block to break it into smaller parts',
+                'Use Check Result to confirm your selection and record the round',
+                'If the roll is larger than the remaining space, the round counts as a missed turn'
+            ]
+        }
+    };
 
     const closeModal = () => { modal.hidden = true; document.removeEventListener('keydown', onEscape); };
 
@@ -403,10 +427,21 @@ function initHowToPlay() {
         if (e.key === 'Escape') closeModal();
     }
 
-    trigger?.addEventListener('click', () => {
-        modal.hidden = false;
-        closeBtn?.focus();
-        document.addEventListener('keydown', onEscape);
+    function updateHowToPlay(target) {
+        const content = HOW_TO_PLAY_CONTENT[target] || HOW_TO_PLAY_CONTENT.fractions;
+        if (title) title.textContent = content.title;
+        if (list) {
+            list.innerHTML = content.steps.map(step => `<li>${step}</li>`).join('');
+        }
+    }
+
+    triggers.forEach(trigger => {
+        trigger.addEventListener('click', () => {
+            updateHowToPlay(trigger.dataset.howToPlayTarget);
+            modal.hidden = false;
+            closeBtn?.focus();
+            document.addEventListener('keydown', onEscape);
+        });
     });
 
     closeBtn?.addEventListener('click', closeModal);
