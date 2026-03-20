@@ -1675,6 +1675,30 @@ main:has(.game-section:not([hidden])) {
     font-size: 0.7rem;
 }
 
+#decimats-table {
+    table-layout: fixed;
+}
+
+#decimats-table .col-round {
+    width: 8%;
+}
+
+#decimats-table .col-target {
+    width: 22%;
+}
+
+#decimats-table .col-selection {
+    width: 28%;
+}
+
+#decimats-table .col-total {
+    width: 24%;
+}
+
+#decimats-table .col-result {
+    width: 18%;
+}
+
 .wall-hint {
     font-size: var(--font-size-sm);
     color: var(--color-text-light);
