@@ -670,7 +670,14 @@ function validateIntegerInput(input, min, max) {
 // Modal
 // ============================================
 
-function showEndModal({ isWin, stats, roundsPlayed, onPlayAgain }) {
+function showEndModal({
+    isWin,
+    roundsPlayed,
+    onPlayAgain,
+    winReason,
+    loseReason,
+    statsItems
+}) {
     const modal = $('#game-modal');
     const inner = $('#modal-inner');
     const fireworks = $('#fireworks-container');
@@ -683,9 +690,6 @@ function showEndModal({ isWin, stats, roundsPlayed, onPlayAgain }) {
     inner.classList.remove('modal-win', 'modal-lose');
     fireworks.hidden = true;
     fireworks.innerHTML = '';
-
-    const totalAttempts = stats.correct + stats.incorrect;
-    const accuracy = totalAttempts > 0 ? Math.round((stats.correct / totalAttempts) * 100) : 0;
 
     if (isWin) {
         inner.classList.add('modal-win');
@@ -706,17 +710,18 @@ function showEndModal({ isWin, stats, roundsPlayed, onPlayAgain }) {
         title.textContent = 'Game Over';
     }
 
+    const renderedStats = statsItems.map(item => `
+        <div class="modal-stat ${item.className}">
+            <span class="modal-stat-value">${item.value}</span>
+            <span class="modal-stat-label">${item.label}</span>
+        </div>
+    `).join('');
+
     statsEl.innerHTML = `
-        <p class="modal-reason">${isWin
-            ? 'Congratulations! You filled the entire fraction wall!'
-            : 'No possible moves remaining with the current dice.'}</p>
+        <p class="modal-reason">${isWin ? winReason : loseReason}</p>
         <p class="modal-rounds">Rounds played: ${roundsPlayed}</p>
         <div class="modal-stat-grid">
-            <div class="modal-stat correct"><span class="modal-stat-value">${stats.correct}</span><span class="modal-stat-label">Correct</span></div>
-            <div class="modal-stat incorrect"><span class="modal-stat-value">${stats.incorrect}</span><span class="modal-stat-label">Incorrect</span></div>
-            <div class="modal-stat skipped"><span class="modal-stat-value">${stats.skipped}</span><span class="modal-stat-label">Skipped (Impossible)</span></div>
-            <div class="modal-stat skipped-possible"><span class="modal-stat-value">${stats.skippedPossible}</span><span class="modal-stat-label">Skipped (Possible)</span></div>
-            <div class="modal-stat accuracy"><span class="modal-stat-value">${accuracy}%</span><span class="modal-stat-label">Accuracy</span></div>
+            ${renderedStats}
         </div>
     `;
 
@@ -728,21 +733,23 @@ function showEndModal({ isWin, stats, roundsPlayed, onPlayAgain }) {
         fireworks.innerHTML = '';
         playAgainBtn.onclick = null;
         closeBtn.onclick = null;
+        modal.removeEventListener('click', handleBackdrop);
+        document.removeEventListener('keydown', handleEscape);
     };
 
-    playAgainBtn.onclick = () => { closeModal(); onPlayAgain(); };
-    closeBtn.onclick = closeModal;
-
-    modal.addEventListener('click', (e) => {
+    const handleBackdrop = (e) => {
         if (e.target === modal) closeModal();
-    });
+    };
 
     const handleEscape = (e) => {
         if (e.key === 'Escape') {
             closeModal();
-            document.removeEventListener('keydown', handleEscape);
         }
     };
+
+    playAgainBtn.onclick = () => { closeModal(); onPlayAgain(); };
+    closeBtn.onclick = closeModal;
+    modal.addEventListener('click', handleBackdrop);
     document.addEventListener('keydown', handleEscape);
 }
 
@@ -1086,13 +1093,25 @@ function nextRound() {
 }
 
 function endFractionsGame(isWin) {
-    GameState.fractions.isGameOver = true;
+    const state = GameState.fractions;
+    state.isGameOver = true;
+    const totalAttempts = state.stats.correct + state.stats.incorrect;
+    const accuracy = totalAttempts > 0 ? Math.round((state.stats.correct / totalAttempts) * 100) : 0;
     const roundsPlayed = GameState.fractions.round - 1;
+
     showEndModal({
         isWin,
-        stats: GameState.fractions.stats,
         roundsPlayed: Math.max(1, roundsPlayed),
-        onPlayAgain: resetFractionsGame
+        onPlayAgain: resetFractionsGame,
+        winReason: 'Congratulations! You filled the entire fraction wall!',
+        loseReason: 'No possible moves remaining with the current dice.',
+        statsItems: [
+            { className: 'correct', value: state.stats.correct, label: 'Correct' },
+            { className: 'incorrect', value: state.stats.incorrect, label: 'Incorrect' },
+            { className: 'skipped', value: state.stats.skipped, label: 'Skipped (Impossible)' },
+            { className: 'skipped-possible', value: state.stats.skippedPossible, label: 'Skipped (Possible)' },
+            { className: 'accuracy', value: `${accuracy}%`, label: 'Accuracy' }
+        ]
     });
 }
 
@@ -1480,6 +1499,28 @@ function resetDecimatsGame() {
     $('#decimat-action-buttons').hidden = true;
 }
 
+function getDecimatRemainingUnits() {
+    return 1000 - GameState.decimats.totalUnits;
+}
+
+function getPossibleDecimatRollUnits() {
+    const state = GameState.decimats;
+    const possibleRolls = new Set();
+
+    state.customIntDice.forEach(numerator => {
+        state.customPlaceDice.forEach(denominator => {
+            possibleRolls.add(numerator * (1000 / denominator));
+        });
+    });
+
+    return Array.from(possibleRolls);
+}
+
+function hasAnyPossibleDecimatRoll() {
+    const remainingUnits = getDecimatRemainingUnits();
+    return getPossibleDecimatRollUnits().some(units => units <= remainingUnits);
+}
+
 function clearPendingDecimatRoll() {
     const state = GameState.decimats;
     state.currentRoll = null;
@@ -1603,7 +1644,7 @@ function rollDecimatDice() {
     }, 500);
 }
 
-function endDecimatsGame() {
+function endDecimatsGame(isWin) {
     const state = GameState.decimats;
     state.isGameOver = true;
     state.currentRoll = null;
@@ -1615,15 +1656,34 @@ function endDecimatsGame() {
     resetDecimatDiceDisplay();
     renderDecimatBoard();
     updateDecimatDisplay();
-    showDecimatFeedback(
-        `Complete! You filled the Decimat in ${state.round} rounds with ${state.stats.correct} correct checks.`,
-        'success'
-    );
+    hideDecimatFeedback();
+
+    const totalAttempts = state.stats.correct + state.stats.incorrect;
+    const accuracy = totalAttempts > 0 ? Math.round((state.stats.correct / totalAttempts) * 100) : 0;
+
+    showEndModal({
+        isWin,
+        roundsPlayed: Math.max(1, state.round),
+        onPlayAgain: resetDecimatsGame,
+        winReason: 'Congratulations! You filled the entire Decimat!',
+        loseReason: 'No possible rolls remaining with the current dice settings.',
+        statsItems: [
+            { className: 'correct', value: state.stats.correct, label: 'Correct' },
+            { className: 'incorrect', value: state.stats.incorrect, label: 'Incorrect' },
+            { className: 'skipped', value: state.stats.missed, label: 'Missed' },
+            { className: 'accuracy', value: `${accuracy}%`, label: 'Accuracy' }
+        ]
+    });
 }
 
 function nextDecimatRound() {
     if (GameState.decimats.totalUnits >= 1000) {
-        endDecimatsGame();
+        endDecimatsGame(true);
+        return;
+    }
+
+    if (!hasAnyPossibleDecimatRoll()) {
+        endDecimatsGame(false);
         return;
     }
 
