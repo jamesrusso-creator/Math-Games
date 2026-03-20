@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Interactive educational math games for learning fractions and decimals">
-    <title>Math Games - Colour in Fractions</title>
+    <title>Math Games - Colour in Fractions & Decimats</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -22,7 +22,7 @@
             <ul id="nav-menu" class="nav-menu" role="menubar">
                 <li role="none"><a href="#home" class="nav-link active" role="menuitem">Home</a></li>
                 <li role="none"><a href="#fractions" class="nav-link" role="menuitem">Colour in Fractions</a></li>
-                <!-- Colour in Decimats: Coming Soon -->
+                <li role="none"><a href="#decimats" class="nav-link" role="menuitem">Colour in Decimats</a></li>
             </ul>
         </nav>
     </header>
@@ -42,11 +42,11 @@
                         <button class="btn btn-primary play-fractions-btn">Play Now</button>
                     </article>
                     
-                    <article class="game-card game-card-disabled" aria-disabled="true">
+                    <article class="game-card">
                         <div class="game-icon" aria-hidden="true">🔢</div>
                         <h3>Colour in Decimats</h3>
-                        <p>Explore decimal place values with the Decimats grid. Roll decimal dice and visualize tenths, hundredths, and thousandths.</p>
-                        <span class="btn btn-disabled">Coming Soon</span>
+                        <p>Explore decimal place value with the Decimat. Roll place-value dice and shade tenths, hundredths, and thousandths.</p>
+                        <button class="btn btn-primary play-decimats-btn">Play Now</button>
                     </article>
                 </div>
 
@@ -171,7 +171,138 @@
             </div>
         </section>
 
-        <!-- Colour in Decimats: Coming Soon -->
+        <!-- Colour in Decimats Game -->
+        <section id="decimats" class="section game-section" aria-labelledby="decimats-title" hidden>
+            <div class="game-console">
+                <div class="game-status-bar">
+                    <h2 id="decimats-title" class="game-title">Colour in Decimats</h2>
+                    <div class="status-items">
+                        <div class="status-item">
+                            <span class="status-label">Round</span>
+                            <span id="decimat-round" class="status-value">1</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Roll</span>
+                            <span id="current-decimat-roll" class="status-value">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Selected</span>
+                            <span id="decimat-selected" class="status-value">0.000</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Total</span>
+                            <span id="decimat-total" class="status-value">0.000</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Remaining</span>
+                            <span id="decimat-remaining" class="status-value">1.000</span>
+                        </div>
+                        <div class="status-pills">
+                            <span class="stat-pill correct"><span id="decimat-correct-count">0</span> ✓</span>
+                            <span class="stat-pill incorrect"><span id="decimat-incorrect-count">0</span> ✗</span>
+                            <span class="stat-pill skipped"><span id="decimat-missed-count">0</span> miss</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="decimat-feedback" class="feedback-message" role="status" aria-live="polite" hidden></div>
+
+                <div class="game-layout">
+                    <div class="game-panel-left">
+                        <div class="fraction-wall-container decimat-board-container">
+                            <p class="wall-hint">Roll the two dice, then shade the matching decimal amount on the Decimat.</p>
+                            <div class="panel-card decimat-sheet">
+                                <div class="decimat-sheet-header">
+                                    <p class="decimat-sheet-kicker">Decimats: helping students make sense of decimal place value</p>
+                                    <h3 class="decimat-sheet-title">Activity Sheet: Colour in Decimats</h3>
+                                </div>
+                                <div id="decimat-board" class="decimat-board" role="grid" aria-label="Interactive Decimat board showing tenths, hundredths, and thousandths"></div>
+                                <div class="decimat-scale" aria-hidden="true">
+                                    <span>units</span>
+                                    <span class="decimat-scale-dot"></span>
+                                    <span>tenths</span>
+                                    <span>hundredths</span>
+                                    <span>thousandths</span>
+                                </div>
+                                <div class="decimat-scale-lines" aria-hidden="true">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <aside class="game-panel-right">
+                        <div class="panel-card dice-card">
+                            <div class="dice-container">
+                                <div class="dice-pair">
+                                    <div class="dice small" id="decimat-dice-int" role="img" aria-label="Number dice">
+                                        <span class="dice-face">?</span>
+                                    </div>
+                                    <div class="dice dice-fraction" id="decimat-dice-place" role="img" aria-label="Place value dice">
+                                        <span class="dice-face">
+                                            <span class="frac-display">
+                                                <span class="frac-num">?</span>
+                                                <span class="frac-line"></span>
+                                                <span class="frac-den">?</span>
+                                            </span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <button id="roll-decimat-btn" class="btn btn-dice btn-roll-full" aria-label="Roll the Decimats dice">
+                                    Roll Dice 🎲
+                                </button>
+                                <p class="decimat-dice-note">Place-value die faces: 1/10, 1/100, 1/100, 1/1000, 1/1000, 1/1000.</p>
+                            </div>
+                        </div>
+
+                        <div id="decimat-action-buttons" class="action-buttons panel-actions" hidden>
+                            <div class="panel-actions-row">
+                                <button id="check-decimat-btn" class="btn btn-primary" disabled>Check Result ✓</button>
+                                <button id="clear-decimat-selection-btn" class="btn btn-tertiary">Clear Selection ✗</button>
+                            </div>
+                        </div>
+
+                        <div class="panel-card">
+                            <h4 class="panel-card-title">How It Works</h4>
+                            <ul class="decimat-rules">
+                                <li>Roll the number die and the place-value die.</li>
+                                <li>Click blocks to shade the exact decimal amount shown.</li>
+                                <li>If a block is too large for the remaining target, it splits into smaller place-value parts.</li>
+                                <li>Use Check Result to confirm your choice and record the round.</li>
+                                <li>If a roll is larger than the remaining unshaded amount, it counts as a missed turn.</li>
+                            </ul>
+                        </div>
+
+                        <div class="panel-bottom-actions">
+                            <button id="reset-decimats-btn" class="btn btn-secondary btn-new-game">New Game</button>
+                        </div>
+                    </aside>
+                </div>
+
+                <div class="game-extras">
+                    <div class="recording-table-container extras-history">
+                        <h4 class="panel-card-title">Recording Table</h4>
+                        <div class="history-scroll">
+                            <table id="decimats-table" class="recording-table compact-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Rd</th>
+                                        <th scope="col">Target</th>
+                                        <th scope="col">Selection</th>
+                                        <th scope="col">Total</th>
+                                        <th scope="col">Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer class="site-footer">

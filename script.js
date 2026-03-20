@@ -18,6 +18,17 @@ const GameState = {
         stats: { correct: 0, incorrect: 0, skipped: 0, skippedPossible: 0 },
         customIntDice: null,
         customFracDice: null
+    },
+    decimats: {
+        currentRoll: null,
+        round: 1,
+        totalUnits: 0,
+        selectedCellIds: [],
+        isSelecting: false,
+        board: [],
+        isGameOver: false,
+        attemptsLeft: 3,
+        stats: { correct: 0, incorrect: 0, missed: 0 }
     }
 };
 
@@ -57,6 +68,8 @@ const VERSIONS = {
 };
 
 let currentVersion = 'proper';
+const DECIMAT_PLACE_DICE = [10, 100, 100, 1000, 1000, 1000];
+let decimatCellCounter = 0;
 
 // Sync initial dice values from default version
 GameState.fractions.customIntDice = [...VERSIONS.proper.intDice];
@@ -100,6 +113,24 @@ function formatSelectedCells(cells) {
 function attemptsToWords(n) {
     const words = { 1: 'One attempt', 2: 'Two attempts', 3: 'Three attempts' };
     return words[n] || `${n} attempts`;
+}
+
+function formatDecimalFromUnits(units, fixedDigits, trimTrailingZeros) {
+    const digits = typeof fixedDigits === 'number' ? fixedDigits : 3;
+    const value = (units / 1000).toFixed(digits);
+
+    if (!trimTrailingZeros) {
+        return value;
+    }
+
+    return value
+        .replace(/(\.\d*?[1-9])0+$/, '$1')
+        .replace(/\.0+$/, '');
+}
+
+function formatRollDecimal(numerator, denominator) {
+    const fixedDigits = denominator === 10 ? 1 : denominator === 100 ? 2 : 3;
+    return (numerator / denominator).toFixed(fixedDigits);
 }
 
 // ============================================
@@ -215,17 +246,25 @@ async function navigateToFractions() {
     const version = await showVersionPicker();
     if (!version) return;
 
+    showSection('fractions');
+    applyVersion(version);
+}
+
+function navigateToDecimats() {
+    showSection('decimats');
+    resetDecimatsGame();
+}
+
+function showSection(targetId) {
     const navLinks = $$('.nav-link');
     const sections = $$('.section');
 
-    navLinks.forEach(l => l.classList.remove('active'));
-    const fractionsNav = $('.nav-link[href="#fractions"]');
-    if (fractionsNav) fractionsNav.classList.add('active');
+    navLinks.forEach(link => link.classList.remove('active'));
+    const activeLink = $(`.nav-link[href="#${targetId}"]`);
+    if (activeLink) activeLink.classList.add('active');
 
-    sections.forEach(section => { section.hidden = section.id !== 'fractions'; });
+    sections.forEach(section => { section.hidden = section.id !== targetId; });
     window.scrollTo(0, 0);
-
-    applyVersion(version);
 }
 
 // ============================================
@@ -257,16 +296,19 @@ function initNavigation() {
                 return;
             }
 
-            navLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-            sections.forEach(section => { section.hidden = section.id !== targetId; });
-            window.scrollTo(0, 0);
+            if (targetId === 'decimats') {
+                navigateToDecimats();
+                return;
+            }
+
+            showSection(targetId);
         });
     });
 }
 
 function initPlayNowButtons() {
     $('.play-fractions-btn')?.addEventListener('click', () => navigateToFractions());
+    $('.play-decimats-btn')?.addEventListener('click', () => navigateToDecimats());
 }
 
 function initHowToPlay() {
@@ -911,6 +953,473 @@ function addToFractionsTable(entry) {
 }
 
 // ============================================
+// Decimats Game
+// ============================================
+
+function setDecimatPlaceDisplay(numerator, denominator) {
+    const num = $('#decimat-dice-place .frac-num');
+    const den = $('#decimat-dice-place .frac-den');
+    if (num) num.textContent = numerator;
+    if (den) den.textContent = denominator;
+}
+
+function showDecimatFeedback(message, type) {
+    const feedback = $('#decimat-feedback');
+    feedback.textContent = message;
+    feedback.className = `feedback-message ${type}`;
+    feedback.hidden = false;
+}
+
+function hideDecimatFeedback() {
+    $('#decimat-feedback').hidden = true;
+}
+
+function createDecimatCell(level, units) {
+    decimatCellCounter += 1;
+    return {
+        id: `decimat-${decimatCellCounter}`,
+        level,
+        units,
+        state: 'empty',
+        children: []
+    };
+}
+
+function splitDecimatCell(cell) {
+    if (!cell || cell.state !== 'empty') return false;
+
+    if (cell.level === 'tenth') {
+        cell.state = 'split';
+        cell.children = Array.from({ length: 10 }, () => createDecimatCell('hundredth', 10));
+        return true;
+    }
+
+    if (cell.level === 'hundredth') {
+        cell.state = 'split';
+        cell.children = Array.from({ length: 10 }, () => createDecimatCell('thousandth', 1));
+        return true;
+    }
+
+    return false;
+}
+
+function buildInitialDecimatBoard() {
+    decimatCellCounter = 0;
+
+    const tenths = Array.from({ length: 10 }, () => createDecimatCell('tenth', 100));
+    splitDecimatCell(tenths[0]);
+    splitDecimatCell(tenths[0].children[0]);
+
+    return tenths;
+}
+
+function findDecimatCellById(id, cells = GameState.decimats.board) {
+    for (const cell of cells) {
+        if (cell.id === id) return cell;
+        if (cell.state === 'split') {
+            const match = findDecimatCellById(id, cell.children);
+            if (match) return match;
+        }
+    }
+    return null;
+}
+
+function getDecimatSelectedCells() {
+    return GameState.decimats.selectedCellIds
+        .map(id => findDecimatCellById(id))
+        .filter(Boolean);
+}
+
+function getDecimatSelectedUnits() {
+    return getDecimatSelectedCells().reduce((sum, cell) => sum + cell.units, 0);
+}
+
+function formatDecimatSelection(cells) {
+    const counts = new Map();
+
+    cells.forEach(cell => {
+        const denominator = 1000 / cell.units;
+        counts.set(denominator, (counts.get(denominator) || 0) + 1);
+    });
+
+    return Array.from(counts.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([denominator, count]) => formatFraction(count, denominator))
+        .join(' + ');
+}
+
+function formatDecimatSelectionLabel(cells) {
+    if (!cells.length) return '-';
+
+    const selectionFraction = formatDecimatSelection(cells);
+    const selectionDecimal = formatDecimalFromUnits(
+        cells.reduce((sum, cell) => sum + cell.units, 0),
+        3,
+        true
+    );
+
+    return `${selectionFraction} (${selectionDecimal})`;
+}
+
+function renderDecimatCell(cell) {
+    const state = GameState.decimats;
+    const element = document.createElement('div');
+    element.className = `decimat-cell decimat-${cell.level}`;
+
+    if (cell.state === 'split') {
+        element.classList.add('decimat-cell-split');
+        if (cell.level === 'tenth') element.classList.add('decimat-tenth-split');
+        if (cell.level === 'hundredth') element.classList.add('decimat-hundredth-split');
+        cell.children.forEach(child => element.appendChild(renderDecimatCell(child)));
+        return element;
+    }
+
+    if (cell.state === 'filled') {
+        element.classList.add('decimat-cell-filled');
+        element.setAttribute('role', 'gridcell');
+        element.setAttribute('aria-disabled', 'true');
+        return element;
+    }
+
+    const isSelected = state.selectedCellIds.includes(cell.id);
+    const isSelectable = state.isSelecting && !state.isGameOver;
+
+    element.setAttribute('role', 'gridcell');
+
+    if (isSelected) {
+        element.classList.add('decimat-cell-selected');
+    } else if (isSelectable) {
+        element.classList.add('decimat-cell-selectable');
+    }
+
+    if (isSelectable) {
+        element.tabIndex = 0;
+        element.setAttribute('aria-label', `${cell.level} block worth ${formatDecimalFromUnits(cell.units, 3, true)}`);
+        element.addEventListener('click', () => handleDecimatCellSelection(cell.id));
+        element.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleDecimatCellSelection(cell.id);
+            }
+        });
+    } else {
+        element.tabIndex = -1;
+    }
+
+    return element;
+}
+
+function renderDecimatBoard() {
+    const board = $('#decimat-board');
+    if (!board) return;
+
+    board.innerHTML = '';
+    board.classList.toggle('selecting', GameState.decimats.isSelecting);
+    GameState.decimats.board.forEach(cell => board.appendChild(renderDecimatCell(cell)));
+    board.setAttribute(
+        'aria-label',
+        `Decimat board with ${formatDecimalFromUnits(GameState.decimats.totalUnits, 3, false)} shaded, ${formatDecimalFromUnits(getDecimatSelectedUnits(), 3, false)} selected, and ${formatDecimalFromUnits(1000 - GameState.decimats.totalUnits, 3, false)} remaining`
+    );
+}
+
+function updateDecimatDisplay() {
+    const state = GameState.decimats;
+    $('#decimat-round').textContent = state.round;
+    $('#current-decimat-roll').textContent = state.currentRoll
+        ? `${state.currentRoll.fractionDisplay} (${state.currentRoll.decimalDisplay})`
+        : '-';
+    $('#decimat-selected').textContent = formatDecimalFromUnits(getDecimatSelectedUnits(), 3, false);
+    $('#decimat-total').textContent = formatDecimalFromUnits(state.totalUnits, 3, false);
+    $('#decimat-remaining').textContent = formatDecimalFromUnits(1000 - state.totalUnits, 3, false);
+}
+
+function updateDecimatStatsDisplay() {
+    const stats = GameState.decimats.stats;
+    $('#decimat-correct-count').textContent = stats.correct;
+    $('#decimat-incorrect-count').textContent = stats.incorrect;
+    $('#decimat-missed-count').textContent = stats.missed;
+}
+
+function addToDecimatsTable(entry) {
+    const tbody = $('#decimats-table tbody');
+    if (!tbody) return;
+
+    const row = document.createElement('tr');
+    if (entry.result === 'Correct') row.className = 'result-correct';
+    else if (entry.result === 'Incorrect') row.className = 'result-incorrect';
+    else row.className = 'result-skipped';
+
+    row.innerHTML = `
+        <td>${entry.round}</td>
+        <td>${entry.target}</td>
+        <td>${entry.selection}</td>
+        <td>${entry.total}</td>
+        <td>${entry.result}</td>
+    `;
+
+    tbody.prepend(row);
+    const scrollContainer = tbody.closest('.history-scroll');
+    if (scrollContainer) scrollContainer.scrollTop = 0;
+}
+
+function updateDecimatActionState() {
+    $('#check-decimat-btn').disabled = GameState.decimats.selectedCellIds.length === 0;
+}
+
+function resetDecimatDiceDisplay() {
+    $('#decimat-dice-int .dice-face').textContent = '?';
+    setDecimatPlaceDisplay('?', '?');
+}
+
+function clearDecimatSelection(updateUI = true) {
+    GameState.decimats.selectedCellIds = [];
+
+    if (updateUI) {
+        renderDecimatBoard();
+        updateDecimatDisplay();
+        updateDecimatActionState();
+    }
+}
+
+function resetDecimatsGame() {
+    const state = GameState.decimats;
+    state.currentRoll = null;
+    state.round = 1;
+    state.totalUnits = 0;
+    state.selectedCellIds = [];
+    state.isSelecting = false;
+    state.board = buildInitialDecimatBoard();
+    state.isGameOver = false;
+    state.attemptsLeft = 3;
+    state.stats = { correct: 0, incorrect: 0, missed: 0 };
+
+    const tbody = $('#decimats-table tbody');
+    if (tbody) tbody.innerHTML = '';
+
+    renderDecimatBoard();
+    updateDecimatDisplay();
+    updateDecimatStatsDisplay();
+    hideDecimatFeedback();
+
+    resetDecimatDiceDisplay();
+    $('#roll-decimat-btn').disabled = false;
+    updateDecimatActionState();
+    $('#decimat-action-buttons').hidden = true;
+}
+
+function clearPendingDecimatRoll() {
+    const state = GameState.decimats;
+    state.currentRoll = null;
+    state.selectedCellIds = [];
+    state.isSelecting = false;
+    state.attemptsLeft = 3;
+    resetDecimatDiceDisplay();
+    $('#roll-decimat-btn').disabled = GameState.decimats.isGameOver;
+    updateDecimatActionState();
+    $('#decimat-action-buttons').hidden = true;
+    renderDecimatBoard();
+    updateDecimatDisplay();
+}
+
+function handleDecimatCellSelection(cellId) {
+    const state = GameState.decimats;
+    if (!state.isSelecting || !state.currentRoll || state.isGameOver) return;
+
+    const cell = findDecimatCellById(cellId);
+    if (!cell || cell.state !== 'empty') return;
+
+    const selectedIndex = state.selectedCellIds.indexOf(cellId);
+    if (selectedIndex !== -1) {
+        state.selectedCellIds.splice(selectedIndex, 1);
+        renderDecimatBoard();
+        updateDecimatDisplay();
+        updateDecimatActionState();
+        return;
+    }
+
+    const remainingTarget = state.currentRoll.units - getDecimatSelectedUnits();
+    if (remainingTarget > 0 && cell.units > remainingTarget && cell.level !== 'thousandth') {
+        splitDecimatCell(cell);
+        renderDecimatBoard();
+        updateDecimatDisplay();
+        updateDecimatActionState();
+        showDecimatFeedback(
+            `That block is larger than the remaining target, so it was split into ${cell.level === 'tenth' ? 'hundredths' : 'thousandths'}.`,
+            'info'
+        );
+        return;
+    }
+
+    state.selectedCellIds.push(cellId);
+    renderDecimatBoard();
+    updateDecimatDisplay();
+    updateDecimatActionState();
+}
+
+function rollDecimatDice() {
+    const state = GameState.decimats;
+    if (state.isGameOver || state.currentRoll || state.isSelecting) return;
+
+    const diceInt = $('#decimat-dice-int');
+    const dicePlace = $('#decimat-dice-place');
+    const remainingUnits = 1000 - state.totalUnits;
+
+    $('#roll-decimat-btn').disabled = true;
+    diceInt.classList.add('rolling');
+    dicePlace.classList.add('rolling');
+
+    setTimeout(() => {
+        const intValue = pickRandomValue([1, 2, 3, 4, 5, 6]);
+        const denominator = pickRandomValue(DECIMAT_PLACE_DICE);
+
+        state.currentRoll = {
+            numerator: intValue,
+            denominator,
+            units: intValue * (1000 / denominator),
+            fractionDisplay: formatFraction(intValue, denominator),
+            decimalDisplay: formatRollDecimal(intValue, denominator)
+        };
+        state.selectedCellIds = [];
+        state.attemptsLeft = 3;
+
+        $('#decimat-dice-int .dice-face').textContent = intValue;
+        setDecimatPlaceDisplay(1, denominator);
+
+        diceInt.classList.remove('rolling');
+        dicePlace.classList.remove('rolling');
+
+        if (state.currentRoll.units > remainingUnits) {
+            state.stats.missed++;
+            addToDecimatsTable({
+                round: state.round,
+                target: `${state.currentRoll.fractionDisplay} (${state.currentRoll.decimalDisplay})`,
+                selection: '-',
+                total: formatDecimalFromUnits(state.totalUnits, 3, true),
+                result: 'Missed Turn'
+            });
+            updateDecimatStatsDisplay();
+            showDecimatFeedback(
+                `${state.currentRoll.decimalDisplay} is greater than the remaining ${formatDecimalFromUnits(remainingUnits, 3, true)}. This round is a missed turn.`,
+                'warning'
+            );
+            nextDecimatRound();
+            return;
+        }
+
+        state.isSelecting = true;
+        $('#decimat-action-buttons').hidden = false;
+        updateDecimatActionState();
+        renderDecimatBoard();
+
+        showDecimatFeedback(
+            `Roll ${state.currentRoll.fractionDisplay} = ${state.currentRoll.decimalDisplay}. Click blocks to shade that amount, then use "Check Result".`,
+            'info'
+        );
+        updateDecimatDisplay();
+    }, 500);
+}
+
+function endDecimatsGame() {
+    const state = GameState.decimats;
+    state.isGameOver = true;
+    state.currentRoll = null;
+    state.selectedCellIds = [];
+    state.isSelecting = false;
+    $('#roll-decimat-btn').disabled = true;
+    $('#decimat-action-buttons').hidden = true;
+    updateDecimatActionState();
+    resetDecimatDiceDisplay();
+    renderDecimatBoard();
+    updateDecimatDisplay();
+    showDecimatFeedback(
+        `Complete! You filled the Decimat in ${state.round} rounds with ${state.stats.correct} correct checks.`,
+        'success'
+    );
+}
+
+function nextDecimatRound() {
+    if (GameState.decimats.totalUnits >= 1000) {
+        endDecimatsGame();
+        return;
+    }
+
+    GameState.decimats.round += 1;
+    clearPendingDecimatRoll();
+}
+
+function checkDecimatResult() {
+    const state = GameState.decimats;
+    if (!state.currentRoll || state.isGameOver || !state.isSelecting) return;
+
+    const roll = state.currentRoll;
+    const selectedCells = getDecimatSelectedCells();
+    const selectedUnits = getDecimatSelectedUnits();
+    const selectionLabel = formatDecimatSelectionLabel(selectedCells);
+
+    if (selectedUnits === roll.units) {
+        selectedCells.forEach(cell => {
+            cell.state = 'filled';
+        });
+
+        state.totalUnits += selectedUnits;
+        state.stats.correct++;
+
+        addToDecimatsTable({
+            round: state.round,
+            target: `${roll.fractionDisplay} (${roll.decimalDisplay})`,
+            selection: selectionLabel,
+            total: formatDecimalFromUnits(state.totalUnits, 3, true),
+            result: 'Correct'
+        });
+        renderDecimatBoard();
+        updateDecimatStatsDisplay();
+        showDecimatFeedback(
+            `Correct! ${selectionLabel} matches ${roll.fractionDisplay}.`,
+            'success'
+        );
+        nextDecimatRound();
+        return;
+    }
+
+    state.stats.incorrect++;
+    state.attemptsLeft--;
+
+    addToDecimatsTable({
+        round: state.round,
+        target: `${roll.fractionDisplay} (${roll.decimalDisplay})`,
+        selection: selectionLabel,
+        total: formatDecimalFromUnits(state.totalUnits, 3, true),
+        result: 'Incorrect'
+    });
+    updateDecimatStatsDisplay();
+
+    clearDecimatSelection();
+
+    if (state.attemptsLeft <= 0) {
+        showDecimatFeedback(
+            `No attempts remaining. ${roll.fractionDisplay} was not shaded correctly. Roll the dice for a new round.`,
+            'error'
+        );
+        nextDecimatRound();
+        return;
+    }
+
+    showDecimatFeedback(
+        `Check the total carefully. Does ${selectionLabel} equal ${roll.fractionDisplay}? ${attemptsToWords(state.attemptsLeft)} remaining.`,
+        'error'
+    );
+}
+
+function initDecimatsGame() {
+    $('#roll-decimat-btn')?.addEventListener('click', rollDecimatDice);
+    $('#check-decimat-btn')?.addEventListener('click', checkDecimatResult);
+    $('#clear-decimat-selection-btn')?.addEventListener('click', () => clearDecimatSelection());
+    $('#reset-decimats-btn')?.addEventListener('click', resetDecimatsGame);
+
+    resetDecimatsGame();
+}
+
+// ============================================
 // Initialize
 // ============================================
 
@@ -920,4 +1429,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initHowToPlay();
     initCustomDiceUI();
     initFractionsGame();
+    initDecimatsGame();
 });
