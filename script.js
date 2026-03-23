@@ -520,32 +520,63 @@ function initCustomDiceUI() {
     const closeBtn = $('#custom-dice-close');
     const title = $('#custom-dice-modal-title');
     const subtitle = $('#custom-dice-modal-subtitle');
+    const panelContent = {
+        fractions: {
+            title: 'Custom Dice Settings: Colour in Fractions',
+            subtitle: 'Adjust the number die and fraction die faces for the Fractions game.'
+        },
+        decimats: {
+            title: 'Custom Dice Settings: Colour in Decimats',
+            subtitle: 'Adjust the number die and place-value die faces for the Decimats game.'
+        }
+    };
     const panels = {
         fractions: $('#fractions-custom-dice-panel'),
         decimats: $('#decimats-custom-dice-panel')
     };
-    const saveBtn = $('#save-fraction-dice');
-    const resetBtn = $('#reset-fraction-dice');
-    const errorMsg = $('#fraction-dice-error');
-    const decimatSaveBtn = $('#save-decimat-dice');
-    const decimatResetBtn = $('#reset-decimat-dice');
-    const decimatErrorMsg = $('#decimat-dice-error');
+    const panelActions = {
+        fractions: {
+            saveButtonSelector: '#save-fraction-dice',
+            resetButtonSelector: '#reset-fraction-dice',
+            errorSelector: '#fraction-dice-error',
+            validate: validateFractionDice,
+            collectValues: getFractionDiceValues,
+            applyValues: ({ intValues, extraValues }) => {
+                GameState.fractions.customIntDice = intValues;
+                GameState.fractions.customFracDice = extraValues;
+            },
+            save: () => saveFractionCustomDice(),
+            reset: resetFractionCustomDice,
+            populate: populateFractionDiceInputs
+        },
+        decimats: {
+            saveButtonSelector: '#save-decimat-dice',
+            resetButtonSelector: '#reset-decimat-dice',
+            errorSelector: '#decimat-dice-error',
+            validate: validateDecimatDice,
+            collectValues: getDecimatDiceValues,
+            applyValues: ({ intValues, extraValues }) => {
+                GameState.decimats.customIntDice = intValues;
+                GameState.decimats.customPlaceDice = extraValues;
+            },
+            save: saveDecimatCustomDice,
+            reset: resetDecimatCustomDice,
+            populate: populateDecimatDiceInputs
+        }
+    };
     let closeModal = () => {};
 
     function showCustomDicePanel(target) {
         const panelKey = target === 'decimats' ? 'decimats' : 'fractions';
+        const content = panelContent[panelKey];
+
         Object.entries(panels).forEach(([key, panel]) => {
             if (!panel) return;
             panel.hidden = key !== panelKey;
         });
 
-        if (panelKey === 'decimats') {
-            title.textContent = 'Custom Dice Settings: Colour in Decimats';
-            if (subtitle) subtitle.textContent = 'Adjust the number die and place-value die faces for the Decimats game.';
-        } else {
-            title.textContent = 'Custom Dice Settings: Colour in Fractions';
-            if (subtitle) subtitle.textContent = 'Adjust the number die and fraction die faces for the Fractions game.';
-        }
+        title.textContent = content.title;
+        if (subtitle) subtitle.textContent = content.subtitle;
     }
 
     triggers.forEach(trigger => {
@@ -567,65 +598,9 @@ function initCustomDiceUI() {
     populateDecimatDiceInputs();
     showCustomDicePanel('fractions');
 
-    saveBtn?.addEventListener('click', () => {
-        if (!validateFractionDice()) return;
-
-        const intValues = [];
-        const fracValues = [];
-        forEachFractionDiceFace(({ intInput, fracSelect }) => {
-            intValues.push(parseInt(intInput.value, 10));
-            fracValues.push(parseInt(fracSelect.value, 10));
-        });
-
-        GameState.fractions.customIntDice = intValues;
-        GameState.fractions.customFracDice = fracValues;
-
-        if (saveFractionCustomDice()) {
-            showDiceMessage(errorMsg, 'Dice settings saved successfully!', true);
-        } else {
-            showDiceMessage(errorMsg, 'Error saving dice settings. Please try again.', false, false);
-        }
-    });
-
-    resetBtn?.addEventListener('click', () => {
-        resetFractionCustomDice();
-        populateFractionDiceInputs();
-        showDiceMessage(errorMsg, 'Dice settings reset to default!', true);
-    });
-
-    decimatSaveBtn?.addEventListener('click', () => {
-        if (!validateDecimatDice()) return;
-
-        const intValues = [];
-        const placeValues = [];
-        forEachDecimatDiceFace(({ intInput, placeSelect }) => {
-            intValues.push(parseInt(intInput.value, 10));
-            placeValues.push(parseInt(placeSelect.value, 10));
-        });
-
-        GameState.decimats.customIntDice = intValues;
-        GameState.decimats.customPlaceDice = placeValues;
-
-        if (saveDecimatCustomDice()) {
-            showDiceMessage(decimatErrorMsg, 'Dice settings saved successfully!', true);
-        } else {
-            showDiceMessage(decimatErrorMsg, 'Error saving dice settings. Please try again.', false, false);
-        }
-    });
-
-    decimatResetBtn?.addEventListener('click', () => {
-        resetDecimatCustomDice();
-        populateDecimatDiceInputs();
-        showDiceMessage(decimatErrorMsg, 'Dice settings reset to default!', true);
-    });
-
-    forEachFractionDiceFace(({ intInput: input }) => {
-        input?.addEventListener('input', () => validateIntegerInput(input, 1, 6));
-    });
-
-    forEachDecimatDiceFace(({ intInput: input }) => {
-        input?.addEventListener('input', () => validateIntegerInput(input, 1, 6));
-    });
+    Object.values(panelActions).forEach(bindCustomDicePanelActions);
+    bindIntegerInputValidation(forEachFractionDiceFace);
+    bindIntegerInputValidation(forEachDecimatDiceFace);
 }
 
 function showDiceMessage(el, text, autoHide, isSuccess = true) {
@@ -648,79 +623,150 @@ function showDiceMessage(el, text, autoHide, isSuccess = true) {
     }
 }
 
-function populateFractionDiceInputs() {
-    forEachFractionDiceFace(({ face, intInput, fracSelect }) => {
-        if (intInput) intInput.value = GameState.fractions.customIntDice[face - 1];
-        if (fracSelect) fracSelect.value = GameState.fractions.customFracDice[face - 1];
+function collectDiceValues(iterateFaces, getExtraInput) {
+    const intValues = [];
+    const extraValues = [];
+
+    iterateFaces(faceData => {
+        intValues.push(parseInt(faceData.intInput.value, 10));
+        extraValues.push(parseInt(getExtraInput(faceData).value, 10));
+    });
+
+    return { intValues, extraValues };
+}
+
+function populateDiceInputs(iterateFaces, intValues, extraValues, getExtraInput) {
+    iterateFaces(faceData => {
+        const { face, intInput } = faceData;
+        const extraInput = getExtraInput(faceData);
+
+        if (intInput) intInput.value = intValues[face - 1];
+        if (extraInput) extraInput.value = extraValues[face - 1];
     });
 }
 
-function populateDecimatDiceInputs() {
-    forEachDecimatDiceFace(({ face, intInput, placeSelect }) => {
-        if (intInput) intInput.value = GameState.decimats.customIntDice[face - 1];
-        if (placeSelect) placeSelect.value = GameState.decimats.customPlaceDice[face - 1];
-    });
-}
+function validateDiceFaces(options) {
+    const {
+        iterateFaces,
+        errorMsg,
+        getExtraInput = null,
+        isExtraValid = null,
+        getIntegerErrorMessage,
+        getExtraErrorMessage = null
+    } = options;
 
-function validateFractionDice() {
-    const errorMsg = $('#fraction-dice-error');
-    let invalidFace = null;
+    let invalidIntegerFace = null;
+    let invalidExtraFace = null;
 
-    forEachFractionDiceFace(({ face, intInput }) => {
-        if (invalidFace) return;
+    iterateFaces(faceData => {
+        if (invalidIntegerFace || invalidExtraFace) return;
 
-        const value = parseInt(intInput.value, 10);
-        if (isNaN(value) || value < 1 || value > 6) {
-            invalidFace = { face, input: intInput };
-        }
-    });
-
-    if (invalidFace) {
-        showDiceMessage(errorMsg, `Face ${invalidFace.face}: Integer dice must be between 1 and 6.`, false, false);
-        invalidFace.input.focus();
-        return false;
-    }
-
-    errorMsg.hidden = true;
-    errorMsg.style.color = '';
-    return true;
-}
-
-function validateDecimatDice() {
-    const errorMsg = $('#decimat-dice-error');
-    let invalidFace = null;
-    let invalidPlaceFace = null;
-
-    forEachDecimatDiceFace(({ face, intInput, placeSelect }) => {
-        if (invalidFace || invalidPlaceFace) return;
-
-        const intValue = parseInt(intInput.value, 10);
+        const intValue = parseInt(faceData.intInput.value, 10);
         if (isNaN(intValue) || intValue < 1 || intValue > 6) {
-            invalidFace = { face, input: intInput };
+            invalidIntegerFace = { face: faceData.face, input: faceData.intInput };
             return;
         }
 
-        const placeValue = parseInt(placeSelect.value, 10);
-        if (!DECIMAT_PLACE_VALUE_OPTIONS.includes(placeValue)) {
-            invalidPlaceFace = { face, input: placeSelect };
+        if (getExtraInput && isExtraValid) {
+            const extraInput = getExtraInput(faceData);
+            const extraValue = parseInt(extraInput.value, 10);
+
+            if (!isExtraValid(extraValue)) {
+                invalidExtraFace = { face: faceData.face, input: extraInput };
+            }
         }
     });
 
-    if (invalidFace) {
-        showDiceMessage(errorMsg, `Face ${invalidFace.face}: Number die values must be between 1 and 6.`, false, false);
-        invalidFace.input.focus();
+    if (invalidIntegerFace) {
+        showDiceMessage(errorMsg, getIntegerErrorMessage(invalidIntegerFace.face), false, false);
+        invalidIntegerFace.input.focus();
         return false;
     }
 
-    if (invalidPlaceFace) {
-        showDiceMessage(errorMsg, `Face ${invalidPlaceFace.face}: Choose 1/10, 1/100, or 1/1000 for the place-value die.`, false, false);
-        invalidPlaceFace.input.focus();
+    if (invalidExtraFace && getExtraErrorMessage) {
+        showDiceMessage(errorMsg, getExtraErrorMessage(invalidExtraFace.face), false, false);
+        invalidExtraFace.input.focus();
         return false;
     }
 
     errorMsg.hidden = true;
     errorMsg.style.color = '';
     return true;
+}
+
+function bindIntegerInputValidation(iterateFaces) {
+    iterateFaces(({ intInput: input }) => {
+        input?.addEventListener('input', () => validateIntegerInput(input, 1, 6));
+    });
+}
+
+function bindCustomDicePanelActions(config) {
+    const saveBtn = $(config.saveButtonSelector);
+    const resetBtn = $(config.resetButtonSelector);
+    const errorMsg = $(config.errorSelector);
+
+    saveBtn?.addEventListener('click', () => {
+        if (!config.validate()) return;
+
+        config.applyValues(config.collectValues());
+
+        if (config.save()) {
+            showDiceMessage(errorMsg, 'Dice settings saved successfully!', true);
+        } else {
+            showDiceMessage(errorMsg, 'Error saving dice settings. Please try again.', false, false);
+        }
+    });
+
+    resetBtn?.addEventListener('click', () => {
+        config.reset();
+        config.populate();
+        showDiceMessage(errorMsg, 'Dice settings reset to default!', true);
+    });
+}
+
+function getFractionDiceValues() {
+    return collectDiceValues(forEachFractionDiceFace, ({ fracSelect }) => fracSelect);
+}
+
+function getDecimatDiceValues() {
+    return collectDiceValues(forEachDecimatDiceFace, ({ placeSelect }) => placeSelect);
+}
+
+function populateFractionDiceInputs() {
+    populateDiceInputs(
+        forEachFractionDiceFace,
+        GameState.fractions.customIntDice,
+        GameState.fractions.customFracDice,
+        ({ fracSelect }) => fracSelect
+    );
+}
+
+function populateDecimatDiceInputs() {
+    populateDiceInputs(
+        forEachDecimatDiceFace,
+        GameState.decimats.customIntDice,
+        GameState.decimats.customPlaceDice,
+        ({ placeSelect }) => placeSelect
+    );
+}
+
+function validateFractionDice() {
+    return validateDiceFaces({
+        iterateFaces: forEachFractionDiceFace,
+        errorMsg: $('#fraction-dice-error'),
+        getIntegerErrorMessage: face => `Face ${face}: Integer dice must be between 1 and 6.`
+    });
+}
+
+function validateDecimatDice() {
+    return validateDiceFaces({
+        iterateFaces: forEachDecimatDiceFace,
+        errorMsg: $('#decimat-dice-error'),
+        getExtraInput: ({ placeSelect }) => placeSelect,
+        isExtraValid: value => DECIMAT_PLACE_VALUE_OPTIONS.includes(value),
+        getIntegerErrorMessage: face => `Face ${face}: Number die values must be between 1 and 6.`,
+        getExtraErrorMessage: face => `Face ${face}: Choose 1/10, 1/100, or 1/1000 for the place-value die.`
+    });
 }
 
 function validateIntegerInput(input, min, max) {
@@ -1250,15 +1296,19 @@ function updateStatsDisplay() {
     $('#skipped-possible-count').textContent = stats.skippedPossible;
 }
 
+function getHistoryResultClass(result) {
+    if (result === 'Correct') return 'result-correct';
+    if (result === 'Incorrect') return 'result-incorrect';
+    if (result === 'Skipped (Possible)') return 'result-skipped-possible';
+    return 'result-skipped';
+}
+
 function addToFractionsTable(entry) {
     const tbody = $('#fractions-table tbody');
     if (!tbody) return;
 
     const row = document.createElement('tr');
-    if (entry.result === 'Correct') row.className = 'result-correct';
-    else if (entry.result === 'Incorrect') row.className = 'result-incorrect';
-    else if (entry.result === 'Skipped (Possible)') row.className = 'result-skipped-possible';
-    else row.className = 'result-skipped';
+    row.className = getHistoryResultClass(entry.result);
 
     row.innerHTML = `
         <td>${entry.round}</td>
@@ -1500,10 +1550,7 @@ function addToDecimatsTable(entry) {
     if (!tbody) return;
 
     const row = document.createElement('tr');
-    if (entry.result === 'Correct') row.className = 'result-correct';
-    else if (entry.result === 'Incorrect') row.className = 'result-incorrect';
-    else if (entry.result === 'Skipped (Possible)') row.className = 'result-skipped-possible';
-    else row.className = 'result-skipped';
+    row.className = getHistoryResultClass(entry.result);
 
     row.innerHTML = `
         <td>${entry.round}</td>
