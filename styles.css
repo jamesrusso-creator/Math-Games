@@ -607,12 +607,12 @@ main {
 }
 
 .decimat-cell-selected {
-    background: var(--color-decimat-selected);
+    background: linear-gradient(135deg, #818cf8, #6366f1);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
 .decimat-cell-filled {
-    background: var(--color-decimat-filled);
+    background: linear-gradient(135deg, var(--color-decimat-filled), #a78bfa);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
 }
 
