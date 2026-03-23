@@ -1742,7 +1742,6 @@ function rollDecimatDice() {
 
     const diceInt = $('#decimat-dice-int');
     const dicePlace = $('#decimat-dice-place');
-    const remainingUnits = getDecimatRemainingUnits();
 
     $('#roll-decimat-btn').disabled = true;
     setDecimatDiceLocked(true);
@@ -1769,20 +1768,10 @@ function rollDecimatDice() {
         diceInt.classList.remove('rolling');
         dicePlace.classList.remove('rolling');
 
-        const isPossibleRoll = canMakeDecimatAmount(state.currentRoll.units);
-        state.isSelecting = isPossibleRoll;
+        state.isSelecting = true;
         $('#decimat-action-buttons').hidden = false;
         updateDecimatActionState();
         renderDecimatBoard();
-
-        if (!isPossibleRoll) {
-            showDecimatFeedback(
-                `${state.currentRoll.decimalDisplay} is greater than the remaining ${formatDecimalFromUnits(remainingUnits, 3, true)}. Use "Skip Turn" to record Skipped (Impossible).`,
-                'warning'
-            );
-            updateDecimatDisplay();
-            return;
-        }
 
         showDecimatFeedback(
             `Roll ${state.currentRoll.fractionDisplay} = ${state.currentRoll.decimalDisplay}. Single-click blocks to select them, double-click a tenth or hundredth to break it down, then use "Check Result".`,
