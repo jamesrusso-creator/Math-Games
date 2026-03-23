@@ -141,7 +141,7 @@ function formatRollDecimal(numerator, denominator) {
 }
 
 // ============================================
-// Local Storage
+// Session Storage
 // ============================================
 
 const STORAGE_KEYS = {
@@ -153,6 +153,30 @@ const STORAGE_KEYS = {
 
 const FRACTION_DICE_FACE_COUNT = 6;
 const DECIMAT_DICE_FACE_COUNT = 6;
+
+function getDiceStorage() {
+    try {
+        return window.sessionStorage;
+    } catch (e) {
+        console.error('Session storage is unavailable:', e);
+        return null;
+    }
+}
+
+function clearLegacyPersistentDiceStorage() {
+    try {
+        Object.keys(VERSIONS).forEach(version => {
+            const keys = getFractionStorageKeys(version);
+            localStorage.removeItem(keys.intDice);
+            localStorage.removeItem(keys.fracDice);
+        });
+
+        localStorage.removeItem(STORAGE_KEYS.decimatIntDice);
+        localStorage.removeItem(STORAGE_KEYS.decimatPlaceDice);
+    } catch (e) {
+        console.error('Error clearing legacy dice settings:', e);
+    }
+}
 
 function forEachFractionDiceFace(callback) {
     for (let face = 1; face <= FRACTION_DICE_FACE_COUNT; face++) {
@@ -237,9 +261,12 @@ function getFractionStorageKeys(version = currentVersion) {
 
 function saveFractionCustomDice(version = currentVersion) {
     const keys = getFractionStorageKeys(version);
+    const storage = getDiceStorage();
+    if (!storage) return false;
+
     try {
-        localStorage.setItem(keys.intDice, JSON.stringify(GameState.fractions.customIntDice));
-        localStorage.setItem(keys.fracDice, JSON.stringify(GameState.fractions.customFracDice));
+        storage.setItem(keys.intDice, JSON.stringify(GameState.fractions.customIntDice));
+        storage.setItem(keys.fracDice, JSON.stringify(GameState.fractions.customFracDice));
         return true;
     } catch (e) {
         console.error('Error saving dice settings:', e);
@@ -248,9 +275,12 @@ function saveFractionCustomDice(version = currentVersion) {
 }
 
 function saveDecimatCustomDice() {
+    const storage = getDiceStorage();
+    if (!storage) return false;
+
     try {
-        localStorage.setItem(STORAGE_KEYS.decimatIntDice, JSON.stringify(GameState.decimats.customIntDice));
-        localStorage.setItem(STORAGE_KEYS.decimatPlaceDice, JSON.stringify(GameState.decimats.customPlaceDice));
+        storage.setItem(STORAGE_KEYS.decimatIntDice, JSON.stringify(GameState.decimats.customIntDice));
+        storage.setItem(STORAGE_KEYS.decimatPlaceDice, JSON.stringify(GameState.decimats.customPlaceDice));
         return true;
     } catch (e) {
         console.error('Error saving decimat dice settings:', e);
@@ -261,12 +291,13 @@ function saveDecimatCustomDice() {
 function loadFractionCustomDice(version = currentVersion) {
     const keys = getFractionStorageKeys(version);
     const defaults = getFractionVersionConfig(version);
+    const storage = getDiceStorage();
     let intDice = [...defaults.intDice];
     let fracDice = [...defaults.fracDice];
 
     try {
-        const storedIntDice = localStorage.getItem(keys.intDice);
-        const storedFracDice = localStorage.getItem(keys.fracDice);
+        const storedIntDice = storage?.getItem(keys.intDice);
+        const storedFracDice = storage?.getItem(keys.fracDice);
 
         if (storedIntDice) {
             const parsedIntDice = JSON.parse(storedIntDice);
@@ -290,9 +321,11 @@ function loadFractionCustomDice(version = currentVersion) {
 }
 
 function loadDecimatCustomDice() {
+    const storage = getDiceStorage();
+
     try {
-        const intDice = localStorage.getItem(STORAGE_KEYS.decimatIntDice);
-        const placeDice = localStorage.getItem(STORAGE_KEYS.decimatPlaceDice);
+        const intDice = storage?.getItem(STORAGE_KEYS.decimatIntDice);
+        const placeDice = storage?.getItem(STORAGE_KEYS.decimatPlaceDice);
 
         if (intDice) {
             const parsedIntDice = JSON.parse(intDice);
@@ -313,22 +346,25 @@ function loadDecimatCustomDice() {
 }
 
 function loadCustomDice() {
+    clearLegacyPersistentDiceStorage();
     loadFractionCustomDice();
     loadDecimatCustomDice();
 }
 
 function resetFractionCustomDice() {
     const keys = getFractionStorageKeys(currentVersion);
-    localStorage.removeItem(keys.intDice);
-    localStorage.removeItem(keys.fracDice);
+    const storage = getDiceStorage();
+    storage?.removeItem(keys.intDice);
+    storage?.removeItem(keys.fracDice);
     const v = getFractionVersionConfig(currentVersion);
     GameState.fractions.customIntDice = [...v.intDice];
     GameState.fractions.customFracDice = [...v.fracDice];
 }
 
 function resetDecimatCustomDice() {
-    localStorage.removeItem(STORAGE_KEYS.decimatIntDice);
-    localStorage.removeItem(STORAGE_KEYS.decimatPlaceDice);
+    const storage = getDiceStorage();
+    storage?.removeItem(STORAGE_KEYS.decimatIntDice);
+    storage?.removeItem(STORAGE_KEYS.decimatPlaceDice);
     GameState.decimats.customIntDice = [...DEFAULT_DECIMAT_INT_DICE];
     GameState.decimats.customPlaceDice = [...DEFAULT_DECIMAT_PLACE_DICE];
 }

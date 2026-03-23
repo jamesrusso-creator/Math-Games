@@ -18,7 +18,7 @@ The fractions game supports two modes:
 
 - Fraction wall with visual bar selection
 - Two game versions with different dice and wall configurations
-- Custom dice settings for Fractions and Decimats with localStorage persistence
+- Custom dice settings for Fractions and Decimats with session-only persistence while the page remains open
 - Up to 3 attempts per round with game history tracking
 - Colour-coded result history (correct / incorrect / skipped)
 - Skip turn detection (only allowed when no valid selection exists)
