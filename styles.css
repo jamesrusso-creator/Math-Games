@@ -33,6 +33,10 @@
     --color-decimat-hover: #ddd6fe;
     --color-decimat-selected: #8b5cf6;
     --color-decimat-filled: #c4b5fd;
+    --decimat-line-whole: 3px;
+    --decimat-line-tenth: 2px;
+    --decimat-line-hundredth: 1px;
+    --decimat-line-thousandth: 0.5px;
     
     /* Typography */
     --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -530,7 +534,7 @@ main {
     aspect-ratio: 1.75 / 1;
     width: 100%;
     min-height: 360px;
-    border: 2px solid var(--color-decimat-border);
+    border: var(--decimat-line-whole) solid var(--color-decimat-border);
     background: white;
     overflow: hidden;
 }
@@ -543,8 +547,8 @@ main {
 }
 
 .decimat-board > .decimat-cell {
-    border-right: 2px solid var(--color-decimat-border);
-    border-bottom: 2px solid var(--color-decimat-border);
+    border-right: var(--decimat-line-tenth) solid var(--color-decimat-border);
+    border-bottom: var(--decimat-line-tenth) solid var(--color-decimat-border);
 }
 
 .decimat-board > .decimat-cell:nth-child(5n) {
@@ -562,8 +566,8 @@ main {
 }
 
 .decimat-tenth-split > .decimat-cell {
-    border-right: 1px solid var(--color-decimat-border);
-    border-bottom: 1px solid var(--color-decimat-border);
+    border-right: var(--decimat-line-hundredth) solid var(--color-decimat-border);
+    border-bottom: var(--decimat-line-hundredth) solid var(--color-decimat-border);
 }
 
 .decimat-tenth-split > .decimat-cell:nth-child(2n) {
@@ -581,8 +585,8 @@ main {
 }
 
 .decimat-hundredth-split > .decimat-cell {
-    border-right: 1px solid var(--color-decimat-border);
-    border-bottom: 1px solid var(--color-decimat-border);
+    border-right: var(--decimat-line-thousandth) solid var(--color-decimat-border);
+    border-bottom: var(--decimat-line-thousandth) solid var(--color-decimat-border);
 }
 
 .decimat-hundredth-split > .decimat-cell:nth-child(5n) {
