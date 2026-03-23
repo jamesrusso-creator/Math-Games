@@ -1215,12 +1215,19 @@ function isFractionWallFull() {
 
 function nextRound() {
     const state = GameState.fractions;
+
+    state.selectedCells.forEach(item => {
+        const cell = $(`.fraction-cell[data-row="${item.row}"][data-cell="${item.cell}"]`);
+        if (cell) cell.classList.remove('selected');
+    });
+
     state.round++;
     state.currentRoll = null;
     state.selectedCells = [];
     state.isSelecting = false;
 
     $('#fraction-action-buttons').hidden = true;
+    $('#check-result-btn').disabled = true;
     $('#fraction-wall').classList.remove('selecting');
     $('#roll-fraction-btn').disabled = false;
     setFracDiceDisplay('?', '?');
