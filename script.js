@@ -145,8 +145,8 @@ function formatRollDecimal(numerator, denominator) {
 // ============================================
 
 const STORAGE_KEYS = {
-    fractionIntDice: 'mathgames_fraction_int_dice',
-    fractionFracDice: 'mathgames_fraction_frac_dice',
+    fractionIntDicePrefix: 'mathgames_fraction_int_dice',
+    fractionFracDicePrefix: 'mathgames_fraction_frac_dice',
     decimatIntDice: 'mathgames_decimat_int_dice',
     decimatPlaceDice: 'mathgames_decimat_place_dice'
 };
@@ -182,10 +182,22 @@ function isValidDiceArray(values, faceCount, validator) {
     return Array.isArray(values) && values.length === faceCount && values.every(validator);
 }
 
-function saveFractionCustomDice() {
+function getFractionVersionConfig(version = currentVersion) {
+    return VERSIONS[version] || VERSIONS.proper;
+}
+
+function getFractionStorageKeys(version = currentVersion) {
+    return {
+        intDice: `${STORAGE_KEYS.fractionIntDicePrefix}_${version}`,
+        fracDice: `${STORAGE_KEYS.fractionFracDicePrefix}_${version}`
+    };
+}
+
+function saveFractionCustomDice(version = currentVersion) {
+    const keys = getFractionStorageKeys(version);
     try {
-        localStorage.setItem(STORAGE_KEYS.fractionIntDice, JSON.stringify(GameState.fractions.customIntDice));
-        localStorage.setItem(STORAGE_KEYS.fractionFracDice, JSON.stringify(GameState.fractions.customFracDice));
+        localStorage.setItem(keys.intDice, JSON.stringify(GameState.fractions.customIntDice));
+        localStorage.setItem(keys.fracDice, JSON.stringify(GameState.fractions.customFracDice));
         return true;
     } catch (e) {
         console.error('Error saving dice settings:', e);
@@ -204,27 +216,35 @@ function saveDecimatCustomDice() {
     }
 }
 
-function loadFractionCustomDice() {
-    try {
-        const intDice = localStorage.getItem(STORAGE_KEYS.fractionIntDice);
-        const fracDice = localStorage.getItem(STORAGE_KEYS.fractionFracDice);
+function loadFractionCustomDice(version = currentVersion) {
+    const keys = getFractionStorageKeys(version);
+    const defaults = getFractionVersionConfig(version);
+    let intDice = [...defaults.intDice];
+    let fracDice = [...defaults.fracDice];
 
-        if (intDice) {
-            const parsedIntDice = JSON.parse(intDice);
+    try {
+        const storedIntDice = localStorage.getItem(keys.intDice);
+        const storedFracDice = localStorage.getItem(keys.fracDice);
+
+        if (storedIntDice) {
+            const parsedIntDice = JSON.parse(storedIntDice);
             if (isValidDiceArray(parsedIntDice, FRACTION_DICE_FACE_COUNT, value => Number.isInteger(value) && value >= 1 && value <= 6)) {
-                GameState.fractions.customIntDice = parsedIntDice;
+                intDice = parsedIntDice;
             }
         }
 
-        if (fracDice) {
-            const parsedFracDice = JSON.parse(fracDice);
+        if (storedFracDice) {
+            const parsedFracDice = JSON.parse(storedFracDice);
             if (isValidDiceArray(parsedFracDice, FRACTION_DICE_FACE_COUNT, value => FRACTION_DENOMINATOR_OPTIONS.includes(value))) {
-                GameState.fractions.customFracDice = parsedFracDice;
+                fracDice = parsedFracDice;
             }
         }
     } catch (e) {
         console.error('Error loading fraction dice settings:', e);
     }
+
+    GameState.fractions.customIntDice = intDice;
+    GameState.fractions.customFracDice = fracDice;
 }
 
 function loadDecimatCustomDice() {
@@ -256,9 +276,10 @@ function loadCustomDice() {
 }
 
 function resetFractionCustomDice() {
-    localStorage.removeItem(STORAGE_KEYS.fractionIntDice);
-    localStorage.removeItem(STORAGE_KEYS.fractionFracDice);
-    const v = VERSIONS[currentVersion] || VERSIONS.proper;
+    const keys = getFractionStorageKeys(currentVersion);
+    localStorage.removeItem(keys.intDice);
+    localStorage.removeItem(keys.fracDice);
+    const v = getFractionVersionConfig(currentVersion);
     GameState.fractions.customIntDice = [...v.intDice];
     GameState.fractions.customFracDice = [...v.fracDice];
 }
@@ -308,13 +329,7 @@ function showVersionPicker() {
 
 function applyVersion(version) {
     currentVersion = version;
-    const v = VERSIONS[version];
-
-    GameState.fractions.customIntDice = [...v.intDice];
-    GameState.fractions.customFracDice = [...v.fracDice];
-
-    localStorage.removeItem(STORAGE_KEYS.fractionIntDice);
-    localStorage.removeItem(STORAGE_KEYS.fractionFracDice);
+    loadFractionCustomDice(version);
 
     createFractionWall();
     resetFractionsGame();
