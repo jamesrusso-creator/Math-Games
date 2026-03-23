@@ -576,8 +576,8 @@ main {
 
 .decimat-hundredth-split {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(5, 1fr);
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(2, 1fr);
 }
 
 .decimat-hundredth-split > .decimat-cell {
@@ -585,11 +585,11 @@ main {
     border-bottom: 1px solid var(--color-decimat-border);
 }
 
-.decimat-hundredth-split > .decimat-cell:nth-child(2n) {
+.decimat-hundredth-split > .decimat-cell:nth-child(5n) {
     border-right: none;
 }
 
-.decimat-hundredth-split > .decimat-cell:nth-child(n + 9) {
+.decimat-hundredth-split > .decimat-cell:nth-child(n + 6) {
     border-bottom: none;
 }
 
