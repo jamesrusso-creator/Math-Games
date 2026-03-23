@@ -30,7 +30,7 @@ const GameState = {
         attemptsLeft: 3,
         customIntDice: null,
         customPlaceDice: null,
-        stats: { correct: 0, incorrect: 0, missed: 0 }
+        stats: { correct: 0, incorrect: 0, missed: 0, skippedPossible: 0 }
     }
 };
 
@@ -1012,10 +1012,15 @@ function doSkipTurn(resultLabel) {
     nextRound();
 }
 
-function showSkipConfirmModal(onConfirm) {
+function showSkipConfirmModal(onConfirm, message = 'Are you sure you want to skip your turn? It is possible to make this roll.') {
     const modal = $('#skip-confirm-modal');
+    const messageEl = $('#skip-confirm-message');
     const yesBtn = $('#skip-confirm-yes');
     const cancelBtn = $('#skip-confirm-cancel');
+
+    if (messageEl) {
+        messageEl.textContent = message;
+    }
 
     modal.hidden = false;
     cancelBtn.focus();
@@ -1444,6 +1449,7 @@ function updateDecimatStatsDisplay() {
     $('#decimat-correct-count').textContent = stats.correct;
     $('#decimat-incorrect-count').textContent = stats.incorrect;
     $('#decimat-missed-count').textContent = stats.missed;
+    $('#decimat-skipped-possible-count').textContent = stats.skippedPossible;
 }
 
 function addToDecimatsTable(entry) {
@@ -1453,6 +1459,7 @@ function addToDecimatsTable(entry) {
     const row = document.createElement('tr');
     if (entry.result === 'Correct') row.className = 'result-correct';
     else if (entry.result === 'Incorrect') row.className = 'result-incorrect';
+    else if (entry.result === 'Skipped (Possible)') row.className = 'result-skipped-possible';
     else row.className = 'result-skipped';
 
     row.innerHTML = `
@@ -1497,7 +1504,7 @@ function resetDecimatsGame() {
     state.board = buildInitialDecimatBoard();
     state.isGameOver = false;
     state.attemptsLeft = 3;
-    state.stats = { correct: 0, incorrect: 0, missed: 0 };
+    state.stats = { correct: 0, incorrect: 0, missed: 0, skippedPossible: 0 };
 
     const tbody = $('#decimats-table tbody');
     if (tbody) tbody.innerHTML = '';
@@ -1516,6 +1523,11 @@ function resetDecimatsGame() {
 
 function getDecimatRemainingUnits() {
     return 1000 - GameState.decimats.totalUnits;
+}
+
+function canMakeDecimatAmount(targetUnits) {
+    // Any remaining area can be broken down to thousandths, so remaining total determines feasibility.
+    return targetUnits <= getDecimatRemainingUnits();
 }
 
 function getPossibleDecimatRollUnits() {
@@ -1689,6 +1701,7 @@ function endDecimatsGame(isWin) {
             { className: 'correct', value: state.stats.correct, label: 'Correct' },
             { className: 'incorrect', value: state.stats.incorrect, label: 'Incorrect' },
             { className: 'skipped', value: state.stats.missed, label: 'Missed' },
+            { className: 'skipped-possible', value: state.stats.skippedPossible, label: 'Skipped (Possible)' },
             { className: 'accuracy', value: `${accuracy}%`, label: 'Accuracy' }
         ]
     });
@@ -1774,9 +1787,52 @@ function checkDecimatResult() {
     );
 }
 
+function skipDecimatTurn() {
+    const state = GameState.decimats;
+    if (!state.isSelecting || !state.currentRoll || state.isGameOver) return;
+
+    const roll = state.currentRoll;
+
+    if (canMakeDecimatAmount(roll.units)) {
+        showSkipConfirmModal(
+            () => doDecimatSkipTurn('Skipped (Possible)'),
+            `Are you sure you want to skip your turn? It is possible to make ${roll.decimalDisplay}.`
+        );
+        return;
+    }
+
+    doDecimatSkipTurn('Skipped (Impossible)');
+}
+
+function doDecimatSkipTurn(resultLabel) {
+    const state = GameState.decimats;
+    const roll = state.currentRoll;
+
+    if (resultLabel === 'Skipped (Possible)') {
+        state.stats.skippedPossible++;
+        updateDecimatStatsDisplay();
+        showDecimatFeedback(`Skipped. ${roll.decimalDisplay} could have been made with the remaining blocks.`, 'skipped-possible');
+    } else {
+        state.stats.missed++;
+        updateDecimatStatsDisplay();
+        showDecimatFeedback(`Skipped. ${roll.decimalDisplay} cannot be made with the remaining blocks.`, 'warning');
+    }
+
+    addToDecimatsTable({
+        round: state.round,
+        target: `${roll.fractionDisplay} (${roll.decimalDisplay})`,
+        selection: '-',
+        total: formatDecimalFromUnits(state.totalUnits, 3, true),
+        result: resultLabel
+    });
+
+    nextDecimatRound();
+}
+
 function initDecimatsGame() {
     $('#roll-decimat-btn')?.addEventListener('click', rollDecimatDice);
     $('#check-decimat-btn')?.addEventListener('click', checkDecimatResult);
+    $('#skip-decimat-turn-btn')?.addEventListener('click', skipDecimatTurn);
     $('#clear-decimat-selection-btn')?.addEventListener('click', () => clearDecimatSelection());
     $('#reset-decimats-btn')?.addEventListener('click', resetDecimatsGame);
 

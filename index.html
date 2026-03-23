@@ -201,6 +201,7 @@
                             <span class="stat-pill correct"><span id="decimat-correct-count">0</span> ✓</span>
                             <span class="stat-pill incorrect"><span id="decimat-incorrect-count">0</span> ✗</span>
                             <span class="stat-pill skipped"><span id="decimat-missed-count">0</span> ⏭</span>
+                            <span class="stat-pill skipped-possible"><span id="decimat-skipped-possible-count">0</span> ⊘</span>
                         </div>
                     </div>
                 </div>
@@ -259,8 +260,9 @@
                         <div id="decimat-action-buttons" class="action-buttons panel-actions" hidden>
                             <div class="panel-actions-row">
                                 <button id="check-decimat-btn" class="btn btn-primary" disabled>Check Result ✓</button>
-                                <button id="clear-decimat-selection-btn" class="btn btn-tertiary">Clear Selection ✗</button>
+                                <button id="skip-decimat-turn-btn" class="btn btn-secondary">Skip Turn ⏭</button>
                             </div>
+                            <button id="clear-decimat-selection-btn" class="btn btn-tertiary">Clear Selection ✗</button>
                         </div>
 
                         <div class="panel-bottom-actions">
@@ -553,7 +555,7 @@
     <div id="skip-confirm-modal" class="modal" role="dialog" aria-labelledby="skip-confirm-title" aria-modal="true" hidden>
         <div class="modal-content">
             <h3 id="skip-confirm-title">Skip Turn?</h3>
-            <p>Are you sure you want to skip your turn? It is possible to make this fraction.</p>
+            <p id="skip-confirm-message">Are you sure you want to skip your turn? It is possible to make this roll.</p>
             <div class="modal-actions">
                 <button id="skip-confirm-yes" class="btn btn-secondary">Yes, Skip</button>
                 <button id="skip-confirm-cancel" class="btn btn-primary">Cancel</button>
