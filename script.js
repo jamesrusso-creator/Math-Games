@@ -182,6 +182,48 @@ function isValidDiceArray(values, faceCount, validator) {
     return Array.isArray(values) && values.length === faceCount && values.every(validator);
 }
 
+function openModal(modal, options = {}) {
+    const { initialFocus = null, onDismiss = null } = options;
+
+    if (!modal) {
+        return () => {};
+    }
+
+    let isClosed = false;
+
+    const close = (reason = 'close') => {
+        if (isClosed) return;
+
+        isClosed = true;
+        modal.hidden = true;
+        modal.removeEventListener('click', handleBackdrop);
+        document.removeEventListener('keydown', handleEscape);
+
+        if (reason !== 'action') {
+            onDismiss?.(reason);
+        }
+    };
+
+    function handleBackdrop(e) {
+        if (e.target === modal) {
+            close('backdrop');
+        }
+    }
+
+    function handleEscape(e) {
+        if (e.key === 'Escape') {
+            close('escape');
+        }
+    }
+
+    modal.hidden = false;
+    modal.addEventListener('click', handleBackdrop);
+    document.addEventListener('keydown', handleEscape);
+    initialFocus?.focus();
+
+    return close;
+}
+
 function getFractionVersionConfig(version = currentVersion) {
     return VERSIONS[version] || VERSIONS.proper;
 }
@@ -300,30 +342,33 @@ function showVersionPicker() {
         const modal = $('#version-modal');
         const cancelBtn = $('#version-modal-cancel');
         const options = $$('.version-option');
+        let closeModal = () => {};
 
-        modal.hidden = false;
-        modal.querySelector('.version-option').focus();
-
-        function cleanup() {
-            modal.hidden = true;
+        const cleanup = () => {
             options.forEach(o => o.removeEventListener('click', onPick));
             cancelBtn.removeEventListener('click', onCancel);
-            modal.removeEventListener('click', onBackdrop);
-            document.removeEventListener('keydown', onEscape);
-        }
+        };
+
+        const finish = (value) => {
+            closeModal('action');
+            cleanup();
+            resolve(value);
+        };
 
         function onPick(e) {
-            cleanup();
-            resolve(e.currentTarget.dataset.version);
+            finish(e.currentTarget.dataset.version);
         }
-        function onCancel() { cleanup(); resolve(null); }
-        function onBackdrop(e) { if (e.target === modal) { cleanup(); resolve(null); } }
-        function onEscape(e) { if (e.key === 'Escape') { cleanup(); resolve(null); } }
+        function onCancel() { finish(null); }
 
         options.forEach(o => o.addEventListener('click', onPick));
         cancelBtn.addEventListener('click', onCancel);
-        modal.addEventListener('click', onBackdrop);
-        document.addEventListener('keydown', onEscape);
+        closeModal = openModal(modal, {
+            initialFocus: modal.querySelector('.version-option'),
+            onDismiss: () => {
+                cleanup();
+                resolve(null);
+            }
+        });
     });
 }
 
@@ -414,6 +459,7 @@ function initHowToPlay() {
     const title = $('#how-to-play-title');
     const list = $('#how-to-play-list');
     const closeBtn = $('#how-to-play-close');
+    let closeModal = () => {};
     const HOW_TO_PLAY_CONTENT = {
         fractions: {
             title: 'How to Play',
@@ -437,12 +483,6 @@ function initHowToPlay() {
         }
     };
 
-    const closeModal = () => { modal.hidden = true; document.removeEventListener('keydown', onEscape); };
-
-    function onEscape(e) {
-        if (e.key === 'Escape') closeModal();
-    }
-
     function updateHowToPlay(target) {
         const content = HOW_TO_PLAY_CONTENT[target] || HOW_TO_PLAY_CONTENT.fractions;
         if (title) title.textContent = content.title;
@@ -454,14 +494,18 @@ function initHowToPlay() {
     triggers.forEach(trigger => {
         trigger.addEventListener('click', () => {
             updateHowToPlay(trigger.dataset.howToPlayTarget);
-            modal.hidden = false;
-            closeBtn?.focus();
-            document.addEventListener('keydown', onEscape);
+            closeModal('action');
+            closeModal = openModal(modal, {
+                initialFocus: closeBtn,
+                onDismiss: () => { closeModal = () => {}; }
+            });
         });
     });
 
-    closeBtn?.addEventListener('click', closeModal);
-    modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    closeBtn?.addEventListener('click', () => {
+        closeModal('action');
+        closeModal = () => {};
+    });
 }
 
 // ============================================
@@ -486,12 +530,7 @@ function initCustomDiceUI() {
     const decimatSaveBtn = $('#save-decimat-dice');
     const decimatResetBtn = $('#reset-decimat-dice');
     const decimatErrorMsg = $('#decimat-dice-error');
-
-    const closeModal = () => {
-        modal.hidden = true;
-        document.removeEventListener('keydown', onEscape);
-    };
-    function onEscape(e) { if (e.key === 'Escape') closeModal(); }
+    let closeModal = () => {};
 
     function showCustomDicePanel(target) {
         const panelKey = target === 'decimats' ? 'decimats' : 'fractions';
@@ -512,13 +551,17 @@ function initCustomDiceUI() {
     triggers.forEach(trigger => {
         trigger.addEventListener('click', () => {
             showCustomDicePanel(trigger.dataset.diceConfigTarget);
-            modal.hidden = false;
-            closeBtn?.focus();
-            document.addEventListener('keydown', onEscape);
+            closeModal('action');
+            closeModal = openModal(modal, {
+                initialFocus: closeBtn,
+                onDismiss: () => { closeModal = () => {}; }
+            });
         });
     });
-    closeBtn?.addEventListener('click', closeModal);
-    modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    closeBtn?.addEventListener('click', () => {
+        closeModal('action');
+        closeModal = () => {};
+    });
 
     populateFractionDiceInputs();
     populateDecimatDiceInputs();
@@ -750,32 +793,25 @@ function showEndModal({
         </div>
     `;
 
-    modal.hidden = false;
-    playAgainBtn.focus();
-
-    const closeModal = () => {
-        modal.hidden = true;
+    const cleanup = () => {
         fireworks.innerHTML = '';
         playAgainBtn.onclick = null;
         closeBtn.onclick = null;
-        modal.removeEventListener('click', handleBackdrop);
-        document.removeEventListener('keydown', handleEscape);
     };
+    const closeModal = openModal(modal, {
+        initialFocus: playAgainBtn,
+        onDismiss: cleanup
+    });
 
-    const handleBackdrop = (e) => {
-        if (e.target === modal) closeModal();
+    playAgainBtn.onclick = () => {
+        closeModal('action');
+        cleanup();
+        onPlayAgain();
     };
-
-    const handleEscape = (e) => {
-        if (e.key === 'Escape') {
-            closeModal();
-        }
+    closeBtn.onclick = () => {
+        closeModal('action');
+        cleanup();
     };
-
-    playAgainBtn.onclick = () => { closeModal(); onPlayAgain(); };
-    closeBtn.onclick = closeModal;
-    modal.addEventListener('click', handleBackdrop);
-    document.addEventListener('keydown', handleEscape);
 }
 
 // ============================================
@@ -1037,32 +1073,24 @@ function showSkipConfirmModal(onConfirm, message = 'Are you sure you want to ski
         messageEl.textContent = message;
     }
 
-    modal.hidden = false;
-    cancelBtn.focus();
-
-    const closeModal = () => {
-        modal.hidden = true;
+    const cleanup = () => {
         yesBtn.onclick = null;
         cancelBtn.onclick = null;
-        modal.removeEventListener('click', onBackdrop);
-        document.removeEventListener('keydown', onEscape);
     };
-
-    function onEscape(e) {
-        if (e.key === 'Escape') closeModal();
-    }
-
-    function onBackdrop(e) {
-        if (e.target === modal) closeModal();
-    }
+    const closeModal = openModal(modal, {
+        initialFocus: cancelBtn,
+        onDismiss: cleanup
+    });
 
     yesBtn.onclick = () => {
-        closeModal();
+        closeModal('action');
+        cleanup();
         onConfirm();
     };
-    cancelBtn.onclick = closeModal;
-    modal.addEventListener('click', onBackdrop);
-    document.addEventListener('keydown', onEscape);
+    cancelBtn.onclick = () => {
+        closeModal('action');
+        cleanup();
+    };
 }
 
 // ============================================
