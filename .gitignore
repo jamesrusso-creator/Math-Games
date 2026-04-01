@@ -35,3 +35,7 @@ Temporary Items
 
 # Cursor
 .cursor/
+
+tmp/
+test-results/
+progress.md

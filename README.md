@@ -1,13 +1,14 @@
-# Math Games - Colour in Fractions & Decimats
+# Math Games - Fractions, Decimats & Place Value
 
-Interactive educational math games for learning fractions and decimals through play.
+Interactive educational math games for learning fractions, decimals, and place value through play.
 
 ## About
 
-The project currently includes two interactive games:
+The project currently includes three interactive games:
 
 - **Colour in Fractions** — roll fraction dice, then select bars on a fraction wall that sum to the target.
 - **Colour in Decimats** — roll a number die and a decimal place-value die, then click Decimat blocks to shade the matching amount.
+- **Place That Number** — roll two digit dice, choose the stronger two-digit number, and place it on a 0 to 100 number line using benchmarks.
 
 The fractions game supports two modes:
 
@@ -26,6 +27,8 @@ The fractions game supports two modes:
 - Decimats dice defaults based on the PDF activity sheet, with optional custom faces
 - Click-to-select Decimats gameplay with result checking and round history
 - Double-click breakdown of tenths and hundredths into smaller decimal place-value pieces
+- Number-line estimation game based on the "Place That Number" classroom activity
+- Two-digit choice strategy that turns correct placements into new benchmarks
 - Responsive design for mobile and desktop
 - Keyboard navigation and screen reader support
 

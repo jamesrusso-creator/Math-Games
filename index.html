@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Interactive educational math games for learning fractions and decimals">
-    <title>Math Games - Colour in Fractions & Decimats</title>
+    <meta name="description" content="Interactive educational math games for learning fractions, decimals, and place value through play">
+    <title>Math Games - Fractions, Decimats & Place Value</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -23,6 +23,7 @@
                 <li role="none"><a href="#home" class="nav-link active" role="menuitem">Home</a></li>
                 <li role="none"><a href="#fractions" class="nav-link" role="menuitem">Colour in Fractions</a></li>
                 <li role="none"><a href="#decimats" class="nav-link" role="menuitem">Colour in Decimats</a></li>
+                <li role="none"><a href="#place-number" class="nav-link" role="menuitem">Place That Number</a></li>
             </ul>
         </nav>
     </header>
@@ -32,7 +33,7 @@
         <section id="home" class="section home-section" aria-labelledby="home-title">
             <div class="container">
                 <h2 id="home-title" class="section-title">Welcome to Math Games</h2>
-                <p class="section-intro">Learn fractions and decimals through interactive, engaging games!</p>
+                <p class="section-intro">Learn fractions, decimals, and place value through interactive, engaging games.</p>
                 
                 <div class="games-grid">
                     <article class="game-card">
@@ -48,6 +49,13 @@
                         <p>Explore decimal place value with the Decimat. Roll place-value dice and shade tenths, hundredths, and thousandths.</p>
                         <button class="btn btn-primary play-decimats-btn">Play Now</button>
                     </article>
+
+                    <article class="game-card">
+                        <div class="game-icon" aria-hidden="true">📍</div>
+                        <h3>Place That Number</h3>
+                        <p>Roll two digit dice, choose the strongest two-digit number, and place it on a 0 to 100 number line using benchmarks.</p>
+                        <button class="btn btn-primary play-place-number-btn">Play Now</button>
+                    </article>
                 </div>
 
                 <div class="features-overview">
@@ -55,6 +63,7 @@
                     <ul class="features-list">
                         <li>Visualize fractions and their equivalents</li>
                         <li>Understand decimal place value</li>
+                        <li>Estimate positions on a number line</li>
                         <li>Practice addition with fractions and decimals</li>
                         <li>Build mathematical intuition through play</li>
                     </ul>
@@ -302,11 +311,156 @@
                 </div>
             </div>
         </section>
+
+        <!-- Place That Number Game -->
+        <section id="place-number" class="section game-section" aria-labelledby="place-number-title" hidden>
+            <div class="game-console">
+                <div class="game-status-bar">
+                    <h2 id="place-number-title" class="game-title">Place That Number</h2>
+                    <div class="status-items">
+                        <div class="status-item">
+                            <span class="status-label">Round</span>
+                            <span id="place-round" class="status-value">1</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Digits</span>
+                            <span id="place-digits" class="status-value">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Number</span>
+                            <span id="place-selected-number" class="status-value">-</span>
+                        </div>
+                        <div class="status-pills">
+                            <span class="stat-pill correct"><span id="place-correct-count">0</span>/10 placed</span>
+                            <span class="stat-pill incorrect"><span id="place-incorrect-count">0</span> misses</span>
+                            <span class="stat-pill benchmark"><span id="place-benchmark-count">2</span> benchmarks</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="place-number-feedback" class="feedback-message" role="status" aria-live="polite" hidden></div>
+
+                <div class="game-layout">
+                    <div class="game-panel-left">
+                        <div class="fraction-wall-container place-number-container">
+                            <p class="wall-hint">Choose the stronger two-digit number, then click the line or use the slider to place it between 0 and 100.</p>
+                            <div class="panel-card place-number-board-card">
+                                <div class="place-number-board-header">
+                                    <h3 class="panel-card-title">Number Line</h3>
+                                    <p id="place-anchor-note" class="place-anchor-note">Roll the dice to get started.</p>
+                                </div>
+
+                                <div id="place-number-line" class="place-number-line" role="group" aria-label="Interactive number line from 0 to 100. Click to place your chosen number.">
+                                    <div class="place-number-track" aria-hidden="true"></div>
+                                    <div class="place-number-ticks" aria-hidden="true">
+                                        <span style="left: 0%;"></span>
+                                        <span style="left: 25%;"></span>
+                                        <span style="left: 50%;"></span>
+                                        <span style="left: 75%;"></span>
+                                        <span style="left: 100%;"></span>
+                                    </div>
+                                    <div id="place-number-markers" class="place-number-markers"></div>
+                                </div>
+
+                                <div class="place-number-labels" aria-hidden="true">
+                                    <span>0</span>
+                                    <span>25</span>
+                                    <span>50</span>
+                                    <span>75</span>
+                                    <span>100</span>
+                                </div>
+
+                                <div class="place-slider">
+                                    <label for="place-estimate-slider">Fine tune your estimate</label>
+                                    <input type="range" id="place-estimate-slider" min="0" max="100" step="0.5" value="50" disabled>
+                                    <div class="place-slider-meta">
+                                        <span id="place-slider-hint">Locked numbers become benchmarks for later rounds.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <aside class="game-panel-right">
+                        <div class="panel-card dice-card">
+                            <div class="dice-container">
+                                <div class="dice-pair">
+                                    <div class="dice small" id="place-dice-left" role="img" aria-label="First digit die">
+                                        <span class="dice-face">?</span>
+                                    </div>
+                                    <div class="dice small" id="place-dice-right" role="img" aria-label="Second digit die">
+                                        <span class="dice-face">?</span>
+                                    </div>
+                                </div>
+                                <button id="roll-place-number-btn" class="btn btn-dice btn-roll-full" aria-label="Roll the place value digit dice">
+                                    Roll Dice 🎲
+                                </button>
+                                <button type="button" class="how-to-play-hint" aria-haspopup="dialog" aria-controls="how-to-play-modal" data-how-to-play-target="place-number">
+                                    How to Play
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="place-choice-card" class="panel-card place-choice-card" hidden>
+                            <h3 class="panel-card-title">Build Your Number</h3>
+                            <p id="place-choice-message" class="place-choice-message">Choose which number gives you the best benchmark.</p>
+                            <div class="place-choice-buttons">
+                                <button id="place-option-a" type="button" class="btn btn-secondary place-option-btn"></button>
+                                <button id="place-option-b" type="button" class="btn btn-secondary place-option-btn"></button>
+                            </div>
+                        </div>
+
+                        <div class="panel-card place-benchmarks-card">
+                            <h3 class="panel-card-title">Current Benchmarks</h3>
+                            <p id="place-benchmark-list" class="place-benchmark-list">0 and 100</p>
+                        </div>
+
+                        <div id="place-action-buttons" class="action-buttons panel-actions" hidden>
+                            <div class="panel-actions-row">
+                                <button id="check-place-number-btn" class="btn btn-primary" disabled>Check Placement ✓</button>
+                                <button id="clear-place-marker-btn" class="btn btn-secondary">Clear Marker</button>
+                            </div>
+                        </div>
+
+                        <div class="panel-bottom-actions">
+                            <button id="reset-place-number-btn" class="btn btn-secondary btn-new-game">New Game</button>
+                        </div>
+                    </aside>
+                </div>
+
+                <div class="game-extras">
+                    <div class="recording-table-container extras-history">
+                        <h4 class="panel-card-title">Game History</h4>
+                        <div class="history-scroll">
+                            <table id="place-number-table" class="recording-table compact-table">
+                                <colgroup>
+                                    <col class="col-round">
+                                    <col class="col-target">
+                                    <col class="col-target">
+                                    <col class="col-total">
+                                    <col class="col-result">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Rd</th>
+                                        <th scope="col">Digits</th>
+                                        <th scope="col">Number</th>
+                                        <th scope="col">Placed At</th>
+                                        <th scope="col">Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer class="site-footer">
         <div class="container">
-            <p>&copy; 2026 Math Games. An educational research prototype for learning fractions and decimals.</p>
+            <p>&copy; 2026 Math Games. An educational research prototype for learning fractions, decimals, and place value.</p>
             <p>For research and educational purposes only.</p>
         </div>
     </footer>
