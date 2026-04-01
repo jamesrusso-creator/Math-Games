@@ -488,7 +488,7 @@ function showSection(targetId) {
 
 function initNavigation() {
     const navLinks = $$('.nav-link');
-    const sections = $$('.section');
+    const brandLink = $('.nav-brand-link');
     const mobileToggle = $('.mobile-menu-toggle');
     const navMenu = $('.nav-menu');
 
@@ -523,6 +523,13 @@ function initNavigation() {
 
             showSection(targetId);
         });
+    });
+
+    brandLink?.addEventListener('click', (e) => {
+        e.preventDefault();
+        mobileToggle?.setAttribute('aria-expanded', 'false');
+        navMenu?.setAttribute('aria-expanded', 'false');
+        showSection('home');
     });
 }
 
