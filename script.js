@@ -2232,14 +2232,6 @@ function updatePlaceNumberActionState() {
     }
 }
 
-function updatePlaceNumberBenchmarkList() {
-    const benchmarkList = $('#place-benchmark-list');
-    if (!benchmarkList) return;
-
-    const values = [0, ...GameState.placeNumber.placedNumbers.map(marker => marker.value).sort((a, b) => a - b), 100];
-    benchmarkList.textContent = values.length === 2 ? '0 and 100' : values.join(', ');
-}
-
 function updatePlaceNumberDisplay() {
     const state = GameState.placeNumber;
     $('#place-round').textContent = state.round;
@@ -2248,7 +2240,6 @@ function updatePlaceNumberDisplay() {
     $('#place-correct-count').textContent = state.stats.correct;
     $('#place-benchmark-count').textContent = state.placedNumbers.length + 2;
 
-    updatePlaceNumberBenchmarkList();
     updatePlaceNumberChoiceCard();
     updatePlaceNumberActionState();
     updatePlaceNumberGuidance();

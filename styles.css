@@ -1974,14 +1974,6 @@ main:has(.game-section:not([hidden])) {
     font-weight: 700;
 }
 
-.place-benchmark-list {
-    color: var(--color-text);
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    line-height: 1.6;
-    word-break: break-word;
-}
-
 /* --- Bottom Collapsible Extras --- */
 .game-extras {
     margin-top: var(--spacing-lg);
