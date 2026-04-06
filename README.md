@@ -8,7 +8,7 @@ The project currently includes three interactive games:
 
 - **Colour in Fractions** — roll fraction dice, then select bars on a fraction wall that sum to the target.
 - **Colour in Decimats** — roll a number die and a decimal place-value die, then click Decimat blocks to shade the matching amount.
-- **Place That Number** — roll two digit dice, choose the stronger two-digit number, and place it on a 0 to 100 number line using benchmarks.
+- **Place That Number** — roll two digit dice, choose the stronger two-digit number, and place it on a 0 to 100 number line in a sudden-death survival run.
 
 The fractions game supports two modes:
 
@@ -29,6 +29,7 @@ The fractions game supports two modes:
 - Double-click breakdown of tenths and hundredths into smaller decimal place-value pieces
 - Number-line estimation game based on the "Place That Number" classroom activity
 - Two-digit choice strategy that turns correct placements into new benchmarks
+- Sudden-death scoring where one incorrect placement ends the run
 - Responsive design for mobile and desktop
 - Keyboard navigation and screen reader support
 

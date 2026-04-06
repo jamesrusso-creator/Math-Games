@@ -85,8 +85,6 @@ const DEFAULT_DECIMAT_INT_DICE = [1, 2, 3, 4, 5, 6];
 const DECIMAT_PLACE_VALUE_OPTIONS = [10, 100, 1000];
 const DEFAULT_DECIMAT_PLACE_DICE = [10, 100, 100, 1000, 1000, 1000];
 const PLACE_NUMBER_DIGIT_VALUES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const PLACE_NUMBER_TARGET_SCORE = 10;
-const PLACE_NUMBER_MAX_MISTAKES = 3;
 let decimatCellCounter = 0;
 
 // Sync initial dice values from default version
@@ -574,7 +572,7 @@ function initHowToPlay() {
                 'Choose which two-digit number you want to build from those digits',
                 'Click the number line or use the slider to estimate where that number belongs from 0 to 100',
                 'Use the numbers already on the line as benchmarks for later rounds',
-                `Place ${PLACE_NUMBER_TARGET_SCORE} numbers before you make ${PLACE_NUMBER_MAX_MISTAKES} mistakes`
+                'The run ends as soon as you place one number incorrectly, so the goal is to last longer than everyone else'
             ]
         }
     };
@@ -2249,6 +2247,7 @@ function updatePlaceNumberDisplay() {
     $('#place-selected-number').textContent = state.selectedNumber === null ? '-' : state.selectedNumber;
     $('#place-correct-count').textContent = state.stats.correct;
     $('#place-incorrect-count').textContent = state.stats.incorrect;
+    $('#place-incorrect-label').textContent = state.stats.incorrect === 1 ? 'miss' : 'misses';
     $('#place-benchmark-count').textContent = state.placedNumbers.length + 2;
 
     updatePlaceNumberBenchmarkList();
@@ -2391,8 +2390,8 @@ function endPlaceNumberGame(isWin) {
         isWin,
         roundsPlayed: Math.max(1, totalRounds),
         onPlayAgain: resetPlaceNumberGame,
-        winReason: `You placed ${PLACE_NUMBER_TARGET_SCORE} numbers and built a reliable bank of benchmarks.`,
-        loseReason: `Three inaccurate placements ended the run. Lean on the benchmarks already on the line.`,
+        winReason: 'You used every available roll without a mistake and built a complete bank of benchmarks.',
+        loseReason: 'The first inaccurate placement ended the run. Compare how many numbers you can place before a miss.',
         statsItems: [
             { className: 'correct', value: state.stats.correct, label: 'Placed' },
             { className: 'incorrect', value: state.stats.incorrect, label: 'Misses' },
@@ -2427,11 +2426,6 @@ function checkPlaceNumberPlacement() {
 
         showPlaceNumberFeedback(evaluation.message, 'success');
 
-        if (state.stats.correct >= PLACE_NUMBER_TARGET_SCORE) {
-            endPlaceNumberGame(true);
-            return;
-        }
-
         advancePlaceNumberRound();
         return;
     }
@@ -2446,13 +2440,7 @@ function checkPlaceNumberPlacement() {
     });
 
     showPlaceNumberFeedback(evaluation.message, 'error');
-
-    if (state.stats.incorrect >= PLACE_NUMBER_MAX_MISTAKES) {
-        endPlaceNumberGame(false);
-        return;
-    }
-
-    advancePlaceNumberRound();
+    endPlaceNumberGame(false);
 }
 
 function rollPlaceNumberDice() {
