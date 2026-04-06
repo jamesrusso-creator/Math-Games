@@ -1828,12 +1828,16 @@ main:has(.game-section:not([hidden])) {
     top: 50%;
     transform: translateX(-50%);
     width: 0;
+    --place-marker-label-top: -86px;
+    --place-marker-stem-top: -54px;
+    --place-marker-stem-height: 54px;
 }
 
 .place-marker-label {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+    top: var(--place-marker-label-top);
     min-width: 2.75rem;
     padding: 0.25rem 0.55rem;
     border-radius: 999px;
@@ -1849,6 +1853,8 @@ main:has(.game-section:not([hidden])) {
 .place-marker-stem {
     position: absolute;
     left: 50%;
+    top: var(--place-marker-stem-top);
+    height: var(--place-marker-stem-height);
     width: 2px;
     transform: translateX(-50%);
     background: rgba(37, 99, 235, 0.7);
@@ -1866,22 +1872,10 @@ main:has(.game-section:not([hidden])) {
     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
 }
 
-.place-marker-upper .place-marker-label {
-    top: -86px;
-}
-
-.place-marker-upper .place-marker-stem {
-    top: -54px;
-    height: 54px;
-}
-
-.place-marker-lower .place-marker-label {
-    top: 32px;
-}
-
-.place-marker-lower .place-marker-stem {
-    top: 8px;
-    height: 16px;
+.place-marker-lower {
+    --place-marker-label-top: 54px;
+    --place-marker-stem-top: 0;
+    --place-marker-stem-height: 53px;
 }
 
 .place-marker.preview .place-marker-label {
@@ -2207,26 +2201,16 @@ main:has(.game-section:not([hidden])) {
         font-size: 0.7rem;
     }
 
-    .place-marker-upper .place-marker-label {
-        top: -72px;
+    .place-marker {
+        --place-marker-label-top: -72px;
+        --place-marker-stem-top: -44px;
+        --place-marker-stem-height: 44px;
     }
 
-    .place-marker-upper .place-marker-stem,
-    .place-marker-lower .place-marker-stem {
-        height: 44px;
-    }
-
-    .place-marker-upper .place-marker-stem {
-        top: -44px;
-    }
-
-    .place-marker-lower .place-marker-label {
-        top: 24px;
-    }
-
-    .place-marker-lower .place-marker-stem {
-        top: 7px;
-        height: 12px;
+    .place-marker-lower {
+        --place-marker-label-top: 44px;
+        --place-marker-stem-top: 0;
+        --place-marker-stem-height: 43px;
     }
 
     .place-choice-buttons {
