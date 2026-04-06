@@ -2246,8 +2246,6 @@ function updatePlaceNumberDisplay() {
     $('#place-digits').textContent = state.currentRoll ? formatDigitRoll(state.currentRoll.digits) : '-';
     $('#place-selected-number').textContent = state.selectedNumber === null ? '-' : state.selectedNumber;
     $('#place-correct-count').textContent = state.stats.correct;
-    $('#place-incorrect-count').textContent = state.stats.incorrect;
-    $('#place-incorrect-label').textContent = state.stats.incorrect === 1 ? 'miss' : 'misses';
     $('#place-benchmark-count').textContent = state.placedNumbers.length + 2;
 
     updatePlaceNumberBenchmarkList();
@@ -2394,7 +2392,6 @@ function endPlaceNumberGame(isWin) {
         loseReason: 'The first inaccurate placement ended the run. Compare how many numbers you can place before a miss.',
         statsItems: [
             { className: 'correct', value: state.stats.correct, label: 'Placed' },
-            { className: 'incorrect', value: state.stats.incorrect, label: 'Misses' },
             { className: 'skipped', value: state.placedNumbers.length + 2, label: 'Benchmarks' },
             { className: 'accuracy', value: `${accuracy}%`, label: 'Accuracy' }
         ]
