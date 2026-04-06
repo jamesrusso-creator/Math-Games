@@ -1798,7 +1798,7 @@ main:has(.game-section:not([hidden])) {
     left: 0;
     right: 0;
     top: 50%;
-    height: 4px;
+    height: 3px;
     transform: translateY(-50%);
     background: linear-gradient(90deg, #1d4ed8, #3b82f6);
 }
@@ -1831,6 +1831,8 @@ main:has(.game-section:not([hidden])) {
     --place-marker-label-top: -86px;
     --place-marker-stem-top: -54px;
     --place-marker-stem-height: 54px;
+    --place-marker-dot-size: 10px;
+    --place-marker-dot-ring: 2px;
 }
 
 .place-marker-label {
@@ -1864,12 +1866,12 @@ main:has(.game-section:not([hidden])) {
     position: absolute;
     left: 50%;
     top: 0;
-    width: 14px;
-    height: 14px;
+    width: var(--place-marker-dot-size);
+    height: var(--place-marker-dot-size);
     border-radius: 50%;
     transform: translate(-50%, -50%);
     background: var(--color-primary);
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+    box-shadow: 0 0 0 var(--place-marker-dot-ring) rgba(37, 99, 235, 0.14);
 }
 
 .place-marker-lower {
@@ -1890,7 +1892,7 @@ main:has(.game-section:not([hidden])) {
 
 .place-marker.preview .place-marker-dot {
     background: #14b8a6;
-    box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.14);
+    box-shadow: 0 0 0 var(--place-marker-dot-ring) rgba(20, 184, 166, 0.14);
 }
 
 .place-marker.failed .place-marker-label {
@@ -1904,7 +1906,7 @@ main:has(.game-section:not([hidden])) {
 
 .place-marker.failed .place-marker-dot {
     background: #dc2626;
-    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.14);
+    box-shadow: 0 0 0 var(--place-marker-dot-ring) rgba(220, 38, 38, 0.14);
 }
 
 .place-marker.label-hidden .place-marker-label,
@@ -2205,6 +2207,8 @@ main:has(.game-section:not([hidden])) {
         --place-marker-label-top: -72px;
         --place-marker-stem-top: -44px;
         --place-marker-stem-height: 44px;
+        --place-marker-dot-size: 8px;
+        --place-marker-dot-ring: 2px;
     }
 
     .place-marker-lower {
