@@ -39,6 +39,7 @@ const GameState = {
         round: 1,
         placedNumbers: [],
         failedPlacement: null,
+        showBenchmarks: false,
         isSelecting: false,
         isGameOver: false,
         stats: { correct: 0, incorrect: 0 }
@@ -2180,6 +2181,20 @@ function updatePlaceNumberHistoryVisibility() {
     historyPanel.hidden = !GameState.placeNumber.isGameOver;
 }
 
+function updatePlaceNumberBenchmarkGuides() {
+    const line = $('#place-number-line');
+    const labels = $('.place-number-labels');
+    const toggle = $('#place-show-benchmarks');
+    const showBenchmarks = GameState.placeNumber.showBenchmarks;
+
+    line?.classList.toggle('place-benchmarks-visible', showBenchmarks);
+    labels?.classList.toggle('place-benchmarks-visible', showBenchmarks);
+
+    if (toggle) {
+        toggle.checked = showBenchmarks;
+    }
+}
+
 function updatePlaceNumberChoiceCard() {
     const state = GameState.placeNumber;
     const card = $('#place-choice-card');
@@ -2264,6 +2279,7 @@ function updatePlaceNumberDisplay() {
     $('#place-benchmark-count').textContent = state.placedNumbers.length + 2;
 
     updatePlaceNumberHistoryVisibility();
+    updatePlaceNumberBenchmarkGuides();
     updatePlaceNumberChoiceCard();
     updatePlaceNumberActionState();
     updatePlaceNumberGuidance();
@@ -2533,6 +2549,10 @@ function initPlaceNumberGame() {
     $('#check-place-number-btn')?.addEventListener('click', checkPlaceNumberPlacement);
     $('#clear-place-marker-btn')?.addEventListener('click', clearPlaceNumberMarker);
     $('#reset-place-number-btn')?.addEventListener('click', resetPlaceNumberGame);
+    $('#place-show-benchmarks')?.addEventListener('change', (event) => {
+        GameState.placeNumber.showBenchmarks = event.currentTarget.checked;
+        updatePlaceNumberBenchmarkGuides();
+    });
     $('#place-number-line')?.addEventListener('click', handlePlaceNumberLineClick);
     $('#place-estimate-slider')?.addEventListener('input', handlePlaceNumberSliderInput);
 

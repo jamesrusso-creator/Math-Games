@@ -115,7 +115,7 @@
                     </div>
 
                     <!-- Right Panel: Controls -->
-                    <aside class="game-panel-right">
+    <aside class="game-panel-right">
                         <div class="panel-card dice-card">
                             <div class="dice-container">
                                 <div class="dice-pair">
@@ -353,9 +353,9 @@
                                     <div class="place-number-track" aria-hidden="true"></div>
                                     <div class="place-number-ticks" aria-hidden="true">
                                         <span style="left: 0%;"></span>
-                                        <span style="left: 25%;"></span>
-                                        <span style="left: 50%;"></span>
-                                        <span style="left: 75%;"></span>
+                                        <span class="place-optional-benchmark" style="left: 25%;"></span>
+                                        <span class="place-optional-benchmark" style="left: 50%;"></span>
+                                        <span class="place-optional-benchmark" style="left: 75%;"></span>
                                         <span style="left: 100%;"></span>
                                     </div>
                                     <div id="place-number-markers" class="place-number-markers"></div>
@@ -363,9 +363,9 @@
 
                                 <div class="place-number-labels" aria-hidden="true">
                                     <span>0</span>
-                                    <span>25</span>
-                                    <span>50</span>
-                                    <span>75</span>
+                                    <span class="place-optional-benchmark">25</span>
+                                    <span class="place-optional-benchmark">50</span>
+                                    <span class="place-optional-benchmark">75</span>
                                     <span>100</span>
                                 </div>
 
@@ -397,6 +397,10 @@
                                 <button type="button" class="how-to-play-hint" aria-haspopup="dialog" aria-controls="how-to-play-modal" data-how-to-play-target="place-number">
                                     How to Play
                                 </button>
+                                <label class="place-benchmark-toggle" for="place-show-benchmarks">
+                                    <input type="checkbox" id="place-show-benchmarks">
+                                    <span>Show 25 / 50 / 75 benchmarks</span>
+                                </label>
                             </div>
                         </div>
 

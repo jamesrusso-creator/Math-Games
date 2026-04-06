@@ -1817,6 +1817,20 @@ main:has(.game-section:not([hidden])) {
     transform: translateX(-50%);
 }
 
+.place-number-ticks .place-optional-benchmark,
+.place-number-labels .place-optional-benchmark {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-fast), visibility var(--transition-fast);
+}
+
+.place-number-ticks.place-benchmarks-visible .place-optional-benchmark,
+.place-number-labels.place-benchmarks-visible .place-optional-benchmark,
+.place-number-line.place-benchmarks-visible .place-optional-benchmark {
+    opacity: 1;
+    visibility: visible;
+}
+
 .place-number-markers {
     position: absolute;
     inset: 0;
@@ -1951,6 +1965,28 @@ main:has(.game-section:not([hidden])) {
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-md);
+}
+
+.place-benchmark-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    line-height: 1.45;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dice-card .place-benchmark-toggle {
+    margin-top: -0.125rem;
+    align-self: stretch;
+    justify-content: center;
+}
+
+.place-benchmark-toggle input {
+    margin-top: 0.15rem;
+    accent-color: var(--color-primary);
 }
 
 .place-slider-chip {
