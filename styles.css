@@ -1876,12 +1876,12 @@ main:has(.game-section:not([hidden])) {
 }
 
 .place-marker-lower .place-marker-label {
-    top: 24px;
+    top: 32px;
 }
 
 .place-marker-lower .place-marker-stem {
-    top: 0;
-    height: 54px;
+    top: 8px;
+    height: 16px;
 }
 
 .place-marker.preview .place-marker-label {
@@ -1897,6 +1897,25 @@ main:has(.game-section:not([hidden])) {
 .place-marker.preview .place-marker-dot {
     background: #14b8a6;
     box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.14);
+}
+
+.place-marker.failed .place-marker-label {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.place-marker.failed .place-marker-stem {
+    background: rgba(220, 38, 38, 0.78);
+}
+
+.place-marker.failed .place-marker-dot {
+    background: #dc2626;
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.14);
+}
+
+.place-marker.label-hidden .place-marker-label,
+.place-marker.label-hidden .place-marker-stem {
+    display: none;
 }
 
 .place-number-labels {
@@ -2202,7 +2221,12 @@ main:has(.game-section:not([hidden])) {
     }
 
     .place-marker-lower .place-marker-label {
-        top: 18px;
+        top: 24px;
+    }
+
+    .place-marker-lower .place-marker-stem {
+        top: 7px;
+        height: 12px;
     }
 
     .place-choice-buttons {

@@ -38,6 +38,7 @@ const GameState = {
         estimate: null,
         round: 1,
         placedNumbers: [],
+        failedPlacement: null,
         isSelecting: false,
         isGameOver: false,
         stats: { correct: 0, incorrect: 0 }
@@ -2116,11 +2117,19 @@ function updatePlaceNumberGuidance() {
         : 'Check whether your marker feels a little closer to the left or right benchmark.';
 }
 
-function buildPlaceNumberMarker(marker, lane = 'upper') {
+function buildPlaceNumberMarker(marker, lane = 'upper', options = {}) {
+    const { hideLabel = false } = options;
     const element = document.createElement('div');
     element.className = `place-marker place-marker-${lane}`;
     if (marker.preview) {
         element.classList.add('preview');
+    } else if (marker.failed) {
+        element.classList.add('failed');
+    } else {
+        element.classList.add('locked');
+    }
+    if (hideLabel) {
+        element.classList.add('label-hidden');
     }
     element.style.left = `${marker.position}%`;
     element.innerHTML = `
@@ -2142,7 +2151,9 @@ function renderPlaceNumberLine() {
     const sortedMarkers = [...state.placedNumbers].sort((a, b) => a.value - b.value);
     sortedMarkers.forEach((marker, index) => {
         const lane = index % 2 === 0 ? 'upper' : 'lower';
-        markersLayer.appendChild(buildPlaceNumberMarker(marker, lane));
+        markersLayer.appendChild(buildPlaceNumberMarker(marker, lane, {
+            hideLabel: !state.isGameOver
+        }));
     });
 
     if (state.currentRoll && state.selectedNumber !== null && state.estimate !== null) {
@@ -2154,7 +2165,19 @@ function renderPlaceNumberLine() {
         }, previewLane));
     }
 
+    if (state.isGameOver && state.failedPlacement) {
+        const failedLane = sortedMarkers.length % 2 === 0 ? 'upper' : 'lower';
+        markersLayer.appendChild(buildPlaceNumberMarker(state.failedPlacement, failedLane));
+    }
+
     line.classList.toggle('is-active', Boolean(state.currentRoll) && state.selectedNumber !== null && !state.isGameOver);
+}
+
+function updatePlaceNumberHistoryVisibility() {
+    const historyPanel = $('#place-history-panel');
+    if (!historyPanel) return;
+
+    historyPanel.hidden = !GameState.placeNumber.isGameOver;
 }
 
 function updatePlaceNumberChoiceCard() {
@@ -2240,6 +2263,7 @@ function updatePlaceNumberDisplay() {
     $('#place-correct-count').textContent = state.stats.correct;
     $('#place-benchmark-count').textContent = state.placedNumbers.length + 2;
 
+    updatePlaceNumberHistoryVisibility();
     updatePlaceNumberChoiceCard();
     updatePlaceNumberActionState();
     updatePlaceNumberGuidance();
@@ -2353,6 +2377,7 @@ function advancePlaceNumberRound() {
     state.currentRoll = null;
     state.selectedNumber = null;
     state.estimate = null;
+    state.failedPlacement = null;
     state.isSelecting = false;
 
     resetPlaceNumberDiceDisplay();
@@ -2363,6 +2388,9 @@ function advancePlaceNumberRound() {
 function endPlaceNumberGame(isWin) {
     const state = GameState.placeNumber;
     state.isGameOver = true;
+    if (isWin) {
+        state.failedPlacement = null;
+    }
     state.currentRoll = null;
     state.selectedNumber = null;
     state.estimate = null;
@@ -2419,6 +2447,11 @@ function checkPlaceNumberPlacement() {
     }
 
     state.stats.incorrect++;
+    state.failedPlacement = {
+        value: state.selectedNumber,
+        position: state.estimate,
+        failed: true
+    };
     addToPlaceNumberTable({
         round: state.round,
         digits: formatDigitRoll(roll.digits),
@@ -2481,6 +2514,7 @@ function resetPlaceNumberGame() {
     state.estimate = null;
     state.round = 1;
     state.placedNumbers = [];
+    state.failedPlacement = null;
     state.isSelecting = false;
     state.isGameOver = false;
     state.stats = { correct: 0, incorrect: 0 };
