@@ -1745,6 +1745,7 @@ main:has(.game-section:not([hidden])) {
 
 /* --- Place That Number --- */
 .place-number-board-card {
+    --place-line-edge-inset: clamp(0.75rem, 1.5vw, 1.125rem);
     padding: var(--spacing-lg);
     background: var(--color-surface);
 }
@@ -1787,6 +1788,11 @@ main:has(.game-section:not([hidden])) {
 
 .place-number-line.is-dragging {
     cursor: grabbing;
+}
+
+.place-number-line-inner {
+    position: absolute;
+    inset: 0 var(--place-line-edge-inset);
 }
 
 .place-number-track {
@@ -1928,6 +1934,7 @@ main:has(.game-section:not([hidden])) {
     display: flex;
     justify-content: space-between;
     margin-top: var(--spacing-md);
+    padding-inline: var(--place-line-edge-inset);
     color: var(--color-text-light);
     font-size: var(--font-size-sm);
     font-weight: 700;

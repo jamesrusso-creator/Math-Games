@@ -2350,7 +2350,8 @@ function clearPlaceNumberMarker() {
 
 function setPlaceNumberEstimateFromClientX(line, clientX) {
     if (!line) return;
-    const rect = line.getBoundingClientRect();
+    const surface = line.querySelector('.place-number-line-inner') || line;
+    const rect = surface.getBoundingClientRect();
     if (rect.width <= 0) return;
 
     const ratio = clampNumber((clientX - rect.left) / rect.width, 0, 1);

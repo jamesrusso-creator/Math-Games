@@ -350,15 +350,17 @@
                                 </div>
 
                                 <div id="place-number-line" class="place-number-line" role="group" tabindex="-1" aria-label="Interactive number line from 0 to 100. Click or drag to place your chosen number.">
-                                    <div class="place-number-track" aria-hidden="true"></div>
-                                    <div class="place-number-ticks" aria-hidden="true">
-                                        <span style="left: 0%;"></span>
-                                        <span class="place-optional-benchmark" style="left: 25%;"></span>
-                                        <span class="place-optional-benchmark" style="left: 50%;"></span>
-                                        <span class="place-optional-benchmark" style="left: 75%;"></span>
-                                        <span style="left: 100%;"></span>
+                                    <div class="place-number-line-inner" aria-hidden="true">
+                                        <div class="place-number-track"></div>
+                                        <div class="place-number-ticks">
+                                            <span style="left: 0%;"></span>
+                                            <span class="place-optional-benchmark" style="left: 25%;"></span>
+                                            <span class="place-optional-benchmark" style="left: 50%;"></span>
+                                            <span class="place-optional-benchmark" style="left: 75%;"></span>
+                                            <span style="left: 100%;"></span>
+                                        </div>
+                                        <div id="place-number-markers" class="place-number-markers"></div>
                                     </div>
-                                    <div id="place-number-markers" class="place-number-markers"></div>
                                 </div>
 
                                 <div class="place-number-labels" aria-hidden="true">
