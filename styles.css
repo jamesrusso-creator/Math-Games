@@ -1774,13 +1774,19 @@ main:has(.game-section:not([hidden])) {
     background: #ffffff;
     overflow: hidden;
     cursor: not-allowed;
+    touch-action: none;
+    user-select: none;
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .place-number-line.is-active {
-    cursor: crosshair;
+    cursor: pointer;
     border-color: rgba(37, 99, 235, 0.45);
     box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.08);
+}
+
+.place-number-line.is-dragging {
+    cursor: grabbing;
 }
 
 .place-number-track {
@@ -1927,36 +1933,6 @@ main:has(.game-section:not([hidden])) {
     font-weight: 700;
 }
 
-.place-slider {
-    margin-top: var(--spacing-lg);
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-}
-
-.place-slider label {
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: var(--color-text);
-}
-
-#place-estimate-slider {
-    width: 100%;
-    accent-color: var(--color-primary);
-}
-
-#place-estimate-slider:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
-.place-slider-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-md);
-}
-
 .place-benchmark-toggle {
     display: flex;
     align-items: flex-start;
@@ -1977,18 +1953,6 @@ main:has(.game-section:not([hidden])) {
 .place-benchmark-toggle input {
     margin-top: 0.15rem;
     accent-color: var(--color-primary);
-}
-
-.place-slider-chip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 44px;
-    padding: 0.25rem 0.75rem;
-    border-radius: 999px;
-    background: #dbeafe;
-    color: #1d4ed8;
-    font-weight: 700;
 }
 
 .place-choice-card {
@@ -2135,10 +2099,6 @@ main:has(.game-section:not([hidden])) {
         min-height: 200px;
     }
 
-    .place-slider-meta {
-        flex-direction: column;
-        align-items: flex-start;
-    }
 }
 
 @media (max-width: 480px) {

@@ -53,7 +53,7 @@
                     <article class="game-card">
                         <div class="game-icon" aria-hidden="true">📍</div>
                         <h3>Place That Number</h3>
-                        <p>Roll two digit dice, choose the strongest two-digit number, and place it on a 0 to 100 number line using benchmarks.</p>
+                        <p>Roll two digit dice, choose a two-digit number, and place it on a 0 to 100 number line using benchmarks.</p>
                         <button class="btn btn-primary play-place-number-btn">Play Now</button>
                     </article>
                 </div>
@@ -342,14 +342,14 @@
                 <div class="game-layout">
                     <div class="game-panel-left">
                         <div class="fraction-wall-container place-number-container">
-                            <p class="wall-hint">Choose a two-digit number, then click the line or use the slider to place it between 0 and 100.</p>
+                            <p class="wall-hint">Choose a two-digit number, then click or drag on the line to place it between 0 and 100.</p>
                             <div class="panel-card place-number-board-card">
                                 <div class="place-number-board-header">
                                     <h3 class="panel-card-title">Number Line</h3>
                                     <p id="place-anchor-note" class="place-anchor-note">Roll the dice to get started.</p>
                                 </div>
 
-                                <div id="place-number-line" class="place-number-line" role="group" aria-label="Interactive number line from 0 to 100. Click to place your chosen number.">
+                                <div id="place-number-line" class="place-number-line" role="group" tabindex="-1" aria-label="Interactive number line from 0 to 100. Click or drag to place your chosen number.">
                                     <div class="place-number-track" aria-hidden="true"></div>
                                     <div class="place-number-ticks" aria-hidden="true">
                                         <span style="left: 0%;"></span>
@@ -367,14 +367,6 @@
                                     <span class="place-optional-benchmark">50</span>
                                     <span class="place-optional-benchmark">75</span>
                                     <span>100</span>
-                                </div>
-
-                                <div class="place-slider">
-                                    <label for="place-estimate-slider">Fine tune your estimate</label>
-                                    <input type="range" id="place-estimate-slider" min="0" max="100" step="0.5" value="50" disabled>
-                                    <div class="place-slider-meta">
-                                        <span id="place-slider-hint">Locked numbers become benchmarks for later rounds.</span>
-                                    </div>
                                 </div>
                             </div>
                         </div>

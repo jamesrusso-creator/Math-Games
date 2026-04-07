@@ -40,6 +40,8 @@ const GameState = {
         placedNumbers: [],
         failedPlacement: null,
         showBenchmarks: false,
+        isDraggingEstimate: false,
+        dragPointerId: null,
         isSelecting: false,
         isGameOver: false,
         stats: { correct: 0, incorrect: 0 }
@@ -572,7 +574,7 @@ function initHowToPlay() {
             steps: [
                 'Roll the two digit dice to get a pair of digits',
                 'Choose which two-digit number you want to build from those digits',
-                'Click the number line or use the slider to estimate where that number belongs from 0 to 100',
+                'Click or drag on the number line to estimate where that number belongs from 0 to 100',
                 'Use the numbers already on the line as benchmarks for later rounds',
                 'The run ends as soon as you place one number incorrectly, so the goal is to last longer than everyone else'
             ]
@@ -2098,24 +2100,20 @@ function describePlaceNumberWindow(value) {
 function updatePlaceNumberGuidance() {
     const state = GameState.placeNumber;
     const note = $('#place-anchor-note');
-    const hint = $('#place-slider-hint');
 
     if (!state.currentRoll) {
         note.textContent = 'Roll the dice to get started.';
-        hint.textContent = 'Locked numbers become benchmarks for later rounds.';
         return;
     }
 
     if (state.selectedNumber === null) {
         note.textContent = 'Choose one of the available numbers before you place a marker.';
-        hint.textContent = 'Think about which option gives you a stronger benchmark for later.';
         return;
     }
 
-    note.textContent = describePlaceNumberWindow(state.selectedNumber);
-    hint.textContent = state.estimate === null
-        ? 'Click the line, then fine tune with the slider.'
-        : 'Check whether your marker feels a little closer to the left or right benchmark.';
+    note.textContent = state.estimate === null
+        ? `${describePlaceNumberWindow(state.selectedNumber)} Click or drag on the line to place your marker.`
+        : `${describePlaceNumberWindow(state.selectedNumber)} Drag on the line to adjust your marker before checking.`;
 }
 
 function buildPlaceNumberMarker(marker, lane = 'upper', options = {}) {
@@ -2172,6 +2170,7 @@ function renderPlaceNumberLine() {
     }
 
     line.classList.toggle('is-active', Boolean(state.currentRoll) && state.selectedNumber !== null && !state.isGameOver);
+    line.classList.toggle('is-dragging', state.isDraggingEstimate);
 }
 
 function updatePlaceNumberHistoryVisibility() {
@@ -2219,7 +2218,7 @@ function updatePlaceNumberChoiceCard() {
     card.hidden = false;
     message.textContent = state.currentRoll.options.length === 1
         ? 'Only one new number is available from these digits.'
-        : 'Choose the number that gives you the strongest benchmark.';
+        : 'Choose the number that gives you the best benchmark.';
 
     buttons.forEach((button, index) => {
         if (!button) return;
@@ -2243,7 +2242,7 @@ function updatePlaceNumberChoiceCard() {
 function updatePlaceNumberActionState() {
     const state = GameState.placeNumber;
     const hasActiveRoll = Boolean(state.currentRoll) && !state.isGameOver;
-    const slider = $('#place-estimate-slider');
+    const line = $('#place-number-line');
     const checkBtn = $('#check-place-number-btn');
     const clearBtn = $('#clear-place-marker-btn');
     const actionButtons = $('#place-action-buttons');
@@ -2257,8 +2256,10 @@ function updatePlaceNumberActionState() {
         actionButtons.hidden = !hasActiveRoll;
     }
 
-    if (slider) {
-        slider.disabled = !hasActiveRoll || state.selectedNumber === null;
+    if (line) {
+        const canPlaceMarker = hasActiveRoll && state.selectedNumber !== null;
+        line.tabIndex = canPlaceMarker ? 0 : -1;
+        line.setAttribute('aria-disabled', canPlaceMarker ? 'false' : 'true');
     }
 
     if (checkBtn) {
@@ -2316,38 +2317,126 @@ function setPlaceNumberEstimate(value) {
 
     const normalized = Math.round(clampNumber(value, 0, 100) * 2) / 2;
     state.estimate = normalized;
-    $('#place-estimate-slider').value = String(normalized);
     updatePlaceNumberDisplay();
+}
+
+function stopPlaceNumberDrag(pointerId = null) {
+    const state = GameState.placeNumber;
+    if (!state.isDraggingEstimate) return;
+    if (pointerId !== null && state.dragPointerId !== pointerId) return;
+
+    const line = $('#place-number-line');
+    if (line && state.dragPointerId !== null && typeof line.hasPointerCapture === 'function' && line.hasPointerCapture(state.dragPointerId)) {
+        try {
+            line.releasePointerCapture(state.dragPointerId);
+        } catch (error) {
+            // Ignore release errors when the pointer capture has already been cleared.
+        }
+    }
+
+    state.isDraggingEstimate = false;
+    state.dragPointerId = null;
+    renderPlaceNumberLine();
 }
 
 function clearPlaceNumberMarker() {
     const state = GameState.placeNumber;
     if (!state.currentRoll || state.isGameOver) return;
 
+    stopPlaceNumberDrag();
     state.estimate = null;
-    $('#place-estimate-slider').value = '50';
     updatePlaceNumberDisplay();
 }
 
-function handlePlaceNumberLineClick(event) {
+function setPlaceNumberEstimateFromClientX(line, clientX) {
+    if (!line) return;
+    const rect = line.getBoundingClientRect();
+    if (rect.width <= 0) return;
+
+    const ratio = clampNumber((clientX - rect.left) / rect.width, 0, 1);
+    setPlaceNumberEstimate(ratio * 100);
+}
+
+function handlePlaceNumberLinePointerDown(event) {
     const state = GameState.placeNumber;
     if (!state.currentRoll || state.isGameOver) return;
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
 
     if (state.selectedNumber === null) {
         showPlaceNumberFeedback('Choose one of the two numbers first, then place your marker on the line.', 'info');
         return;
     }
 
-    const rect = event.currentTarget.getBoundingClientRect();
-    const ratio = clampNumber((event.clientX - rect.left) / rect.width, 0, 1);
-    setPlaceNumberEstimate(ratio * 100);
+    const line = event.currentTarget;
+    state.isDraggingEstimate = true;
+    state.dragPointerId = event.pointerId;
+
+    if (typeof line.setPointerCapture === 'function') {
+        try {
+            line.setPointerCapture(event.pointerId);
+        } catch (error) {
+            // Ignore capture errors when the browser does not allow pointer capture here.
+        }
+    }
+
+    event.preventDefault();
+    setPlaceNumberEstimateFromClientX(line, event.clientX);
 }
 
-function handlePlaceNumberSliderInput(event) {
+function handlePlaceNumberLinePointerMove(event) {
+    const state = GameState.placeNumber;
+    if (!state.isDraggingEstimate || state.dragPointerId !== event.pointerId) return;
+
+    event.preventDefault();
+    setPlaceNumberEstimateFromClientX(event.currentTarget, event.clientX);
+}
+
+function handlePlaceNumberLinePointerUp(event) {
+    const state = GameState.placeNumber;
+    if (!state.isDraggingEstimate || state.dragPointerId !== event.pointerId) return;
+
+    event.preventDefault();
+    setPlaceNumberEstimateFromClientX(event.currentTarget, event.clientX);
+    stopPlaceNumberDrag(event.pointerId);
+}
+
+function handlePlaceNumberLinePointerCancel(event) {
+    stopPlaceNumberDrag(event.pointerId);
+}
+
+function handlePlaceNumberLineKeyDown(event) {
     const state = GameState.placeNumber;
     if (!state.currentRoll || state.selectedNumber === null || state.isGameOver) return;
 
-    setPlaceNumberEstimate(parseFloat(event.target.value));
+    const step = event.shiftKey ? 5 : 0.5;
+    const currentEstimate = state.estimate ?? 50;
+    let nextEstimate = currentEstimate;
+    let handled = true;
+
+    switch (event.key) {
+        case 'ArrowLeft':
+        case 'ArrowDown':
+            nextEstimate -= step;
+            break;
+        case 'ArrowRight':
+        case 'ArrowUp':
+            nextEstimate += step;
+            break;
+        case 'Home':
+            nextEstimate = 0;
+            break;
+        case 'End':
+            nextEstimate = 100;
+            break;
+        default:
+            handled = false;
+            break;
+    }
+
+    if (!handled) return;
+
+    event.preventDefault();
+    setPlaceNumberEstimate(nextEstimate);
 }
 
 function selectPlaceNumberOption(value) {
@@ -2395,9 +2484,10 @@ function advancePlaceNumberRound() {
     state.estimate = null;
     state.failedPlacement = null;
     state.isSelecting = false;
+    state.isDraggingEstimate = false;
+    state.dragPointerId = null;
 
     resetPlaceNumberDiceDisplay();
-    $('#place-estimate-slider').value = '50';
     updatePlaceNumberDisplay();
 }
 
@@ -2411,9 +2501,9 @@ function endPlaceNumberGame(isWin) {
     state.selectedNumber = null;
     state.estimate = null;
     state.isSelecting = false;
+    stopPlaceNumberDrag();
 
     resetPlaceNumberDiceDisplay();
-    $('#place-estimate-slider').value = '50';
     updatePlaceNumberDisplay();
 
     const totalRounds = state.stats.correct + state.stats.incorrect;
@@ -2506,10 +2596,11 @@ function rollPlaceNumberDice() {
         state.selectedNumber = roll.options.length === 1 ? roll.options[0] : null;
         state.estimate = null;
         state.isSelecting = true;
+        state.isDraggingEstimate = false;
+        state.dragPointerId = null;
 
         $('#place-dice-left .dice-face').textContent = roll.digits[0];
         $('#place-dice-right .dice-face').textContent = roll.digits[1];
-        $('#place-estimate-slider').value = '50';
 
         updatePlaceNumberDisplay();
 
@@ -2525,6 +2616,7 @@ function rollPlaceNumberDice() {
 
 function resetPlaceNumberGame() {
     const state = GameState.placeNumber;
+    stopPlaceNumberDrag();
     state.currentRoll = null;
     state.selectedNumber = null;
     state.estimate = null;
@@ -2532,6 +2624,8 @@ function resetPlaceNumberGame() {
     state.placedNumbers = [];
     state.failedPlacement = null;
     state.isSelecting = false;
+    state.isDraggingEstimate = false;
+    state.dragPointerId = null;
     state.isGameOver = false;
     state.stats = { correct: 0, incorrect: 0 };
 
@@ -2539,7 +2633,6 @@ function resetPlaceNumberGame() {
     if (tbody) tbody.innerHTML = '';
 
     resetPlaceNumberDiceDisplay();
-    $('#place-estimate-slider').value = '50';
     hidePlaceNumberFeedback();
     updatePlaceNumberDisplay();
 }
@@ -2553,8 +2646,12 @@ function initPlaceNumberGame() {
         GameState.placeNumber.showBenchmarks = event.currentTarget.checked;
         updatePlaceNumberBenchmarkGuides();
     });
-    $('#place-number-line')?.addEventListener('click', handlePlaceNumberLineClick);
-    $('#place-estimate-slider')?.addEventListener('input', handlePlaceNumberSliderInput);
+    $('#place-number-line')?.addEventListener('pointerdown', handlePlaceNumberLinePointerDown);
+    $('#place-number-line')?.addEventListener('pointermove', handlePlaceNumberLinePointerMove);
+    $('#place-number-line')?.addEventListener('pointerup', handlePlaceNumberLinePointerUp);
+    $('#place-number-line')?.addEventListener('pointercancel', handlePlaceNumberLinePointerCancel);
+    $('#place-number-line')?.addEventListener('lostpointercapture', handlePlaceNumberLinePointerCancel);
+    $('#place-number-line')?.addEventListener('keydown', handlePlaceNumberLineKeyDown);
 
     ['#place-option-a', '#place-option-b'].forEach(selector => {
         $(selector)?.addEventListener('click', (event) => {
