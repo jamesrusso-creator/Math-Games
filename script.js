@@ -43,7 +43,6 @@ const GameState = {
         showBenchmarks: false,
         isDraggingEstimate: false,
         dragPointerId: null,
-        isSelecting: false,
         isGameOver: false,
         stats: { correct: 0, incorrect: 0 }
     }
@@ -2135,6 +2134,10 @@ function updatePlaceNumberGuidance() {
     syncHintToggle(true);
 }
 
+function getPlaceNumberMarkerLane(index) {
+    return index % 2 === 0 ? 'upper' : 'lower';
+}
+
 function buildPlaceNumberMarker(marker, lane = 'upper', options = {}) {
     const { hideLabel = false } = options;
     const element = document.createElement('div');
@@ -2168,14 +2171,14 @@ function renderPlaceNumberLine() {
 
     const sortedMarkers = [...state.placedNumbers].sort((a, b) => a.value - b.value);
     sortedMarkers.forEach((marker, index) => {
-        const lane = index % 2 === 0 ? 'upper' : 'lower';
+        const lane = getPlaceNumberMarkerLane(index);
         markersLayer.appendChild(buildPlaceNumberMarker(marker, lane, {
             hideLabel: !state.isGameOver
         }));
     });
 
     if (state.currentRoll && state.selectedNumber !== null && state.estimate !== null) {
-        const previewLane = sortedMarkers.length % 2 === 0 ? 'upper' : 'lower';
+        const previewLane = getPlaceNumberMarkerLane(sortedMarkers.length);
         markersLayer.appendChild(buildPlaceNumberMarker({
             value: state.selectedNumber,
             position: state.estimate,
@@ -2184,7 +2187,7 @@ function renderPlaceNumberLine() {
     }
 
     if (state.isGameOver && state.failedPlacement) {
-        const failedLane = sortedMarkers.length % 2 === 0 ? 'upper' : 'lower';
+        const failedLane = getPlaceNumberMarkerLane(sortedMarkers.length);
         markersLayer.appendChild(buildPlaceNumberMarker(state.failedPlacement, failedLane));
     }
 
@@ -2217,20 +2220,22 @@ function updatePlaceNumberChoiceCard() {
     const state = GameState.placeNumber;
     const card = $('#place-choice-card');
     const message = $('#place-choice-message');
-    const buttons = [$('#place-option-a'), $('#place-option-b')];
+    const buttons = $$('.place-option-btn');
 
     if (!card) return;
 
+    const resetOptionButton = (button) => {
+        if (!button) return;
+        button.hidden = true;
+        button.dataset.value = '';
+        button.textContent = '';
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-secondary');
+    };
+
     if (!state.currentRoll) {
         card.hidden = true;
-        buttons.forEach(button => {
-            if (!button) return;
-            button.hidden = true;
-            button.dataset.value = '';
-            button.textContent = '';
-            button.classList.remove('btn-primary');
-            button.classList.add('btn-secondary');
-        });
+        buttons.forEach(resetOptionButton);
         return;
     }
 
@@ -2244,8 +2249,7 @@ function updatePlaceNumberChoiceCard() {
 
         const optionValue = state.currentRoll.options[index];
         if (typeof optionValue !== 'number') {
-            button.hidden = true;
-            button.dataset.value = '';
+            resetOptionButton(button);
             return;
         }
 
@@ -2325,9 +2329,34 @@ function addToPlaceNumberTable(entry) {
     if (scrollContainer) scrollContainer.scrollTop = 0;
 }
 
+function setPlaceNumberDiceDisplay(leftValue, rightValue) {
+    $('#place-dice-left .dice-face').textContent = leftValue;
+    $('#place-dice-right .dice-face').textContent = rightValue;
+}
+
 function resetPlaceNumberDiceDisplay() {
-    $('#place-dice-left .dice-face').textContent = '?';
-    $('#place-dice-right .dice-face').textContent = '?';
+    setPlaceNumberDiceDisplay('?', '?');
+}
+
+function resetPlaceNumberTurnState({ clearFailedPlacement = false } = {}) {
+    const state = GameState.placeNumber;
+    state.currentRoll = null;
+    state.selectedNumber = null;
+    state.estimate = null;
+    state.showHint = false;
+    state.isDraggingEstimate = false;
+    state.dragPointerId = null;
+
+    if (clearFailedPlacement) {
+        state.failedPlacement = null;
+    }
+}
+
+function startPlaceNumberTurn(roll) {
+    const state = GameState.placeNumber;
+    resetPlaceNumberTurnState({ clearFailedPlacement: true });
+    state.currentRoll = roll;
+    state.selectedNumber = roll.options.length === 1 ? roll.options[0] : null;
 }
 
 function setPlaceNumberEstimate(value) {
@@ -2507,14 +2536,7 @@ function evaluatePlaceNumberPlacement(value, estimate) {
 function advancePlaceNumberRound() {
     const state = GameState.placeNumber;
     state.round += 1;
-    state.currentRoll = null;
-    state.selectedNumber = null;
-    state.estimate = null;
-    state.showHint = false;
-    state.failedPlacement = null;
-    state.isSelecting = false;
-    state.isDraggingEstimate = false;
-    state.dragPointerId = null;
+    resetPlaceNumberTurnState({ clearFailedPlacement: true });
 
     resetPlaceNumberDiceDisplay();
     updatePlaceNumberDisplay();
@@ -2523,15 +2545,8 @@ function advancePlaceNumberRound() {
 function endPlaceNumberGame(isWin) {
     const state = GameState.placeNumber;
     state.isGameOver = true;
-    if (isWin) {
-        state.failedPlacement = null;
-    }
-    state.currentRoll = null;
-    state.selectedNumber = null;
-    state.estimate = null;
-    state.showHint = false;
-    state.isSelecting = false;
     stopPlaceNumberDrag();
+    resetPlaceNumberTurnState({ clearFailedPlacement: isWin });
 
     resetPlaceNumberDiceDisplay();
     updatePlaceNumberDisplay();
@@ -2622,16 +2637,9 @@ function rollPlaceNumberDice() {
             return;
         }
 
-        state.currentRoll = roll;
-        state.selectedNumber = roll.options.length === 1 ? roll.options[0] : null;
-        state.estimate = null;
-        state.showHint = false;
-        state.isSelecting = true;
-        state.isDraggingEstimate = false;
-        state.dragPointerId = null;
+        startPlaceNumberTurn(roll);
 
-        $('#place-dice-left .dice-face').textContent = roll.digits[0];
-        $('#place-dice-right .dice-face').textContent = roll.digits[1];
+        setPlaceNumberDiceDisplay(roll.digits[0], roll.digits[1]);
 
         updatePlaceNumberDisplay();
 
@@ -2648,16 +2656,9 @@ function rollPlaceNumberDice() {
 function resetPlaceNumberGame() {
     const state = GameState.placeNumber;
     stopPlaceNumberDrag();
-    state.currentRoll = null;
-    state.selectedNumber = null;
-    state.estimate = null;
-    state.showHint = false;
+    resetPlaceNumberTurnState({ clearFailedPlacement: true });
     state.round = 1;
     state.placedNumbers = [];
-    state.failedPlacement = null;
-    state.isSelecting = false;
-    state.isDraggingEstimate = false;
-    state.dragPointerId = null;
     state.isGameOver = false;
     state.stats = { correct: 0, incorrect: 0 };
 
@@ -2686,8 +2687,8 @@ function initPlaceNumberGame() {
     $('#place-number-line')?.addEventListener('lostpointercapture', handlePlaceNumberLinePointerCancel);
     $('#place-number-line')?.addEventListener('keydown', handlePlaceNumberLineKeyDown);
 
-    ['#place-option-a', '#place-option-b'].forEach(selector => {
-        $(selector)?.addEventListener('click', (event) => {
+    $$('.place-option-btn').forEach(button => {
+        button.addEventListener('click', (event) => {
             const value = parseInt(event.currentTarget.dataset.value, 10);
             if (!Number.isNaN(value)) {
                 selectPlaceNumberOption(value);

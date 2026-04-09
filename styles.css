@@ -1840,9 +1840,8 @@ main:has(.game-section:not([hidden])) {
     transition: opacity var(--transition-fast), visibility var(--transition-fast);
 }
 
-.place-number-ticks.place-benchmarks-visible .place-optional-benchmark,
-.place-number-labels.place-benchmarks-visible .place-optional-benchmark,
-.place-number-line.place-benchmarks-visible .place-optional-benchmark {
+.place-number-line.place-benchmarks-visible .place-number-ticks .place-optional-benchmark,
+.place-number-labels.place-benchmarks-visible .place-optional-benchmark {
     opacity: 1;
     visibility: visible;
 }
