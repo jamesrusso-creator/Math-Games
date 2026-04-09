@@ -1757,8 +1757,22 @@ main:has(.game-section:not([hidden])) {
     margin-bottom: var(--spacing-md);
 }
 
+.place-number-board-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
 .place-number-board-header .panel-card-title {
     margin-bottom: 0;
+}
+
+.place-hint-toggle {
+    padding: 0.45rem 0.9rem;
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
 }
 
 .place-anchor-note {

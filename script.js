@@ -36,6 +36,7 @@ const GameState = {
         currentRoll: null,
         selectedNumber: null,
         estimate: null,
+        showHint: false,
         round: 1,
         placedNumbers: [],
         failedPlacement: null,
@@ -2100,20 +2101,38 @@ function describePlaceNumberWindow(value) {
 function updatePlaceNumberGuidance() {
     const state = GameState.placeNumber;
     const note = $('#place-anchor-note');
+    const hintToggle = $('#place-hint-toggle');
+
+    if (!note) return;
+
+    const syncHintToggle = (isVisible) => {
+        if (!hintToggle) return;
+        hintToggle.hidden = !isVisible;
+        hintToggle.textContent = 'Hint';
+        hintToggle.setAttribute('aria-expanded', state.showHint ? 'true' : 'false');
+    };
 
     if (!state.currentRoll) {
         note.textContent = 'Roll the dice to get started.';
+        syncHintToggle(false);
         return;
     }
 
     if (state.selectedNumber === null) {
         note.textContent = 'Choose one of the available numbers before you place a marker.';
+        syncHintToggle(false);
         return;
     }
 
-    note.textContent = state.estimate === null
-        ? `${describePlaceNumberWindow(state.selectedNumber)} Click or drag on the line to place your marker.`
-        : `${describePlaceNumberWindow(state.selectedNumber)} Drag on the line to adjust your marker before checking.`;
+    const actionPrompt = state.estimate === null
+        ? 'Click or drag on the line to place your marker.'
+        : 'Drag on the line to adjust your marker before checking.';
+
+    note.textContent = state.showHint
+        ? `${describePlaceNumberWindow(state.selectedNumber)} ${actionPrompt}`
+        : actionPrompt;
+
+    syncHintToggle(true);
 }
 
 function buildPlaceNumberMarker(marker, lane = 'upper', options = {}) {
@@ -2440,6 +2459,14 @@ function handlePlaceNumberLineKeyDown(event) {
     setPlaceNumberEstimate(nextEstimate);
 }
 
+function togglePlaceNumberHint() {
+    const state = GameState.placeNumber;
+    if (!state.currentRoll || state.selectedNumber === null || state.isGameOver) return;
+
+    state.showHint = !state.showHint;
+    updatePlaceNumberGuidance();
+}
+
 function selectPlaceNumberOption(value) {
     const state = GameState.placeNumber;
     if (!state.currentRoll || state.isGameOver) return;
@@ -2483,6 +2510,7 @@ function advancePlaceNumberRound() {
     state.currentRoll = null;
     state.selectedNumber = null;
     state.estimate = null;
+    state.showHint = false;
     state.failedPlacement = null;
     state.isSelecting = false;
     state.isDraggingEstimate = false;
@@ -2501,6 +2529,7 @@ function endPlaceNumberGame(isWin) {
     state.currentRoll = null;
     state.selectedNumber = null;
     state.estimate = null;
+    state.showHint = false;
     state.isSelecting = false;
     stopPlaceNumberDrag();
 
@@ -2596,6 +2625,7 @@ function rollPlaceNumberDice() {
         state.currentRoll = roll;
         state.selectedNumber = roll.options.length === 1 ? roll.options[0] : null;
         state.estimate = null;
+        state.showHint = false;
         state.isSelecting = true;
         state.isDraggingEstimate = false;
         state.dragPointerId = null;
@@ -2621,6 +2651,7 @@ function resetPlaceNumberGame() {
     state.currentRoll = null;
     state.selectedNumber = null;
     state.estimate = null;
+    state.showHint = false;
     state.round = 1;
     state.placedNumbers = [];
     state.failedPlacement = null;
@@ -2642,6 +2673,7 @@ function initPlaceNumberGame() {
     $('#roll-place-number-btn')?.addEventListener('click', rollPlaceNumberDice);
     $('#check-place-number-btn')?.addEventListener('click', checkPlaceNumberPlacement);
     $('#clear-place-marker-btn')?.addEventListener('click', clearPlaceNumberMarker);
+    $('#place-hint-toggle')?.addEventListener('click', togglePlaceNumberHint);
     $('#reset-place-number-btn')?.addEventListener('click', resetPlaceNumberGame);
     $('#place-show-benchmarks')?.addEventListener('change', (event) => {
         GameState.placeNumber.showBenchmarks = event.currentTarget.checked;
