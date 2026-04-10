@@ -51,6 +51,25 @@ python3 -m http.server 8000
 
 Then visit `http://localhost:8000`.
 
+## Testing
+
+The browser tests for `Colour in Fractions` and `Colour in Decimats` open the app directly from `index.html`, so no dev server is required.
+
+Install the test dependency and run:
+
+```bash
+npm install
+npm test
+```
+
+To generate a coverage report for the browser-tested game logic, run:
+
+```bash
+npm run coverage
+```
+
+The command writes reports into `coverage/`, including an HTML report at `coverage/index.html`.
+
 ## License
 
 Educational use.

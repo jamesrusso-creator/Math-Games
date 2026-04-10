@@ -36,6 +36,8 @@ Temporary Items
 # Cursor
 .cursor/
 
+node_modules/
+coverage/
 tmp/
 test-results/
 progress.md
