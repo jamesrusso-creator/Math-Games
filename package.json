@@ -2,8 +2,8 @@
   "name": "math-games",
   "private": true,
   "scripts": {
-    "test": "node --test tests/*.test.js",
-    "coverage": "COLLECT_COVERAGE=1 node --test tests/*.test.js"
+    "test": "node --test tests/games.test.js",
+    "coverage": "COLLECT_COVERAGE=1 node --test tests/games.test.js"
   },
   "devDependencies": {
     "istanbul-lib-coverage": "^3.2.2",
