@@ -1,49 +1,50 @@
-# Math Games - Fractions, Decimats & Place Value
+# Math Games
 
-Interactive educational math games for learning fractions, decimals, and place value through play.
+Interactive browser-based math games for fractions, decimals, and number-line estimation.
 
-## About
+## Included Games
 
-The project currently includes three interactive games:
+The project currently includes three games:
 
-- **Colour in Fractions** — roll fraction dice, then select bars on a fraction wall that sum to the target.
-- **Colour in Decimats** — roll a number die and a decimal place-value die, then click Decimat blocks to shade the matching amount.
-- **Place That Number** — roll two digit dice, choose the stronger two-digit number, and place it on a 0 to 100 number line in a sudden-death survival run.
+- **Colour in Fractions** — roll fraction dice, then shade bars on a fraction wall that add up to the target.
+- **Colour in Decimats** — roll a number die and a place-value die, then select or split Decimat blocks to make the matching decimal amount.
+- **Place That Number** — a survival number-line game where each correct placement becomes a new benchmark for later rounds.
 
-The fractions game supports two modes:
+## Game Versions
 
-- **Proper Fractions** — numerator is always less than the denominator (e.g. 2/5, 3/10)
-- **Improper Fractions** — numerator can be greater than or equal to the denominator (e.g. 3/2, 4/3)
+`Colour in Fractions` has two selectable versions:
 
-## Features
+- **Without Improper Fractions** — the numerator stays smaller than the denominator.
+- **With Improper Fractions** — the numerator can be equal to or larger than the denominator.
 
-- Fraction wall with visual bar selection
-- Two game versions with different dice and wall configurations
-- Custom dice settings for Fractions and Decimats with session-only persistence while the page remains open
-- Up to 3 attempts per round with game history tracking
-- Colour-coded result history (correct / incorrect / skipped)
-- Skip turn detection (only allowed when no valid selection exists)
-- Decimat board for tenths, hundredths, and thousandths
-- Decimats dice defaults based on the PDF activity sheet, with optional custom faces
-- Click-to-select Decimats gameplay with result checking and round history
-- Double-click breakdown of tenths and hundredths into smaller decimal place-value pieces
-- Number-line estimation game based on the "Place That Number" classroom activity
-- Two-digit choice strategy that turns correct placements into new benchmarks
-- Sudden-death scoring where one incorrect placement ends the run
-- Responsive design for mobile and desktop
-- Keyboard navigation and screen reader support
+`Place That Number` has three selectable versions:
 
-## Tech Stack
+- **INTEGER / 0 to 100** — two digit dice on a 0 to 100 number line.
+- **INTEGER / 0 to 1000** — three digit dice on a 0 to 1000 number line.
+- **FRACTION / 0 to 6** — two dice from 1 to 6, arranged as a fraction and placed on a 0 to 6 line.
 
-Pure frontend — no build tools, no frameworks, no dependencies.
+## Current Feature Set
 
-- `index.html` — page structure
-- `styles.css` — styling and responsive layout
-- `script.js` — game logic and state management
+- Pure frontend app with no build step for gameplay
+- Version picker for Fractions and Place That Number
+- Session-only custom dice settings for Fractions and Decimats
+- Round history tables for all three games
+- Skip tracking and possible/impossible skip detection for Fractions and Decimats
+- Decimat block splitting from tenths to hundredths to thousandths
+- Keyboard-accessible interaction across the games
+- `Place That Number` benchmark-based survival gameplay across integer and fraction variants
+- Mixed-fraction history formatting for `Placed At` in Place That Number
+
+## Project Structure
+
+- `index.html` — page structure, game sections, and modal markup
+- `styles.css` — layout, component styling, and responsive behavior
+- `script.js` — game state, rules, DOM updates, and interaction logic
+- `tests/` — Playwright-driven browser regression tests
 
 ## Running Locally
 
-Open `index.html` directly in a browser, or serve with any static server:
+You can open `index.html` directly in a browser, or serve the folder with any static server:
 
 ```bash
 python3 -m http.server 8000
@@ -53,22 +54,28 @@ Then visit `http://localhost:8000`.
 
 ## Testing
 
-The browser tests for `Colour in Fractions` and `Colour in Decimats` open the app directly from `index.html`, so no dev server is required.
+The regression suite opens `index.html` directly, so a dev server is not required.
 
-Install the test dependency and run:
+Install dependencies and run the full browser suite:
 
 ```bash
 npm install
 npm test
 ```
 
-To generate a coverage report for the browser-tested game logic, run:
+The current test suite covers:
+
+- `Colour in Fractions`
+- `Colour in Decimats`
+- `Place That Number`
+
+To generate a browser-side coverage report for `script.js`, run:
 
 ```bash
 npm run coverage
 ```
 
-The command writes reports into `coverage/`, including an HTML report at `coverage/index.html`.
+Coverage output is written into `coverage/`, including an HTML report at `coverage/index.html`.
 
 ## License
 
