@@ -1970,6 +1970,10 @@ main:has(.game-section:not([hidden])) {
     justify-content: center;
 }
 
+.place-dice-row {
+    flex-wrap: wrap;
+}
+
 .place-benchmark-toggle input {
     margin-top: 0.15rem;
     accent-color: var(--color-primary);
@@ -1989,7 +1993,7 @@ main:has(.game-section:not([hidden])) {
 
 .place-choice-buttons {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: var(--spacing-sm);
 }
 
@@ -1997,6 +2001,7 @@ main:has(.game-section:not([hidden])) {
     min-height: 3rem;
     font-size: var(--font-size-lg);
     font-weight: 700;
+    white-space: nowrap;
 }
 
 /* --- Bottom Collapsible Extras --- */

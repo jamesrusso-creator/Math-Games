@@ -33,9 +33,10 @@ const GameState = {
         stats: { correct: 0, incorrect: 0, skipped: 0, skippedPossible: 0 }
     },
     placeNumber: {
+        variant: 'int_100',
         currentRoll: null,
-        selectedNumber: null,
-        estimate: null,
+        selectedOptionId: null,
+        estimateUnits: null,
         showHint: false,
         round: 1,
         placedNumbers: [],
@@ -160,19 +161,215 @@ function clampNumber(value, min, max) {
 }
 
 function formatDigitRoll(digits) {
-    if (!digits || digits.length < 2) return '-';
-    return `${digits[0]} & ${digits[1]}`;
+    if (!digits || digits.length === 0) return '-';
+    return digits.join(' & ');
 }
 
-function formatPlaceEstimate(value) {
-    if (typeof value !== 'number' || Number.isNaN(value)) return '-';
+function greatestCommonDivisor(a, b) {
+    let x = Math.abs(a);
+    let y = Math.abs(b);
 
-    if (Math.abs(value - Math.round(value)) < 0.001) {
-        return `${Math.round(value)}`;
+    while (y !== 0) {
+        [x, y] = [y, x % y];
     }
 
-    return value.toFixed(1).replace(/\.0$/, '');
+    return x || 1;
 }
+
+function formatMixedFractionFromUnits(units, unitsPerWhole) {
+    if (typeof units !== 'number' || Number.isNaN(units)) return '-';
+
+    const whole = Math.floor(units / unitsPerWhole);
+    const remainder = Math.abs(units % unitsPerWhole);
+
+    if (remainder === 0) {
+        return `${whole}`;
+    }
+
+    const divisor = greatestCommonDivisor(remainder, unitsPerWhole);
+    const numerator = remainder / divisor;
+    const denominator = unitsPerWhole / divisor;
+
+    return whole === 0
+        ? `${numerator}/${denominator}`
+        : `${whole} ${numerator}/${denominator}`;
+}
+
+function formatCanonicalChoice(rawLabel, canonicalLabel) {
+    return rawLabel === canonicalLabel ? rawLabel : `${rawLabel} (= ${canonicalLabel})`;
+}
+
+function formatReadableChoices(items) {
+    if (!items || items.length === 0) return '';
+    if (items.length === 1) return items[0];
+    if (items.length === 2) return `${items[0]} or ${items[1]}`;
+
+    return `${items.slice(0, -1).join(', ')}, or ${items[items.length - 1]}`;
+}
+
+function buildUniqueDigitNumbers(digits) {
+    const values = new Set();
+    const used = new Array(digits.length).fill(false);
+    const path = [];
+
+    function walk() {
+        if (path.length === digits.length) {
+            values.add(Number(path.join('')));
+            return;
+        }
+
+        const seenAtDepth = new Set();
+
+        digits.forEach((digit, index) => {
+            if (used[index] || seenAtDepth.has(digit)) return;
+            seenAtDepth.add(digit);
+            used[index] = true;
+            path.push(digit);
+            walk();
+            path.pop();
+            used[index] = false;
+        });
+    }
+
+    walk();
+    return [...values];
+}
+
+function buildPlaceIntegerRollOptions(dice, placedValues, variant) {
+    return buildUniqueDigitNumbers(dice)
+        .filter(value => value > 0 && value < variant.rangeMax)
+        .map(value => ({
+            rawLabel: `${value}`,
+            valueUnits: value * variant.unitsPerWhole
+        }))
+        .filter(option => !placedValues.has(option.valueUnits));
+}
+
+function buildPlaceFractionRollOptions(dice, placedValues, variant) {
+    const [left, right] = dice;
+    const orderedPairs = left === right
+        ? [[left, right]]
+        : [[left, right], [right, left]];
+
+    return orderedPairs
+        .map(([numerator, denominator]) => ({
+            rawLabel: `${numerator}/${denominator}`,
+            valueUnits: (numerator * variant.unitsPerWhole) / denominator
+        }))
+        .filter(option => option.valueUnits > 0 && option.valueUnits < variant.rangeUnits)
+        .filter(option => !placedValues.has(option.valueUnits));
+}
+
+function createPlaceChoiceOption(variant, option) {
+    const canonicalLabel = formatMixedFractionFromUnits(option.valueUnits, variant.unitsPerWhole);
+    return {
+        id: `${option.rawLabel}:${option.valueUnits}`,
+        rawLabel: option.rawLabel,
+        valueUnits: option.valueUnits,
+        canonicalLabel,
+        choiceLabel: option.rawLabel,
+        selectedLabel: formatCanonicalChoice(option.rawLabel, canonicalLabel)
+    };
+}
+
+const PLACE_NUMBER_VARIANTS = {
+    int_100: {
+        id: 'int_100',
+        title: 'Place That Number (0 to 100)',
+        badge: '0 to 100',
+        description: 'Two digit dice, whole-number targets, and half-step placement on a 0 to 100 line.',
+        rangeMax: 100,
+        rangeUnits: 200,
+        unitsPerWhole: 2,
+        diceFaces: PLACE_NUMBER_DIGIT_VALUES,
+        diceCount: 2,
+        keyboardStepUnits: 1,
+        keyboardJumpUnits: 10,
+        choiceCardTitle: 'Build Your Number',
+        statusRollLabel: 'Digits',
+        statusChoiceLabel: 'Chosen Value',
+        historyRollLabel: 'Digits',
+        historyChoiceLabel: 'Number',
+        wallHint: 'Choose a two-digit number, then click or drag on the line to place it between 0 and 100.',
+        lineAriaLabel: 'Interactive number line from 0 to 100. Click or drag to place your chosen number.',
+        benchmarkToggleTemplate: benchmarkLabels => `Show ${benchmarkLabels.join(' / ')} benchmarks`,
+        howToPlaySteps: [
+            'Roll the two digit dice to get a pair of digits.',
+            'Choose which two-digit number you want to build from those digits.',
+            'Click or drag on the number line to estimate where that number belongs from 0 to 100.',
+            'Use the numbers already on the line as benchmarks for later rounds.',
+            'The run ends as soon as you place one number incorrectly, so the goal is to last longer than everyone else.'
+        ],
+        rollPromptSingle: available => `Only ${available} is still available from these digits. Place it on the line.`,
+        rollPromptMultiple: available => `Choose ${available}, then place your number on the line.`,
+        wholeLineHint: valueLabel => `${valueLabel} is using the whole 0 to 100 line. Look for halves, quarters, and tens.`,
+        optionBuilder: buildPlaceIntegerRollOptions
+    },
+    int_1000: {
+        id: 'int_1000',
+        title: 'Place That Number (0 to 1000)',
+        badge: '0 to 1000',
+        description: 'Three digit dice, more possible targets, and the same half-step placement on a 0 to 1000 line.',
+        rangeMax: 1000,
+        rangeUnits: 2000,
+        unitsPerWhole: 2,
+        diceFaces: PLACE_NUMBER_DIGIT_VALUES,
+        diceCount: 3,
+        keyboardStepUnits: 1,
+        keyboardJumpUnits: 20,
+        choiceCardTitle: 'Build Your Number',
+        statusRollLabel: 'Digits',
+        statusChoiceLabel: 'Chosen Value',
+        historyRollLabel: 'Digits',
+        historyChoiceLabel: 'Number',
+        wallHint: 'Choose a three-digit number, then click or drag on the line to place it between 0 and 1000.',
+        lineAriaLabel: 'Interactive number line from 0 to 1000. Click or drag to place your chosen number.',
+        benchmarkToggleTemplate: benchmarkLabels => `Show ${benchmarkLabels.join(' / ')} benchmarks`,
+        howToPlaySteps: [
+            'Roll the three digit dice to get a set of digits.',
+            'Choose which number you want to build from those digits.',
+            'Click or drag on the number line to estimate where that number belongs from 0 to 1000.',
+            'Use the numbers already on the line as benchmarks for later rounds.',
+            'The run ends as soon as you place one number incorrectly, so the goal is to survive for more rounds than everyone else.'
+        ],
+        rollPromptSingle: available => `Only ${available} is still available from these digits. Place it on the line.`,
+        rollPromptMultiple: available => `Choose ${available}, then place your number on the line.`,
+        wholeLineHint: valueLabel => `${valueLabel} is using the whole 0 to 1000 line. Look for halves, quarters, and hundreds.`,
+        optionBuilder: buildPlaceIntegerRollOptions
+    },
+    frac_0_6: {
+        id: 'frac_0_6',
+        title: 'Place That Number (0 to 6 Fractions)',
+        badge: '0 to 6 Fractions',
+        description: 'Two dice from 1 to 6. Choose which way to write them as a fraction, then place that value on a 0 to 6 line.',
+        rangeMax: 6,
+        rangeUnits: 360,
+        unitsPerWhole: 60,
+        diceFaces: [1, 2, 3, 4, 5, 6],
+        diceCount: 2,
+        keyboardStepUnits: 1,
+        keyboardJumpUnits: 10,
+        choiceCardTitle: 'Build Your Fraction',
+        statusRollLabel: 'Dice',
+        statusChoiceLabel: 'Chosen Value',
+        historyRollLabel: 'Dice',
+        historyChoiceLabel: 'Fraction',
+        wallHint: 'Choose one of the two fractions, then click or drag on the line to place it between 0 and 6.',
+        lineAriaLabel: 'Interactive number line from 0 to 6. Click or drag to place your chosen fraction.',
+        benchmarkToggleTemplate: benchmarkLabels => `Show ${benchmarkLabels.join(' / ')} benchmarks`,
+        howToPlaySteps: [
+            'Roll the two dice to get two numbers from 1 to 6.',
+            'Choose which way to write them as a fraction.',
+            'Click or drag on the number line to estimate where that fraction belongs from 0 to 6.',
+            'Use the numbers already on the line as benchmarks for later rounds.',
+            'The run ends as soon as you place one value incorrectly, so the goal is to survive for more rounds than everyone else.'
+        ],
+        rollPromptSingle: available => `Only ${available} is still available from these dice. Place it on the line.`,
+        rollPromptMultiple: available => `Choose ${available}, then place your fraction on the line.`,
+        wholeLineHint: valueLabel => `${valueLabel} is using the whole 0 to 6 line. Look for halves, thirds, and sixths.`,
+        optionBuilder: buildPlaceFractionRollOptions
+    }
+};
 
 // ============================================
 // Session Storage
@@ -411,7 +608,7 @@ function showVersionPicker() {
     return new Promise((resolve) => {
         const modal = $('#version-modal');
         const cancelBtn = $('#version-modal-cancel');
-        const options = $$('.version-option');
+        const options = $$('#version-modal .version-option');
         let closeModal = () => {};
 
         const cleanup = () => {
@@ -434,6 +631,44 @@ function showVersionPicker() {
         cancelBtn.addEventListener('click', onCancel);
         closeModal = openModal(modal, {
             initialFocus: modal.querySelector('.version-option'),
+            onDismiss: () => {
+                cleanup();
+                resolve(null);
+            }
+        });
+    });
+}
+
+function showPlaceNumberVersionPicker() {
+    return new Promise((resolve) => {
+        const modal = $('#place-version-modal');
+        const cancelBtn = $('#place-version-modal-cancel');
+        const options = $$('#place-version-modal .place-version-option');
+        let closeModal = () => {};
+
+        const cleanup = () => {
+            options.forEach(option => option.removeEventListener('click', onPick));
+            cancelBtn.removeEventListener('click', onCancel);
+        };
+
+        const finish = (value) => {
+            closeModal('action');
+            cleanup();
+            resolve(value);
+        };
+
+        function onPick(event) {
+            finish(event.currentTarget.dataset.placeVariant);
+        }
+
+        function onCancel() {
+            finish(null);
+        }
+
+        options.forEach(option => option.addEventListener('click', onPick));
+        cancelBtn.addEventListener('click', onCancel);
+        closeModal = openModal(modal, {
+            initialFocus: modal.querySelector('.place-version-option'),
             onDismiss: () => {
                 cleanup();
                 resolve(null);
@@ -467,9 +702,12 @@ function navigateToDecimats() {
     resetDecimatsGame();
 }
 
-function navigateToPlaceNumber() {
+async function navigateToPlaceNumber() {
+    const variant = await showPlaceNumberVersionPicker();
+    if (!variant) return;
+
     showSection('place-number');
-    resetPlaceNumberGame();
+    applyPlaceNumberVariant(variant);
 }
 
 function showSection(targetId) {
@@ -571,18 +809,17 @@ function initHowToPlay() {
         },
         'place-number': {
             title: 'How to Play',
-            steps: [
-                'Roll the two digit dice to get a pair of digits',
-                'Choose which two-digit number you want to build from those digits',
-                'Click or drag on the number line to estimate where that number belongs from 0 to 100',
-                'Use the numbers already on the line as benchmarks for later rounds',
-                'The run ends as soon as you place one number incorrectly, so the goal is to last longer than everyone else'
-            ]
+            steps: []
         }
     };
 
     function updateHowToPlay(target) {
-        const content = HOW_TO_PLAY_CONTENT[target] || HOW_TO_PLAY_CONTENT.fractions;
+        const content = target === 'place-number'
+            ? {
+                title: 'How to Play',
+                steps: getCurrentPlaceNumberVariant().howToPlaySteps
+            }
+            : (HOW_TO_PLAY_CONTENT[target] || HOW_TO_PLAY_CONTENT.fractions);
         if (title) title.textContent = content.title;
         if (list) {
             list.innerHTML = content.steps.map(step => `<li>${step}</li>`).join('');
@@ -2019,6 +2256,91 @@ function initDecimatsGame() {
 // Place That Number Game
 // ============================================
 
+function getCurrentPlaceNumberVariant() {
+    return PLACE_NUMBER_VARIANTS[GameState.placeNumber.variant] || PLACE_NUMBER_VARIANTS.int_100;
+}
+
+function getPlaceNumberOptionById(optionId = GameState.placeNumber.selectedOptionId) {
+    const options = GameState.placeNumber.currentRoll?.options || [];
+    return options.find(option => option.id === optionId) || null;
+}
+
+function formatPlaceNumberUnits(units, variant = getCurrentPlaceNumberVariant()) {
+    return formatMixedFractionFromUnits(units, variant.unitsPerWhole);
+}
+
+function getPlaceNumberBenchmarkUnits(variant = getCurrentPlaceNumberVariant()) {
+    return [
+        Math.round(variant.rangeUnits / 4),
+        Math.round(variant.rangeUnits / 2),
+        Math.round((variant.rangeUnits * 3) / 4)
+    ];
+}
+
+function renderPlaceNumberDice(dice = null, { rolling = false } = {}) {
+    const row = $('#place-dice-row');
+    const variant = getCurrentPlaceNumberVariant();
+    if (!row) return;
+
+    row.innerHTML = '';
+
+    for (let index = 0; index < variant.diceCount; index++) {
+        const die = document.createElement('div');
+        die.className = 'dice small';
+        if (rolling) {
+            die.classList.add('rolling');
+        }
+        die.setAttribute('role', 'img');
+        die.setAttribute('aria-label', `Die ${index + 1}`);
+
+        const face = document.createElement('span');
+        face.className = 'dice-face';
+        face.textContent = dice && typeof dice[index] !== 'undefined' ? String(dice[index]) : '?';
+        die.appendChild(face);
+        row.appendChild(die);
+    }
+}
+
+function renderPlaceNumberStaticUI() {
+    const variant = getCurrentPlaceNumberVariant();
+    const benchmarkUnits = getPlaceNumberBenchmarkUnits(variant);
+    const benchmarkLabels = benchmarkUnits.map(units => formatPlaceNumberUnits(units, variant));
+
+    $('#place-number-title').textContent = variant.title;
+    $('#place-roll-label').textContent = variant.statusRollLabel;
+    $('#place-choice-label').textContent = variant.statusChoiceLabel;
+    $('#place-history-roll-header').textContent = variant.historyRollLabel;
+    $('#place-history-choice-header').textContent = variant.historyChoiceLabel;
+    $('#place-wall-hint').textContent = variant.wallHint;
+    $('#place-choice-title').textContent = variant.choiceCardTitle;
+    $('#place-benchmark-toggle-label').textContent = variant.benchmarkToggleTemplate(benchmarkLabels);
+    $('#place-number-line')?.setAttribute('aria-label', variant.lineAriaLabel);
+
+    const ticks = $('#place-number-ticks');
+    if (ticks) {
+        ticks.innerHTML = `
+            <span style="left: 0%;"></span>
+            <span class="place-optional-benchmark" style="left: 25%;"></span>
+            <span class="place-optional-benchmark" style="left: 50%;"></span>
+            <span class="place-optional-benchmark" style="left: 75%;"></span>
+            <span style="left: 100%;"></span>
+        `;
+    }
+
+    const labels = $('#place-number-labels');
+    if (labels) {
+        labels.innerHTML = `
+            <span>0</span>
+            <span class="place-optional-benchmark">${benchmarkLabels[0]}</span>
+            <span class="place-optional-benchmark">${benchmarkLabels[1]}</span>
+            <span class="place-optional-benchmark">${benchmarkLabels[2]}</span>
+            <span>${formatPlaceNumberUnits(variant.rangeUnits, variant)}</span>
+        `;
+    }
+
+    renderPlaceNumberDice();
+}
+
 function showPlaceNumberFeedback(message, type) {
     const feedback = $('#place-number-feedback');
     feedback.textContent = message;
@@ -2030,23 +2352,18 @@ function hidePlaceNumberFeedback() {
     $('#place-number-feedback').hidden = true;
 }
 
-function getPlaceNumberRollOptions(leftDigit, rightDigit) {
-    const placedValues = new Set(GameState.placeNumber.placedNumbers.map(marker => marker.value));
-    const options = [leftDigit * 10 + rightDigit, rightDigit * 10 + leftDigit];
-
-    return [...new Set(options)]
-        .filter(value => value > 0 && value < 100 && !placedValues.has(value));
-}
-
 function generatePlaceNumberRoll() {
-    for (let attempt = 0; attempt < 120; attempt++) {
-        const leftDigit = pickRandomValue(PLACE_NUMBER_DIGIT_VALUES);
-        const rightDigit = pickRandomValue(PLACE_NUMBER_DIGIT_VALUES);
-        const options = getPlaceNumberRollOptions(leftDigit, rightDigit);
+    const variant = getCurrentPlaceNumberVariant();
+    const placedValues = new Set(GameState.placeNumber.placedNumbers.map(marker => marker.valueUnits));
 
+    for (let attempt = 0; attempt < 240; attempt++) {
+        const dice = Array.from({ length: variant.diceCount }, () => pickRandomValue(variant.diceFaces));
+        const options = variant.optionBuilder(dice, placedValues, variant)
+            .map(option => createPlaceChoiceOption(variant, option));
         if (options.length > 0) {
             return {
-                digits: [leftDigit, rightDigit],
+                dice,
+                display: formatDigitRoll(dice),
                 options
             };
         }
@@ -2055,50 +2372,57 @@ function generatePlaceNumberRoll() {
     return null;
 }
 
-function getPlaceNumberWindow(value) {
+function getPlaceNumberWindow(valueUnits) {
+    const variant = getCurrentPlaceNumberVariant();
     const sortedMarkers = [...GameState.placeNumber.placedNumbers]
-        .sort((a, b) => a.value - b.value);
+        .sort((a, b) => a.valueUnits - b.valueUnits);
     const anchors = [
-        { value: 0, position: 0 },
-        ...sortedMarkers.map(marker => ({ value: marker.value, position: marker.position })),
-        { value: 100, position: 100 }
+        { valueUnits: 0, positionUnits: 0 },
+        ...sortedMarkers.map(marker => ({
+            valueUnits: marker.valueUnits,
+            positionUnits: marker.positionUnits
+        })),
+        { valueUnits: variant.rangeUnits, positionUnits: variant.rangeUnits }
     ];
 
     let left = anchors[0];
     let right = anchors[anchors.length - 1];
 
     for (let i = 0; i < anchors.length - 1; i++) {
-        if (anchors[i].value < value && value < anchors[i + 1].value) {
+        if (anchors[i].valueUnits < valueUnits && valueUnits < anchors[i + 1].valueUnits) {
             left = anchors[i];
             right = anchors[i + 1];
             break;
         }
     }
 
-    const valueGap = Math.max(1, right.value - left.value);
-    const positionGap = Math.max(1, right.position - left.position);
-    const ratio = (value - left.value) / valueGap;
-    const expectedPosition = left.position + (ratio * positionGap);
+    const valueGap = Math.max(1, right.valueUnits - left.valueUnits);
+    const positionGap = Math.max(1, right.positionUnits - left.positionUnits);
+    const ratio = (valueUnits - left.valueUnits) / valueGap;
+    const expectedPositionUnits = left.positionUnits + (ratio * positionGap);
     const tolerance = Math.min(
         Math.max(positionGap * 0.18, 3),
         Math.max(2, positionGap * 0.4)
     );
 
-    return { left, right, expectedPosition, tolerance };
+    return { left, right, expectedPositionUnits, tolerance };
 }
 
-function describePlaceNumberWindow(value) {
-    const { left, right } = getPlaceNumberWindow(value);
+function describePlaceNumberWindow(valueUnits) {
+    const variant = getCurrentPlaceNumberVariant();
+    const { left, right } = getPlaceNumberWindow(valueUnits);
+    const valueLabel = formatPlaceNumberUnits(valueUnits, variant);
 
-    if (left.value === 0 && right.value === 100) {
-        return `${value} is using the whole 0 to 100 line. Look for halves, quarters, and tens.`;
+    if (left.valueUnits === 0 && right.valueUnits === variant.rangeUnits) {
+        return variant.wholeLineHint(valueLabel);
     }
 
-    return `${value} should sit between ${left.value} and ${right.value}. Use that gap as your benchmark.`;
+    return `${valueLabel} should sit between ${formatPlaceNumberUnits(left.valueUnits, variant)} and ${formatPlaceNumberUnits(right.valueUnits, variant)}. Use that gap as your benchmark.`;
 }
 
 function updatePlaceNumberGuidance() {
     const state = GameState.placeNumber;
+    const selectedOption = getPlaceNumberOptionById();
     const note = $('#place-anchor-note');
     const hintToggle = $('#place-hint-toggle');
 
@@ -2117,18 +2441,18 @@ function updatePlaceNumberGuidance() {
         return;
     }
 
-    if (state.selectedNumber === null) {
-        note.textContent = 'Choose one of the available numbers before you place a marker.';
+    if (!selectedOption) {
+        note.textContent = 'Choose one of the available values before you place a marker.';
         syncHintToggle(false);
         return;
     }
 
-    const actionPrompt = state.estimate === null
+    const actionPrompt = state.estimateUnits === null
         ? 'Click or drag on the line to place your marker.'
         : 'Drag on the line to adjust your marker before checking.';
 
     note.textContent = state.showHint
-        ? `${describePlaceNumberWindow(state.selectedNumber)} ${actionPrompt}`
+        ? `${describePlaceNumberWindow(selectedOption.valueUnits)} ${actionPrompt}`
         : actionPrompt;
 
     syncHintToggle(true);
@@ -2139,6 +2463,7 @@ function getPlaceNumberMarkerLane(index) {
 }
 
 function buildPlaceNumberMarker(marker, lane = 'upper', options = {}) {
+    const variant = getCurrentPlaceNumberVariant();
     const { hideLabel = false } = options;
     const element = document.createElement('div');
     element.className = `place-marker place-marker-${lane}`;
@@ -2152,9 +2477,9 @@ function buildPlaceNumberMarker(marker, lane = 'upper', options = {}) {
     if (hideLabel) {
         element.classList.add('label-hidden');
     }
-    element.style.left = `${marker.position}%`;
+    element.style.left = `${(marker.positionUnits / variant.rangeUnits) * 100}%`;
     element.innerHTML = `
-        <span class="place-marker-label">${marker.value}</span>
+        <span class="place-marker-label">${marker.label}</span>
         <span class="place-marker-stem"></span>
         <span class="place-marker-dot"></span>
     `;
@@ -2169,7 +2494,8 @@ function renderPlaceNumberLine() {
 
     markersLayer.innerHTML = '';
 
-    const sortedMarkers = [...state.placedNumbers].sort((a, b) => a.value - b.value);
+    const selectedOption = getPlaceNumberOptionById();
+    const sortedMarkers = [...state.placedNumbers].sort((a, b) => a.valueUnits - b.valueUnits);
     sortedMarkers.forEach((marker, index) => {
         const lane = getPlaceNumberMarkerLane(index);
         markersLayer.appendChild(buildPlaceNumberMarker(marker, lane, {
@@ -2177,11 +2503,11 @@ function renderPlaceNumberLine() {
         }));
     });
 
-    if (state.currentRoll && state.selectedNumber !== null && state.estimate !== null) {
+    if (state.currentRoll && selectedOption && state.estimateUnits !== null) {
         const previewLane = getPlaceNumberMarkerLane(sortedMarkers.length);
         markersLayer.appendChild(buildPlaceNumberMarker({
-            value: state.selectedNumber,
-            position: state.estimate,
+            label: selectedOption.canonicalLabel,
+            positionUnits: state.estimateUnits,
             preview: true
         }, previewLane));
     }
@@ -2191,7 +2517,7 @@ function renderPlaceNumberLine() {
         markersLayer.appendChild(buildPlaceNumberMarker(state.failedPlacement, failedLane));
     }
 
-    line.classList.toggle('is-active', Boolean(state.currentRoll) && state.selectedNumber !== null && !state.isGameOver);
+    line.classList.toggle('is-active', Boolean(state.currentRoll) && Boolean(selectedOption) && !state.isGameOver);
     line.classList.toggle('is-dragging', state.isDraggingEstimate);
 }
 
@@ -2204,7 +2530,7 @@ function updatePlaceNumberHistoryVisibility() {
 
 function updatePlaceNumberBenchmarkGuides() {
     const line = $('#place-number-line');
-    const labels = $('.place-number-labels');
+    const labels = $('#place-number-labels');
     const toggle = $('#place-show-benchmarks');
     const showBenchmarks = GameState.placeNumber.showBenchmarks;
 
@@ -2220,50 +2546,37 @@ function updatePlaceNumberChoiceCard() {
     const state = GameState.placeNumber;
     const card = $('#place-choice-card');
     const message = $('#place-choice-message');
-    const buttons = $$('.place-option-btn');
+    const buttons = $('#place-choice-buttons');
 
-    if (!card) return;
-
-    const resetOptionButton = (button) => {
-        if (!button) return;
-        button.hidden = true;
-        button.dataset.value = '';
-        button.textContent = '';
-        button.classList.remove('btn-primary');
-        button.classList.add('btn-secondary');
-    };
+    if (!card || !buttons) return;
 
     if (!state.currentRoll) {
         card.hidden = true;
-        buttons.forEach(resetOptionButton);
+        buttons.innerHTML = '';
         return;
     }
 
     card.hidden = false;
     message.textContent = state.currentRoll.options.length === 1
-        ? 'Only one new number is available from these digits.'
-        : 'Choose the number that gives you the best benchmark.';
+        ? 'Only one new value is available from this roll.'
+        : 'Choose the value that gives you the best benchmark.';
 
-    buttons.forEach((button, index) => {
-        if (!button) return;
-
-        const optionValue = state.currentRoll.options[index];
-        if (typeof optionValue !== 'number') {
-            resetOptionButton(button);
-            return;
-        }
-
-        button.hidden = false;
-        button.dataset.value = String(optionValue);
-        button.textContent = String(optionValue);
-        const isSelected = state.selectedNumber === optionValue;
-        button.classList.toggle('btn-primary', isSelected);
-        button.classList.toggle('btn-secondary', !isSelected);
+    buttons.innerHTML = '';
+    state.currentRoll.options.forEach(option => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn place-option-btn';
+        button.dataset.optionId = option.id;
+        button.textContent = option.choiceLabel;
+        const isSelected = state.selectedOptionId === option.id;
+        button.classList.add(isSelected ? 'btn-primary' : 'btn-secondary');
+        buttons.appendChild(button);
     });
 }
 
 function updatePlaceNumberActionState() {
     const state = GameState.placeNumber;
+    const selectedOption = getPlaceNumberOptionById();
     const hasActiveRoll = Boolean(state.currentRoll) && !state.isGameOver;
     const line = $('#place-number-line');
     const checkBtn = $('#check-place-number-btn');
@@ -2280,25 +2593,26 @@ function updatePlaceNumberActionState() {
     }
 
     if (line) {
-        const canPlaceMarker = hasActiveRoll && state.selectedNumber !== null;
+        const canPlaceMarker = hasActiveRoll && Boolean(selectedOption);
         line.tabIndex = canPlaceMarker ? 0 : -1;
         line.setAttribute('aria-disabled', canPlaceMarker ? 'false' : 'true');
     }
 
     if (checkBtn) {
-        checkBtn.disabled = !(hasActiveRoll && state.selectedNumber !== null && state.estimate !== null);
+        checkBtn.disabled = !(hasActiveRoll && selectedOption && state.estimateUnits !== null);
     }
 
     if (clearBtn) {
-        clearBtn.disabled = state.estimate === null;
+        clearBtn.disabled = state.estimateUnits === null;
     }
 }
 
 function updatePlaceNumberDisplay() {
     const state = GameState.placeNumber;
+    const selectedOption = getPlaceNumberOptionById();
     $('#place-round').textContent = state.round;
-    $('#place-digits').textContent = state.currentRoll ? formatDigitRoll(state.currentRoll.digits) : '-';
-    $('#place-selected-number').textContent = state.selectedNumber === null ? '-' : state.selectedNumber;
+    $('#place-digits').textContent = state.currentRoll ? state.currentRoll.display : '-';
+    $('#place-selected-number').textContent = selectedOption ? selectedOption.selectedLabel : '-';
     $('#place-correct-count').textContent = state.stats.correct;
     $('#place-benchmark-count').textContent = state.placedNumbers.length + 2;
 
@@ -2318,8 +2632,8 @@ function addToPlaceNumberTable(entry) {
     row.className = getHistoryResultClass(entry.result);
     row.innerHTML = `
         <td>${entry.round}</td>
-        <td>${entry.digits}</td>
-        <td>${entry.number}</td>
+        <td>${entry.roll}</td>
+        <td>${entry.choice}</td>
         <td>${entry.estimate}</td>
         <td>${entry.result}</td>
     `;
@@ -2329,20 +2643,19 @@ function addToPlaceNumberTable(entry) {
     if (scrollContainer) scrollContainer.scrollTop = 0;
 }
 
-function setPlaceNumberDiceDisplay(leftValue, rightValue) {
-    $('#place-dice-left .dice-face').textContent = leftValue;
-    $('#place-dice-right .dice-face').textContent = rightValue;
+function setPlaceNumberDiceDisplay(dice) {
+    renderPlaceNumberDice(dice);
 }
 
 function resetPlaceNumberDiceDisplay() {
-    setPlaceNumberDiceDisplay('?', '?');
+    renderPlaceNumberDice();
 }
 
 function resetPlaceNumberTurnState({ clearFailedPlacement = false } = {}) {
     const state = GameState.placeNumber;
     state.currentRoll = null;
-    state.selectedNumber = null;
-    state.estimate = null;
+    state.selectedOptionId = null;
+    state.estimateUnits = null;
     state.showHint = false;
     state.isDraggingEstimate = false;
     state.dragPointerId = null;
@@ -2356,15 +2669,17 @@ function startPlaceNumberTurn(roll) {
     const state = GameState.placeNumber;
     resetPlaceNumberTurnState({ clearFailedPlacement: true });
     state.currentRoll = roll;
-    state.selectedNumber = roll.options.length === 1 ? roll.options[0] : null;
+    state.selectedOptionId = roll.options.length === 1 ? roll.options[0].id : null;
 }
 
-function setPlaceNumberEstimate(value) {
+function setPlaceNumberEstimate(valueUnits) {
+    const variant = getCurrentPlaceNumberVariant();
+    const selectedOption = getPlaceNumberOptionById();
     const state = GameState.placeNumber;
-    if (!state.currentRoll || state.selectedNumber === null || state.isGameOver) return;
+    if (!state.currentRoll || !selectedOption || state.isGameOver) return;
 
-    const normalized = Math.round(clampNumber(value, 0, 100) * 2) / 2;
-    state.estimate = normalized;
+    const normalized = Math.round(clampNumber(valueUnits, 0, variant.rangeUnits));
+    state.estimateUnits = normalized;
     updatePlaceNumberDisplay();
 }
 
@@ -2392,18 +2707,19 @@ function clearPlaceNumberMarker() {
     if (!state.currentRoll || state.isGameOver) return;
 
     stopPlaceNumberDrag();
-    state.estimate = null;
+    state.estimateUnits = null;
     updatePlaceNumberDisplay();
 }
 
 function setPlaceNumberEstimateFromClientX(line, clientX) {
+    const variant = getCurrentPlaceNumberVariant();
     if (!line) return;
     const surface = line.querySelector('.place-number-line-inner') || line;
     const rect = surface.getBoundingClientRect();
     if (rect.width <= 0) return;
 
     const ratio = clampNumber((clientX - rect.left) / rect.width, 0, 1);
-    setPlaceNumberEstimate(ratio * 100);
+    setPlaceNumberEstimate(ratio * variant.rangeUnits);
 }
 
 function handlePlaceNumberLinePointerDown(event) {
@@ -2411,8 +2727,8 @@ function handlePlaceNumberLinePointerDown(event) {
     if (!state.currentRoll || state.isGameOver) return;
     if (event.pointerType === 'mouse' && event.button !== 0) return;
 
-    if (state.selectedNumber === null) {
-        showPlaceNumberFeedback('Choose one of the two numbers first, then place your marker on the line.', 'info');
+    if (!getPlaceNumberOptionById()) {
+        showPlaceNumberFeedback('Choose one of the available values first, then place your marker on the line.', 'info');
         return;
     }
 
@@ -2455,10 +2771,11 @@ function handlePlaceNumberLinePointerCancel(event) {
 
 function handlePlaceNumberLineKeyDown(event) {
     const state = GameState.placeNumber;
-    if (!state.currentRoll || state.selectedNumber === null || state.isGameOver) return;
+    const variant = getCurrentPlaceNumberVariant();
+    if (!state.currentRoll || !getPlaceNumberOptionById() || state.isGameOver) return;
 
-    const step = event.shiftKey ? 5 : 0.5;
-    const currentEstimate = state.estimate ?? 50;
+    const step = event.shiftKey ? variant.keyboardJumpUnits : variant.keyboardStepUnits;
+    const currentEstimate = state.estimateUnits ?? Math.round(variant.rangeUnits / 2);
     let nextEstimate = currentEstimate;
     let handled = true;
 
@@ -2475,7 +2792,7 @@ function handlePlaceNumberLineKeyDown(event) {
             nextEstimate = 0;
             break;
         case 'End':
-            nextEstimate = 100;
+            nextEstimate = variant.rangeUnits;
             break;
         default:
             handled = false;
@@ -2490,29 +2807,33 @@ function handlePlaceNumberLineKeyDown(event) {
 
 function togglePlaceNumberHint() {
     const state = GameState.placeNumber;
-    if (!state.currentRoll || state.selectedNumber === null || state.isGameOver) return;
+    if (!state.currentRoll || !getPlaceNumberOptionById() || state.isGameOver) return;
 
     state.showHint = !state.showHint;
     updatePlaceNumberGuidance();
 }
 
-function selectPlaceNumberOption(value) {
+function selectPlaceNumberOption(optionId) {
     const state = GameState.placeNumber;
     if (!state.currentRoll || state.isGameOver) return;
 
-    state.selectedNumber = value;
+    state.selectedOptionId = optionId;
     updatePlaceNumberDisplay();
 }
 
-function evaluatePlaceNumberPlacement(value, estimate) {
-    const windowData = getPlaceNumberWindow(value);
-    const insideInterval = estimate > windowData.left.position && estimate < windowData.right.position;
-    const difference = Math.abs(estimate - windowData.expectedPosition);
+function evaluatePlaceNumberPlacement(valueUnits, estimateUnits) {
+    const variant = getCurrentPlaceNumberVariant();
+    const windowData = getPlaceNumberWindow(valueUnits);
+    const insideInterval = estimateUnits > windowData.left.positionUnits && estimateUnits < windowData.right.positionUnits;
+    const difference = Math.abs(estimateUnits - windowData.expectedPositionUnits);
+    const valueLabel = formatPlaceNumberUnits(valueUnits, variant);
+    const leftLabel = formatPlaceNumberUnits(windowData.left.valueUnits, variant);
+    const rightLabel = formatPlaceNumberUnits(windowData.right.valueUnits, variant);
 
     if (insideInterval && difference <= windowData.tolerance) {
         return {
             isCorrect: true,
-            message: `Placed! ${value} sits well on your line and now becomes a new benchmark.`,
+            message: `Placed! ${valueLabel} sits well on your line and now becomes a new benchmark.`,
             windowData
         };
     }
@@ -2520,15 +2841,15 @@ function evaluatePlaceNumberPlacement(value, estimate) {
     if (!insideInterval) {
         return {
             isCorrect: false,
-            message: `${value} needs to sit between ${windowData.left.value} and ${windowData.right.value}. Keep your marker inside that gap.`,
+            message: `${valueLabel} needs to sit between ${leftLabel} and ${rightLabel}. Keep your marker inside that gap.`,
             windowData
         };
     }
 
-    const direction = estimate < windowData.expectedPosition ? 'a little farther right' : 'a little farther left';
+    const direction = estimateUnits < windowData.expectedPositionUnits ? 'a little farther right' : 'a little farther left';
     return {
         isCorrect: false,
-        message: `${value} belongs between ${windowData.left.value} and ${windowData.right.value}. Try moving your marker ${direction}.`,
+        message: `${valueLabel} belongs between ${leftLabel} and ${rightLabel}. Try moving your marker ${direction}.`,
         windowData
     };
 }
@@ -2570,23 +2891,25 @@ function endPlaceNumberGame(isWin) {
 
 function checkPlaceNumberPlacement() {
     const state = GameState.placeNumber;
-    if (!state.currentRoll || state.selectedNumber === null || state.estimate === null || state.isGameOver) return;
+    const selectedOption = getPlaceNumberOptionById();
+    if (!state.currentRoll || !selectedOption || state.estimateUnits === null || state.isGameOver) return;
 
     const roll = state.currentRoll;
-    const estimateLabel = formatPlaceEstimate(state.estimate);
-    const evaluation = evaluatePlaceNumberPlacement(state.selectedNumber, state.estimate);
+    const estimateLabel = formatPlaceNumberUnits(state.estimateUnits);
+    const evaluation = evaluatePlaceNumberPlacement(selectedOption.valueUnits, state.estimateUnits);
 
     if (evaluation.isCorrect) {
         state.placedNumbers.push({
-            value: state.selectedNumber,
-            position: state.estimate
+            valueUnits: selectedOption.valueUnits,
+            label: selectedOption.canonicalLabel,
+            positionUnits: state.estimateUnits
         });
         state.stats.correct++;
 
         addToPlaceNumberTable({
             round: state.round,
-            digits: formatDigitRoll(roll.digits),
-            number: state.selectedNumber,
+            roll: roll.display,
+            choice: selectedOption.selectedLabel,
             estimate: estimateLabel,
             result: 'Correct'
         });
@@ -2599,14 +2922,15 @@ function checkPlaceNumberPlacement() {
 
     state.stats.incorrect++;
     state.failedPlacement = {
-        value: state.selectedNumber,
-        position: state.estimate,
+        valueUnits: selectedOption.valueUnits,
+        label: selectedOption.canonicalLabel,
+        positionUnits: state.estimateUnits,
         failed: true
     };
     addToPlaceNumberTable({
         round: state.round,
-        digits: formatDigitRoll(roll.digits),
-        number: state.selectedNumber,
+        roll: roll.display,
+        choice: selectedOption.selectedLabel,
         estimate: estimateLabel,
         result: 'Incorrect'
     });
@@ -2616,21 +2940,15 @@ function checkPlaceNumberPlacement() {
 }
 
 function rollPlaceNumberDice() {
+    const variant = getCurrentPlaceNumberVariant();
     const state = GameState.placeNumber;
     if (state.isGameOver || state.currentRoll) return;
 
-    const leftDie = $('#place-dice-left');
-    const rightDie = $('#place-dice-right');
-
-    leftDie.classList.add('rolling');
-    rightDie.classList.add('rolling');
+    renderPlaceNumberDice(null, { rolling: true });
     $('#roll-place-number-btn').disabled = true;
 
     setTimeout(() => {
         const roll = generatePlaceNumberRoll();
-
-        leftDie.classList.remove('rolling');
-        rightDie.classList.remove('rolling');
 
         if (!roll) {
             endPlaceNumberGame(true);
@@ -2639,15 +2957,15 @@ function rollPlaceNumberDice() {
 
         startPlaceNumberTurn(roll);
 
-        setPlaceNumberDiceDisplay(roll.digits[0], roll.digits[1]);
+        setPlaceNumberDiceDisplay(roll.dice);
 
         updatePlaceNumberDisplay();
 
-        const availableNumbers = roll.options.join(' or ');
+        const availableChoices = formatReadableChoices(roll.options.map(option => option.choiceLabel));
         showPlaceNumberFeedback(
             roll.options.length === 1
-                ? `Only ${availableNumbers} is still available from these digits. Place it on the line.`
-                : `Choose ${availableNumbers}, then place your number on the line.`,
+                ? variant.rollPromptSingle(availableChoices)
+                : variant.rollPromptMultiple(availableChoices),
             'info'
         );
     }, 500);
@@ -2670,6 +2988,12 @@ function resetPlaceNumberGame() {
     updatePlaceNumberDisplay();
 }
 
+function applyPlaceNumberVariant(variantId) {
+    GameState.placeNumber.variant = PLACE_NUMBER_VARIANTS[variantId] ? variantId : 'int_100';
+    renderPlaceNumberStaticUI();
+    resetPlaceNumberGame();
+}
+
 function initPlaceNumberGame() {
     $('#roll-place-number-btn')?.addEventListener('click', rollPlaceNumberDice);
     $('#check-place-number-btn')?.addEventListener('click', checkPlaceNumberPlacement);
@@ -2686,17 +3010,17 @@ function initPlaceNumberGame() {
     $('#place-number-line')?.addEventListener('pointercancel', handlePlaceNumberLinePointerCancel);
     $('#place-number-line')?.addEventListener('lostpointercapture', handlePlaceNumberLinePointerCancel);
     $('#place-number-line')?.addEventListener('keydown', handlePlaceNumberLineKeyDown);
+    $('#place-choice-buttons')?.addEventListener('click', (event) => {
+        const button = event.target.closest('.place-option-btn');
+        if (!button) return;
 
-    $$('.place-option-btn').forEach(button => {
-        button.addEventListener('click', (event) => {
-            const value = parseInt(event.currentTarget.dataset.value, 10);
-            if (!Number.isNaN(value)) {
-                selectPlaceNumberOption(value);
-            }
-        });
+        const { optionId } = button.dataset;
+        if (optionId) {
+            selectPlaceNumberOption(optionId);
+        }
     });
 
-    resetPlaceNumberGame();
+    applyPlaceNumberVariant(GameState.placeNumber.variant);
 }
 
 // ============================================

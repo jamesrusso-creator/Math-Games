@@ -323,11 +323,11 @@
                             <span id="place-round" class="status-value">1</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Digits</span>
+                            <span id="place-roll-label" class="status-label">Digits</span>
                             <span id="place-digits" class="status-value">-</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Number</span>
+                            <span id="place-choice-label" class="status-label">Chosen Value</span>
                             <span id="place-selected-number" class="status-value">-</span>
                         </div>
                         <div class="status-pills">
@@ -342,7 +342,7 @@
                 <div class="game-layout">
                     <div class="game-panel-left">
                         <div class="fraction-wall-container place-number-container">
-                            <p class="wall-hint">Choose a two-digit number, then click or drag on the line to place it between 0 and 100.</p>
+                            <p id="place-wall-hint" class="wall-hint">Choose a two-digit number, then click or drag on the line to place it between 0 and 100.</p>
                             <div class="panel-card place-number-board-card">
                                 <div class="place-number-board-header">
                                     <div class="place-number-board-heading">
@@ -357,24 +357,12 @@
                                 <div id="place-number-line" class="place-number-line" role="group" tabindex="-1" aria-label="Interactive number line from 0 to 100. Click or drag to place your chosen number.">
                                     <div class="place-number-line-inner" aria-hidden="true">
                                         <div class="place-number-track"></div>
-                                        <div class="place-number-ticks">
-                                            <span style="left: 0%;"></span>
-                                            <span class="place-optional-benchmark" style="left: 25%;"></span>
-                                            <span class="place-optional-benchmark" style="left: 50%;"></span>
-                                            <span class="place-optional-benchmark" style="left: 75%;"></span>
-                                            <span style="left: 100%;"></span>
-                                        </div>
+                                        <div id="place-number-ticks" class="place-number-ticks"></div>
                                         <div id="place-number-markers" class="place-number-markers"></div>
                                     </div>
                                 </div>
 
-                                <div class="place-number-labels" aria-hidden="true">
-                                    <span>0</span>
-                                    <span class="place-optional-benchmark">25</span>
-                                    <span class="place-optional-benchmark">50</span>
-                                    <span class="place-optional-benchmark">75</span>
-                                    <span>100</span>
-                                </div>
+                                <div id="place-number-labels" class="place-number-labels" aria-hidden="true"></div>
                             </div>
                         </div>
                     </div>
@@ -382,14 +370,7 @@
                     <aside class="game-panel-right">
                         <div class="panel-card dice-card">
                             <div class="dice-container">
-                                <div class="dice-pair">
-                                    <div class="dice small" id="place-dice-left" role="img" aria-label="First digit die">
-                                        <span class="dice-face">?</span>
-                                    </div>
-                                    <div class="dice small" id="place-dice-right" role="img" aria-label="Second digit die">
-                                        <span class="dice-face">?</span>
-                                    </div>
-                                </div>
+                                <div id="place-dice-row" class="dice-pair place-dice-row"></div>
                                 <button id="roll-place-number-btn" class="btn btn-dice btn-roll-full" aria-label="Roll the place value digit dice">
                                     Roll Dice 🎲
                                 </button>
@@ -398,18 +379,15 @@
                                 </button>
                                 <label class="place-benchmark-toggle" for="place-show-benchmarks">
                                     <input type="checkbox" id="place-show-benchmarks">
-                                    <span>Show 25 / 50 / 75 benchmarks</span>
+                                    <span id="place-benchmark-toggle-label">Show 25 / 50 / 75 benchmarks</span>
                                 </label>
                             </div>
                         </div>
 
                         <div id="place-choice-card" class="panel-card place-choice-card" hidden>
-                            <h3 class="panel-card-title">Build Your Number</h3>
+                            <h3 id="place-choice-title" class="panel-card-title">Build Your Number</h3>
                             <p id="place-choice-message" class="place-choice-message">Choose which number gives you the best benchmark.</p>
-                            <div class="place-choice-buttons">
-                                <button id="place-option-a" type="button" class="btn btn-secondary place-option-btn"></button>
-                                <button id="place-option-b" type="button" class="btn btn-secondary place-option-btn"></button>
-                            </div>
+                            <div id="place-choice-buttons" class="place-choice-buttons"></div>
                         </div>
 
                         <div id="place-action-buttons" class="action-buttons panel-actions" hidden>
@@ -440,8 +418,8 @@
                                 <thead>
                                     <tr>
                                         <th scope="col">Rd</th>
-                                        <th scope="col">Digits</th>
-                                        <th scope="col">Number</th>
+                                        <th id="place-history-roll-header" scope="col">Digits</th>
+                                        <th id="place-history-choice-header" scope="col">Number</th>
                                         <th scope="col">Placed At</th>
                                         <th scope="col">Result</th>
                                     </tr>
@@ -732,6 +710,31 @@
                 </button>
             </div>
             <button id="version-modal-cancel" class="btn btn-secondary">Cancel</button>
+        </div>
+    </div>
+
+    <div id="place-version-modal" class="modal" role="dialog" aria-labelledby="place-version-modal-title" aria-modal="true" hidden>
+        <div class="modal-content version-picker">
+            <h3 id="place-version-modal-title">Choose a Version</h3>
+            <p class="version-picker-desc">Select which version of Place That Number you'd like to play:</p>
+            <div class="version-options">
+                <button class="place-version-option version-option" data-place-variant="int_100">
+                    <span class="version-badge">0 to 100</span>
+                    <span class="version-name">Integer Version</span>
+                    <span class="version-detail">Two digit dice on a 0 to 100 number line.</span>
+                </button>
+                <button class="place-version-option version-option" data-place-variant="int_1000">
+                    <span class="version-badge">0 to 1000</span>
+                    <span class="version-name">Integer Version</span>
+                    <span class="version-detail">Three digit dice on a 0 to 1000 number line.</span>
+                </button>
+                <button class="place-version-option version-option" data-place-variant="frac_0_6">
+                    <span class="version-badge">0 to 6</span>
+                    <span class="version-name">Fraction Version</span>
+                    <span class="version-detail">Two dice from 1 to 6, arranged as a fraction.</span>
+                </button>
+            </div>
+            <button id="place-version-modal-cancel" class="btn btn-secondary">Cancel</button>
         </div>
     </div>
 
