@@ -217,6 +217,12 @@ function formatImproperFractionFromUnits(units, unitsPerWhole) {
     return `${units / divisor}/${unitsPerWhole / divisor}`;
 }
 
+const PLACE_NUMBER_FORMATTERS = {
+    mixed: formatMixedFractionFromUnits,
+    historyMixed: formatHistoryMixedFractionFromUnits,
+    improper: formatImproperFractionFromUnits
+};
+
 function formatReadableChoices(items) {
     if (!items || items.length === 0) return '';
     if (items.length === 1) return items[0];
@@ -278,10 +284,15 @@ function buildPlaceFractionRollOptions(dice, placedValues, variant) {
         .filter(option => !placedValues.has(option.valueUnits));
 }
 
+function formatPlaceVariantUnits(units, variant, formatKey = 'mixed') {
+    const formatter = PLACE_NUMBER_FORMATTERS[formatKey] || PLACE_NUMBER_FORMATTERS.mixed;
+    return formatter(units, variant.unitsPerWhole);
+}
+
 function createPlaceChoiceOption(variant, option) {
-    const canonicalLabel = formatMixedFractionFromUnits(option.valueUnits, variant.unitsPerWhole);
-    const historyCanonicalLabel = formatHistoryMixedFractionFromUnits(option.valueUnits, variant.unitsPerWhole);
-    const markerLabel = formatPlaceNumberMarkerUnits(option.valueUnits, variant);
+    const canonicalLabel = formatPlaceVariantUnits(option.valueUnits, variant, variant.selectedValueFormat);
+    const historyCanonicalLabel = formatPlaceVariantUnits(option.valueUnits, variant, variant.historyValueFormat);
+    const markerLabel = formatPlaceVariantUnits(option.valueUnits, variant, variant.markerValueFormat);
     return {
         id: `${option.rawLabel}:${option.valueUnits}`,
         rawLabel: option.rawLabel,
@@ -295,8 +306,48 @@ function createPlaceChoiceOption(variant, option) {
     };
 }
 
+function formatPlaceBenchmarkToggleLabel(benchmarkLabels) {
+    return `Show ${benchmarkLabels.join(' / ')} benchmarks`;
+}
+
+function createPlaceRollPromptSingle(sourceLabel) {
+    return available => `Only ${available} is still available from these ${sourceLabel}. Place it on the line.`;
+}
+
+function createPlaceRollPromptMultiple(valueLabel) {
+    return available => `Choose ${available}, then place your ${valueLabel} on the line.`;
+}
+
+function createPlaceNumberVariant(config) {
+    return {
+        choiceCardTitle: 'Build Your Number',
+        statusChoiceLabel: 'Chosen Value',
+        benchmarkToggleTemplate: formatPlaceBenchmarkToggleLabel,
+        selectedValueFormat: 'mixed',
+        historyValueFormat: 'historyMixed',
+        feedbackValueFormat: 'mixed',
+        markerValueFormat: 'mixed',
+        ...config
+    };
+}
+
+function createPlaceIntegerVariant(config) {
+    return createPlaceNumberVariant({
+        statusRollLabel: 'Digits',
+        historyRollLabel: 'Digits',
+        historyChoiceLabel: 'Number',
+        unitsPerWhole: 2,
+        diceFaces: PLACE_NUMBER_DIGIT_VALUES,
+        keyboardStepUnits: 1,
+        optionBuilder: buildPlaceIntegerRollOptions,
+        rollPromptSingle: createPlaceRollPromptSingle('digits'),
+        rollPromptMultiple: createPlaceRollPromptMultiple('number'),
+        ...config
+    });
+}
+
 const PLACE_NUMBER_VARIANTS = {
-    int_100: {
+    int_100: createPlaceIntegerVariant({
         id: 'int_100',
         title: 'Place That Number (0 to 100)',
         badge: '0 to 100',
@@ -304,19 +355,10 @@ const PLACE_NUMBER_VARIANTS = {
         benchmarkUnits: [50, 100, 150],
         rangeMax: 100,
         rangeUnits: 200,
-        unitsPerWhole: 2,
-        diceFaces: PLACE_NUMBER_DIGIT_VALUES,
         diceCount: 2,
-        keyboardStepUnits: 1,
         keyboardJumpUnits: 10,
-        choiceCardTitle: 'Build Your Number',
-        statusRollLabel: 'Digits',
-        statusChoiceLabel: 'Chosen Value',
-        historyRollLabel: 'Digits',
-        historyChoiceLabel: 'Number',
         wallHint: 'Choose a two-digit number, then click or drag on the line to place it between 0 and 100.',
         lineAriaLabel: 'Interactive number line from 0 to 100. Click or drag to place your chosen number.',
-        benchmarkToggleTemplate: benchmarkLabels => `Show ${benchmarkLabels.join(' / ')} benchmarks`,
         howToPlaySteps: [
             'Roll the two digit dice to get a pair of digits.',
             'Choose which two-digit number you want to build from those digits.',
@@ -324,12 +366,9 @@ const PLACE_NUMBER_VARIANTS = {
             'Use the numbers already on the line as benchmarks for later rounds.',
             'The run ends as soon as you place one number incorrectly, so the goal is to last longer than everyone else.'
         ],
-        rollPromptSingle: available => `Only ${available} is still available from these digits. Place it on the line.`,
-        rollPromptMultiple: available => `Choose ${available}, then place your number on the line.`,
         wholeLineHint: valueLabel => `${valueLabel} is using the whole 0 to 100 line. Look for halves, quarters, and tens.`,
-        optionBuilder: buildPlaceIntegerRollOptions
-    },
-    int_1000: {
+    }),
+    int_1000: createPlaceIntegerVariant({
         id: 'int_1000',
         title: 'Place That Number (0 to 1000)',
         badge: '0 to 1000',
@@ -337,19 +376,10 @@ const PLACE_NUMBER_VARIANTS = {
         benchmarkUnits: [500, 1000, 1500],
         rangeMax: 1000,
         rangeUnits: 2000,
-        unitsPerWhole: 2,
-        diceFaces: PLACE_NUMBER_DIGIT_VALUES,
         diceCount: 3,
-        keyboardStepUnits: 1,
         keyboardJumpUnits: 20,
-        choiceCardTitle: 'Build Your Number',
-        statusRollLabel: 'Digits',
-        statusChoiceLabel: 'Chosen Value',
-        historyRollLabel: 'Digits',
-        historyChoiceLabel: 'Number',
         wallHint: 'Choose a three-digit number, then click or drag on the line to place it between 0 and 1000.',
         lineAriaLabel: 'Interactive number line from 0 to 1000. Click or drag to place your chosen number.',
-        benchmarkToggleTemplate: benchmarkLabels => `Show ${benchmarkLabels.join(' / ')} benchmarks`,
         howToPlaySteps: [
             'Roll the three digit dice to get a set of digits.',
             'Choose which number you want to build from those digits.',
@@ -357,12 +387,9 @@ const PLACE_NUMBER_VARIANTS = {
             'Use the numbers already on the line as benchmarks for later rounds.',
             'The run ends as soon as you place one number incorrectly, so the goal is to survive for more rounds than everyone else.'
         ],
-        rollPromptSingle: available => `Only ${available} is still available from these digits. Place it on the line.`,
-        rollPromptMultiple: available => `Choose ${available}, then place your number on the line.`,
         wholeLineHint: valueLabel => `${valueLabel} is using the whole 0 to 1000 line. Look for halves, quarters, and hundreds.`,
-        optionBuilder: buildPlaceIntegerRollOptions
-    },
-    frac_0_6: {
+    }),
+    frac_0_6: createPlaceNumberVariant({
         id: 'frac_0_6',
         title: 'Place That Number (0 to 6 Fractions)',
         badge: '0 to 6 Fractions',
@@ -377,12 +404,12 @@ const PLACE_NUMBER_VARIANTS = {
         keyboardJumpUnits: 10,
         choiceCardTitle: 'Build Your Fraction',
         statusRollLabel: 'Dice',
-        statusChoiceLabel: 'Chosen Value',
         historyRollLabel: 'Dice',
         historyChoiceLabel: 'Fraction',
+        feedbackValueFormat: 'improper',
+        markerValueFormat: 'improper',
         wallHint: 'Choose one of the two fractions, then click or drag on the line to place it between 0 and 6.',
         lineAriaLabel: 'Interactive number line from 0 to 6. Click or drag to place your chosen fraction.',
-        benchmarkToggleTemplate: benchmarkLabels => `Show ${benchmarkLabels.join(' / ')} benchmarks`,
         howToPlaySteps: [
             'Roll the two dice to get two numbers from 1 to 6.',
             'Choose which way to write them as a fraction.',
@@ -390,11 +417,11 @@ const PLACE_NUMBER_VARIANTS = {
             'Use the numbers already on the line as benchmarks for later rounds.',
             'The run ends as soon as you place one value incorrectly, so the goal is to survive for more rounds than everyone else.'
         ],
-        rollPromptSingle: available => `Only ${available} is still available from these dice. Place it on the line.`,
-        rollPromptMultiple: available => `Choose ${available}, then place your fraction on the line.`,
+        rollPromptSingle: createPlaceRollPromptSingle('dice'),
+        rollPromptMultiple: createPlaceRollPromptMultiple('fraction'),
         wholeLineHint: valueLabel => `${valueLabel} is using the whole 0 to 6 line. Look for halves, thirds, and sixths.`,
         optionBuilder: buildPlaceFractionRollOptions
-    }
+    })
 };
 
 // ============================================
@@ -2292,27 +2319,23 @@ function getPlaceNumberOptionById(optionId = GameState.placeNumber.selectedOptio
 }
 
 function formatPlaceNumberUnits(units, variant = getCurrentPlaceNumberVariant()) {
-    return formatMixedFractionFromUnits(units, variant.unitsPerWhole);
+    return formatPlaceVariantUnits(units, variant, 'mixed');
 }
 
 function formatPlaceNumberHistoryUnits(units, variant = getCurrentPlaceNumberVariant()) {
-    return formatHistoryMixedFractionFromUnits(units, variant.unitsPerWhole);
+    return formatPlaceVariantUnits(units, variant, 'historyMixed');
 }
 
 function formatPlaceNumberImproperUnits(units, variant = getCurrentPlaceNumberVariant()) {
-    return formatImproperFractionFromUnits(units, variant.unitsPerWhole);
+    return formatPlaceVariantUnits(units, variant, 'improper');
 }
 
 function formatPlaceNumberFeedbackUnits(units, variant = getCurrentPlaceNumberVariant()) {
-    return variant.id === 'frac_0_6'
-        ? formatPlaceNumberImproperUnits(units, variant)
-        : formatPlaceNumberUnits(units, variant);
+    return formatPlaceVariantUnits(units, variant, variant.feedbackValueFormat);
 }
 
 function formatPlaceNumberMarkerUnits(units, variant = getCurrentPlaceNumberVariant()) {
-    return variant.id === 'frac_0_6'
-        ? formatPlaceNumberImproperUnits(units, variant)
-        : formatPlaceNumberUnits(units, variant);
+    return formatPlaceVariantUnits(units, variant, variant.markerValueFormat);
 }
 
 function getPlaceNumberBenchmarkUnits(variant = getCurrentPlaceNumberVariant()) {
