@@ -532,6 +532,77 @@ function openModal(modal, options = {}) {
     return close;
 }
 
+function showOptionPickerModal({
+    modalSelector,
+    optionSelector,
+    cancelSelector,
+    valueDataKey
+}) {
+    return new Promise((resolve) => {
+        const modal = $(modalSelector);
+        const cancelBtn = $(cancelSelector);
+        const options = Array.from($$(optionSelector));
+
+        if (!modal || options.length === 0) {
+            resolve(null);
+            return;
+        }
+
+        let isResolved = false;
+        let closeModal = () => {};
+
+        const cleanup = () => {
+            options.forEach(option => option.removeEventListener('click', onPick));
+            cancelBtn?.removeEventListener('click', onCancel);
+        };
+
+        const finish = (value, dismissed = false) => {
+            if (isResolved) return;
+            isResolved = true;
+
+            if (!dismissed) {
+                closeModal('action');
+            }
+
+            cleanup();
+            resolve(value);
+        };
+
+        function onPick(event) {
+            finish(event.currentTarget.dataset[valueDataKey] ?? null);
+        }
+
+        function onCancel() {
+            finish(null);
+        }
+
+        options.forEach(option => option.addEventListener('click', onPick));
+        cancelBtn?.addEventListener('click', onCancel);
+        closeModal = openModal(modal, {
+            initialFocus: options[0] || cancelBtn,
+            onDismiss: () => finish(null, true)
+        });
+    });
+}
+
+function setFeedbackMessage(selector, message, type) {
+    const feedback = $(selector);
+    if (!feedback) return;
+
+    feedback.textContent = message;
+    feedback.className = `feedback-message ${type}`;
+    feedback.hidden = false;
+}
+
+function clearFeedbackMessage(selector) {
+    const feedback = $(selector);
+    if (!feedback) return;
+
+    feedback.hidden = true;
+    feedback.textContent = '';
+    feedback.className = 'feedback-message';
+}
+
 function getFractionVersionConfig(version = currentVersion) {
     return VERSIONS[version] || VERSIONS.proper;
 }
@@ -658,75 +729,20 @@ function resetDecimatCustomDice() {
 // ============================================
 
 function showVersionPicker() {
-    return new Promise((resolve) => {
-        const modal = $('#version-modal');
-        const cancelBtn = $('#version-modal-cancel');
-        const options = $$('#version-modal .version-option');
-        let closeModal = () => {};
-
-        const cleanup = () => {
-            options.forEach(o => o.removeEventListener('click', onPick));
-            cancelBtn.removeEventListener('click', onCancel);
-        };
-
-        const finish = (value) => {
-            closeModal('action');
-            cleanup();
-            resolve(value);
-        };
-
-        function onPick(e) {
-            finish(e.currentTarget.dataset.version);
-        }
-        function onCancel() { finish(null); }
-
-        options.forEach(o => o.addEventListener('click', onPick));
-        cancelBtn.addEventListener('click', onCancel);
-        closeModal = openModal(modal, {
-            initialFocus: modal.querySelector('.version-option'),
-            onDismiss: () => {
-                cleanup();
-                resolve(null);
-            }
-        });
+    return showOptionPickerModal({
+        modalSelector: '#version-modal',
+        optionSelector: '#version-modal .version-option',
+        cancelSelector: '#version-modal-cancel',
+        valueDataKey: 'version'
     });
 }
 
 function showPlaceNumberVersionPicker() {
-    return new Promise((resolve) => {
-        const modal = $('#place-version-modal');
-        const cancelBtn = $('#place-version-modal-cancel');
-        const options = $$('#place-version-modal .place-version-option');
-        let closeModal = () => {};
-
-        const cleanup = () => {
-            options.forEach(option => option.removeEventListener('click', onPick));
-            cancelBtn.removeEventListener('click', onCancel);
-        };
-
-        const finish = (value) => {
-            closeModal('action');
-            cleanup();
-            resolve(value);
-        };
-
-        function onPick(event) {
-            finish(event.currentTarget.dataset.placeVariant);
-        }
-
-        function onCancel() {
-            finish(null);
-        }
-
-        options.forEach(option => option.addEventListener('click', onPick));
-        cancelBtn.addEventListener('click', onCancel);
-        closeModal = openModal(modal, {
-            initialFocus: modal.querySelector('.place-version-option'),
-            onDismiss: () => {
-                cleanup();
-                resolve(null);
-            }
-        });
+    return showOptionPickerModal({
+        modalSelector: '#place-version-modal',
+        optionSelector: '#place-version-modal .place-version-option',
+        cancelSelector: '#place-version-modal-cancel',
+        valueDataKey: 'placeVariant'
     });
 }
 
@@ -1667,14 +1683,11 @@ function setDecimatDiceLocked(locked) {
 // ============================================
 
 function showFeedback(message, type) {
-    const feedback = $('#fraction-feedback');
-    feedback.textContent = message;
-    feedback.className = `feedback-message ${type}`;
-    feedback.hidden = false;
+    setFeedbackMessage('#fraction-feedback', message, type);
 }
 
 function hideFeedback() {
-    $('#fraction-feedback').hidden = true;
+    clearFeedbackMessage('#fraction-feedback');
 }
 
 function updateFractionDisplay() {
@@ -1698,22 +1711,26 @@ function getHistoryResultClass(result) {
     return 'result-skipped';
 }
 
-function addToFractionsTable(entry) {
-    const tbody = $('#fractions-table tbody');
+function prependHistoryRow(tableSelector, cells, result) {
+    const tbody = $(`${tableSelector} tbody`);
     if (!tbody) return;
 
     const row = document.createElement('tr');
-    row.className = getHistoryResultClass(entry.result);
-
-    row.innerHTML = `
-        <td>${entry.round}</td>
-        <td>${entry.target}</td>
-        <td>${entry.selection}</td>
-        <td>${entry.result}</td>
-    `;
+    row.className = getHistoryResultClass(result);
+    row.innerHTML = cells.map(cell => `<td>${cell}</td>`).join('');
     tbody.prepend(row);
+
     const scrollContainer = tbody.closest('.history-scroll');
     if (scrollContainer) scrollContainer.scrollTop = 0;
+}
+
+function addToFractionsTable(entry) {
+    prependHistoryRow('#fractions-table', [
+        entry.round,
+        entry.target,
+        entry.selection,
+        entry.result
+    ], entry.result);
 }
 
 // ============================================
@@ -1728,14 +1745,11 @@ function setDecimatPlaceDisplay(numerator, denominator) {
 }
 
 function showDecimatFeedback(message, type) {
-    const feedback = $('#decimat-feedback');
-    feedback.textContent = message;
-    feedback.className = `feedback-message ${type}`;
-    feedback.hidden = false;
+    setFeedbackMessage('#decimat-feedback', message, type);
 }
 
 function hideDecimatFeedback() {
-    $('#decimat-feedback').hidden = true;
+    clearFeedbackMessage('#decimat-feedback');
 }
 
 function createDecimatCell(level, units) {
@@ -1941,23 +1955,13 @@ function updateDecimatStatsDisplay() {
 }
 
 function addToDecimatsTable(entry) {
-    const tbody = $('#decimats-table tbody');
-    if (!tbody) return;
-
-    const row = document.createElement('tr');
-    row.className = getHistoryResultClass(entry.result);
-
-    row.innerHTML = `
-        <td>${entry.round}</td>
-        <td>${entry.target}</td>
-        <td>${entry.selection}</td>
-        <td>${entry.total}</td>
-        <td>${entry.result}</td>
-    `;
-
-    tbody.prepend(row);
-    const scrollContainer = tbody.closest('.history-scroll');
-    if (scrollContainer) scrollContainer.scrollTop = 0;
+    prependHistoryRow('#decimats-table', [
+        entry.round,
+        entry.target,
+        entry.selection,
+        entry.total,
+        entry.result
+    ], entry.result);
 }
 
 function updateDecimatActionState() {
@@ -2412,14 +2416,11 @@ function renderPlaceNumberStaticUI() {
 }
 
 function showPlaceNumberFeedback(message, type) {
-    const feedback = $('#place-number-feedback');
-    feedback.textContent = message;
-    feedback.className = `feedback-message ${type}`;
-    feedback.hidden = false;
+    setFeedbackMessage('#place-number-feedback', message, type);
 }
 
 function hidePlaceNumberFeedback() {
-    $('#place-number-feedback').hidden = true;
+    clearFeedbackMessage('#place-number-feedback');
 }
 
 function generatePlaceNumberRoll() {
@@ -2695,22 +2696,13 @@ function updatePlaceNumberDisplay() {
 }
 
 function addToPlaceNumberTable(entry) {
-    const tbody = $('#place-number-table tbody');
-    if (!tbody) return;
-
-    const row = document.createElement('tr');
-    row.className = getHistoryResultClass(entry.result);
-    row.innerHTML = `
-        <td>${entry.round}</td>
-        <td>${entry.roll}</td>
-        <td>${entry.choice}</td>
-        <td>${entry.estimate}</td>
-        <td>${entry.result}</td>
-    `;
-
-    tbody.prepend(row);
-    const scrollContainer = tbody.closest('.history-scroll');
-    if (scrollContainer) scrollContainer.scrollTop = 0;
+    prependHistoryRow('#place-number-table', [
+        entry.round,
+        entry.roll,
+        entry.choice,
+        entry.estimate,
+        entry.result
+    ], entry.result);
 }
 
 function setPlaceNumberDiceDisplay(dice) {
