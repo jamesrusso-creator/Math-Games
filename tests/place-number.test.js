@@ -93,11 +93,12 @@ test('Place That Number 0-1000 supports three dice and records half-step placeme
     assert.deepEqual(priorCorrectRow, ['1', '1 & 2 & 3', '123', '123 + 1/2', 'Correct']);
 });
 
-test('Place That Number 0-6 fractions normalizes the chosen value and records mixed-fraction history', async (t) => {
+test('Place That Number 0-6 fractions use 1 and 3 benchmarks and simplified improper-fraction labels', async (t) => {
     const page = await openAppPage(browser, t);
 
     await openPlaceNumber(page, 'frac_0_6');
     assert.equal(await getText(page, '#place-number-title'), 'Place That Number (0 to 6 Fractions)');
+    assert.equal(await getText(page, '#place-benchmark-toggle-label'), 'Show 1 / 3 benchmarks');
 
     await setRandomSequence(page, [0.2, 0.75, 0, 0]);
 
@@ -117,4 +118,43 @@ test('Place That Number 0-6 fractions normalizes the chosen value and records mi
 
     const priorCorrectRow = await getRowText(page, '#place-number-table tbody tr:nth-child(2)');
     assert.deepEqual(priorCorrectRow, ['1', '2 & 5', '5/2 (= 2 + 1/2)', '2 + 1/2', 'Correct']);
+
+    const markerLabels = await page.locator('.place-marker-label').evaluateAll((nodes) =>
+        nodes.map((node) => node.textContent.trim())
+    );
+    assert.equal(markerLabels.includes('5/2'), true);
+    assert.equal(markerLabels.includes('2 1/2'), false);
+});
+
+test('Place That Number fraction feedback keeps improper fractions in the top message', async (t) => {
+    const page = await openAppPage(browser, t);
+
+    await openPlaceNumber(page, 'frac_0_6');
+    await setRandomSequence(page, [0.75, 0.75, 0.95, 0.55, 0.95, 0.75]);
+
+    await page.click('#roll-place-number-btn');
+    await waitForText(page, '#place-digits', '5 & 5');
+    await clickPlaceChoice(page, '5/5');
+    await clickNumberLineAtRatio(page, 1 / 6);
+    await page.click('#check-place-number-btn');
+    await waitForText(page, '#place-round', '2');
+
+    await page.click('#roll-place-number-btn');
+    await waitForText(page, '#place-digits', '6 & 4');
+    await clickPlaceChoice(page, '6/4');
+    await clickNumberLineAtRatio(page, 1.5 / 6);
+    await page.click('#check-place-number-btn');
+    await waitForText(page, '#place-round', '3');
+
+    await page.click('#roll-place-number-btn');
+    await waitForText(page, '#place-digits', '6 & 5');
+    await clickPlaceChoice(page, '6/5');
+    await clickNumberLineAtRatio(page, 0.24);
+    await page.click('#check-place-number-btn');
+
+    await waitForVisible(page, '#game-modal');
+
+    const feedback = await getText(page, '#place-number-feedback');
+    assert.match(feedback, /6\/5 belongs between 1 and 3\/2/i);
+    assert.doesNotMatch(feedback, /1 1\/5|1 1\/2/i);
 });

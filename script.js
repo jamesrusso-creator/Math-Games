@@ -206,6 +206,17 @@ function formatHistoryMixedFractionFromUnits(units, unitsPerWhole) {
     });
 }
 
+function formatImproperFractionFromUnits(units, unitsPerWhole) {
+    if (typeof units !== 'number' || Number.isNaN(units)) return '-';
+
+    if (units % unitsPerWhole === 0) {
+        return `${units / unitsPerWhole}`;
+    }
+
+    const divisor = greatestCommonDivisor(units, unitsPerWhole);
+    return `${units / divisor}/${unitsPerWhole / divisor}`;
+}
+
 function formatReadableChoices(items) {
     if (!items || items.length === 0) return '';
     if (items.length === 1) return items[0];
@@ -270,12 +281,14 @@ function buildPlaceFractionRollOptions(dice, placedValues, variant) {
 function createPlaceChoiceOption(variant, option) {
     const canonicalLabel = formatMixedFractionFromUnits(option.valueUnits, variant.unitsPerWhole);
     const historyCanonicalLabel = formatHistoryMixedFractionFromUnits(option.valueUnits, variant.unitsPerWhole);
+    const markerLabel = formatPlaceNumberMarkerUnits(option.valueUnits, variant);
     return {
         id: `${option.rawLabel}:${option.valueUnits}`,
         rawLabel: option.rawLabel,
         valueUnits: option.valueUnits,
         canonicalLabel,
         historyCanonicalLabel,
+        markerLabel,
         choiceLabel: option.rawLabel,
         selectedLabel: formatCanonicalChoice(option.rawLabel, canonicalLabel),
         historyLabel: formatCanonicalChoice(option.rawLabel, historyCanonicalLabel)
@@ -288,6 +301,7 @@ const PLACE_NUMBER_VARIANTS = {
         title: 'Place That Number (0 to 100)',
         badge: '0 to 100',
         description: 'Two digit dice, whole-number targets, and half-step placement on a 0 to 100 line.',
+        benchmarkUnits: [50, 100, 150],
         rangeMax: 100,
         rangeUnits: 200,
         unitsPerWhole: 2,
@@ -320,6 +334,7 @@ const PLACE_NUMBER_VARIANTS = {
         title: 'Place That Number (0 to 1000)',
         badge: '0 to 1000',
         description: 'Three digit dice, more possible targets, and the same half-step placement on a 0 to 1000 line.',
+        benchmarkUnits: [500, 1000, 1500],
         rangeMax: 1000,
         rangeUnits: 2000,
         unitsPerWhole: 2,
@@ -352,6 +367,7 @@ const PLACE_NUMBER_VARIANTS = {
         title: 'Place That Number (0 to 6 Fractions)',
         badge: '0 to 6 Fractions',
         description: 'Two dice from 1 to 6. Choose which way to write them as a fraction, then place that value on a 0 to 6 line.',
+        benchmarkUnits: [60, 180],
         rangeMax: 6,
         rangeUnits: 360,
         unitsPerWhole: 60,
@@ -2283,12 +2299,33 @@ function formatPlaceNumberHistoryUnits(units, variant = getCurrentPlaceNumberVar
     return formatHistoryMixedFractionFromUnits(units, variant.unitsPerWhole);
 }
 
+function formatPlaceNumberImproperUnits(units, variant = getCurrentPlaceNumberVariant()) {
+    return formatImproperFractionFromUnits(units, variant.unitsPerWhole);
+}
+
+function formatPlaceNumberFeedbackUnits(units, variant = getCurrentPlaceNumberVariant()) {
+    return variant.id === 'frac_0_6'
+        ? formatPlaceNumberImproperUnits(units, variant)
+        : formatPlaceNumberUnits(units, variant);
+}
+
+function formatPlaceNumberMarkerUnits(units, variant = getCurrentPlaceNumberVariant()) {
+    return variant.id === 'frac_0_6'
+        ? formatPlaceNumberImproperUnits(units, variant)
+        : formatPlaceNumberUnits(units, variant);
+}
+
 function getPlaceNumberBenchmarkUnits(variant = getCurrentPlaceNumberVariant()) {
-    return [
+    return variant.benchmarkUnits || [
         Math.round(variant.rangeUnits / 4),
         Math.round(variant.rangeUnits / 2),
         Math.round((variant.rangeUnits * 3) / 4)
     ];
+}
+
+function getPlaceNumberLabelPositionStyle(units, variant = getCurrentPlaceNumberVariant()) {
+    const ratio = units / variant.rangeUnits;
+    return `left: calc(var(--place-line-edge-inset) + ${ratio} * (100% - (2 * var(--place-line-edge-inset))));`;
 }
 
 function renderPlaceNumberDice(dice = null, { rolling = false } = {}) {
@@ -2332,24 +2369,20 @@ function renderPlaceNumberStaticUI() {
 
     const ticks = $('#place-number-ticks');
     if (ticks) {
-        ticks.innerHTML = `
-            <span style="left: 0%;"></span>
-            <span class="place-optional-benchmark" style="left: 25%;"></span>
-            <span class="place-optional-benchmark" style="left: 50%;"></span>
-            <span class="place-optional-benchmark" style="left: 75%;"></span>
-            <span style="left: 100%;"></span>
-        `;
+        ticks.innerHTML = [
+            '<span class="place-number-tick-start" style="left: 0%;"></span>',
+            ...benchmarkUnits.map(units => `<span class="place-optional-benchmark" style="left: ${(units / variant.rangeUnits) * 100}%;"></span>`),
+            '<span class="place-number-tick-end" style="left: 100%;"></span>'
+        ].join('');
     }
 
     const labels = $('#place-number-labels');
     if (labels) {
-        labels.innerHTML = `
-            <span>0</span>
-            <span class="place-optional-benchmark">${benchmarkLabels[0]}</span>
-            <span class="place-optional-benchmark">${benchmarkLabels[1]}</span>
-            <span class="place-optional-benchmark">${benchmarkLabels[2]}</span>
-            <span>${formatPlaceNumberUnits(variant.rangeUnits, variant)}</span>
-        `;
+        labels.innerHTML = [
+            '<span class="place-number-label-start">0</span>',
+            ...benchmarkUnits.map((units, index) => `<span class="place-optional-benchmark" style="${getPlaceNumberLabelPositionStyle(units, variant)}">${benchmarkLabels[index]}</span>`),
+            `<span class="place-number-label-end">${formatPlaceNumberUnits(variant.rangeUnits, variant)}</span>`
+        ].join('');
     }
 
     renderPlaceNumberDice();
@@ -2520,7 +2553,7 @@ function renderPlaceNumberLine() {
     if (state.currentRoll && selectedOption && state.estimateUnits !== null) {
         const previewLane = getPlaceNumberMarkerLane(sortedMarkers.length);
         markersLayer.appendChild(buildPlaceNumberMarker({
-            label: selectedOption.canonicalLabel,
+            label: selectedOption.markerLabel,
             positionUnits: state.estimateUnits,
             preview: true
         }, previewLane));
@@ -2835,14 +2868,15 @@ function selectPlaceNumberOption(optionId) {
     updatePlaceNumberDisplay();
 }
 
-function evaluatePlaceNumberPlacement(valueUnits, estimateUnits) {
+function evaluatePlaceNumberPlacement(selectedOption, estimateUnits) {
     const variant = getCurrentPlaceNumberVariant();
+    const valueUnits = selectedOption.valueUnits;
     const windowData = getPlaceNumberWindow(valueUnits);
     const insideInterval = estimateUnits > windowData.left.positionUnits && estimateUnits < windowData.right.positionUnits;
     const difference = Math.abs(estimateUnits - windowData.expectedPositionUnits);
-    const valueLabel = formatPlaceNumberUnits(valueUnits, variant);
-    const leftLabel = formatPlaceNumberUnits(windowData.left.valueUnits, variant);
-    const rightLabel = formatPlaceNumberUnits(windowData.right.valueUnits, variant);
+    const valueLabel = selectedOption.choiceLabel;
+    const leftLabel = formatPlaceNumberFeedbackUnits(windowData.left.valueUnits, variant);
+    const rightLabel = formatPlaceNumberFeedbackUnits(windowData.right.valueUnits, variant);
 
     if (insideInterval && difference <= windowData.tolerance) {
         return {
@@ -2910,12 +2944,12 @@ function checkPlaceNumberPlacement() {
 
     const roll = state.currentRoll;
     const estimateLabel = formatPlaceNumberHistoryUnits(state.estimateUnits);
-    const evaluation = evaluatePlaceNumberPlacement(selectedOption.valueUnits, state.estimateUnits);
+    const evaluation = evaluatePlaceNumberPlacement(selectedOption, state.estimateUnits);
 
     if (evaluation.isCorrect) {
         state.placedNumbers.push({
             valueUnits: selectedOption.valueUnits,
-            label: selectedOption.canonicalLabel,
+            label: selectedOption.markerLabel,
             positionUnits: state.estimateUnits
         });
         state.stats.correct++;
@@ -2937,7 +2971,7 @@ function checkPlaceNumberPlacement() {
     state.stats.incorrect++;
     state.failedPlacement = {
         valueUnits: selectedOption.valueUnits,
-        label: selectedOption.canonicalLabel,
+        label: selectedOption.markerLabel,
         positionUnits: state.estimateUnits,
         failed: true
     };

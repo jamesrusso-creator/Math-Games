@@ -1944,13 +1944,30 @@ main:has(.game-section:not([hidden])) {
 }
 
 .place-number-labels {
-    display: flex;
-    justify-content: space-between;
+    position: relative;
     margin-top: var(--spacing-md);
-    padding-inline: var(--place-line-edge-inset);
+    min-height: 1.5rem;
     color: var(--color-text-light);
     font-size: var(--font-size-sm);
     font-weight: 700;
+}
+
+.place-number-labels span {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+.place-number-labels .place-number-label-start {
+    left: var(--place-line-edge-inset);
+    transform: none;
+}
+
+.place-number-labels .place-number-label-end {
+    right: var(--place-line-edge-inset);
+    left: auto;
+    transform: none;
 }
 
 .place-benchmark-toggle {
