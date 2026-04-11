@@ -77,6 +77,23 @@ async function openDecimats(page) {
     await waitForVisible(page, '#decimats');
 }
 
+async function openFractionDiceModal(page) {
+    await page.click('#custom-dice-trigger');
+    await waitForVisible(page, '#custom-dice-modal');
+    await waitForVisible(page, '#fractions-custom-dice-panel');
+}
+
+async function openDecimatDiceModal(page) {
+    await page.click('#custom-decimat-dice-trigger');
+    await waitForVisible(page, '#custom-dice-modal');
+    await waitForVisible(page, '#decimats-custom-dice-panel');
+}
+
+async function closeCustomDiceModal(page) {
+    await page.click('#custom-dice-close');
+    await waitForHidden(page, '#custom-dice-modal');
+}
+
 function normalizeFaces(value, faceCount = 6) {
     if (Array.isArray(value)) {
         if (value.length !== faceCount) {
@@ -92,9 +109,7 @@ async function configureFractionsDice(page, numerator, denominator) {
     const numerators = normalizeFaces(numerator);
     const denominators = normalizeFaces(denominator);
 
-    await page.click('#custom-dice-trigger');
-    await waitForVisible(page, '#custom-dice-modal');
-    await waitForVisible(page, '#fractions-custom-dice-panel');
+    await openFractionDiceModal(page);
 
     for (let face = 1; face <= 6; face += 1) {
         await page.locator(`#frac-int-${face}`).fill(String(numerators[face - 1]));
@@ -106,17 +121,14 @@ async function configureFractionsDice(page, numerator, denominator) {
         const message = document.querySelector('#fraction-dice-error');
         return message && !message.hidden && message.textContent.includes('saved successfully');
     });
-    await page.click('#custom-dice-close');
-    await waitForHidden(page, '#custom-dice-modal');
+    await closeCustomDiceModal(page);
 }
 
 async function configureDecimatDice(page, numberValue, placeValue) {
     const numbers = normalizeFaces(numberValue);
     const placeValues = normalizeFaces(placeValue);
 
-    await page.click('#custom-decimat-dice-trigger');
-    await waitForVisible(page, '#custom-dice-modal');
-    await waitForVisible(page, '#decimats-custom-dice-panel');
+    await openDecimatDiceModal(page);
 
     for (let face = 1; face <= 6; face += 1) {
         await page.locator(`#decimat-int-${face}`).fill(String(numbers[face - 1]));
@@ -128,8 +140,7 @@ async function configureDecimatDice(page, numberValue, placeValue) {
         const message = document.querySelector('#decimat-dice-error');
         return message && !message.hidden && message.textContent.includes('saved successfully');
     });
-    await page.click('#custom-dice-close');
-    await waitForHidden(page, '#custom-dice-modal');
+    await closeCustomDiceModal(page);
 }
 
 async function clickFractionCells(page, rowIndex, cellIndexes) {
@@ -159,18 +170,32 @@ async function setRandomSequence(page, values) {
     }, values);
 }
 
+async function reloadApp(page) {
+    await page.reload();
+    await page.waitForLoadState('domcontentloaded');
+}
+
+async function waitForGameModal(page) {
+    await waitForVisible(page, '#game-modal');
+}
+
 module.exports = {
     clickDecimatCells,
     clickFractionCells,
+    closeCustomDiceModal,
     configureDecimatDice,
     configureFractionsDice,
     getRowText,
     getText,
     isDisabled,
+    openDecimatDiceModal,
     openAppPage,
     openDecimats,
+    openFractionDiceModal,
     openFractions,
+    reloadApp,
     setRandomSequence,
+    waitForGameModal,
     waitForHidden,
     waitForText,
     waitForVisible

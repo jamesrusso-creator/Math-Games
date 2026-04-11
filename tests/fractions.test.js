@@ -5,13 +5,17 @@ const test = require('node:test');
 const { chromium } = require('playwright');
 const {
     clickFractionCells,
+    closeCustomDiceModal,
     configureFractionsDice,
     getRowText,
     getText,
     isDisabled,
+    openFractionDiceModal,
     openAppPage,
     openFractions,
+    reloadApp,
     setRandomSequence,
+    waitForGameModal,
     waitForHidden,
     waitForText,
     waitForVisible
@@ -51,6 +55,60 @@ test('Colour in Fractions records a correct fixed roll', async (t) => {
         cell.classList.contains('used')
     );
     assert.equal(wasUsed, true);
+});
+
+test('Colour in Fractions custom dice persist for the current session and reset to defaults', async (t) => {
+    const page = await openAppPage(browser, t);
+
+    await openFractions(page);
+    await openFractionDiceModal(page);
+
+    await page.locator('#frac-int-1').fill('6');
+    await page.selectOption('#frac-denom-1', '6');
+    await page.click('#save-fraction-dice');
+    await page.waitForFunction(() => {
+        const message = document.querySelector('#fraction-dice-error');
+        return message && !message.hidden && message.textContent.includes('saved successfully');
+    });
+    await closeCustomDiceModal(page);
+
+    await reloadApp(page);
+    await openFractions(page);
+    await openFractionDiceModal(page);
+    assert.equal(await page.locator('#frac-int-1').inputValue(), '6');
+    assert.equal(await page.locator('#frac-denom-1').inputValue(), '6');
+
+    await page.click('#reset-fraction-dice');
+    await page.waitForFunction(() => {
+        const message = document.querySelector('#fraction-dice-error');
+        return message && !message.hidden && message.textContent.includes('reset to default');
+    });
+    assert.equal(await page.locator('#frac-int-1').inputValue(), '1');
+    assert.equal(await page.locator('#frac-denom-1').inputValue(), '4');
+    await closeCustomDiceModal(page);
+
+    await reloadApp(page);
+    await openFractions(page);
+    await openFractionDiceModal(page);
+    assert.equal(await page.locator('#frac-int-1').inputValue(), '1');
+    assert.equal(await page.locator('#frac-denom-1').inputValue(), '4');
+});
+
+test('Colour in Fractions locks custom dice during an active round', async (t) => {
+    const page = await openAppPage(browser, t);
+
+    await openFractions(page);
+    await configureFractionsDice(page, 1, 2);
+
+    await page.click('#roll-fraction-btn');
+    await waitForText(page, '#current-fraction', '1/2');
+
+    await openFractionDiceModal(page);
+    assert.equal(await isDisabled(page, '#frac-int-1'), true);
+    assert.equal(await isDisabled(page, '#save-fraction-dice'), true);
+
+    const lockedNotice = await getText(page, '#fractions-custom-dice-panel .dice-locked-notice');
+    assert.match(lockedNotice, /cannot be changed during an active Fractions game/i);
 });
 
 test('Colour in Fractions clear selection resets the current choice', async (t) => {
@@ -182,4 +240,76 @@ test('Colour in Fractions marks an impossible skip without opening the confirmat
 
     const latestRow = await getRowText(page, '#fractions-table tbody tr:first-child');
     assert.deepEqual(latestRow, ['6', '2/5', '-', 'Skipped (Impossible)']);
+});
+
+test('Colour in Fractions shows a win modal when the wall is completely filled', async (t) => {
+    const page = await openAppPage(browser, t);
+
+    await openFractions(page);
+    await configureFractionsDice(page, 6, 6);
+
+    const rowCellCounts = [2, 3, 4, 5, 6, 8, 10, 12];
+
+    for (let rowIndex = 0; rowIndex < rowCellCounts.length; rowIndex += 1) {
+        await page.click('#roll-fraction-btn');
+        await waitForText(page, '#current-fraction', '6/6');
+
+        await clickFractionCells(
+            page,
+            rowIndex,
+            Array.from({ length: rowCellCounts[rowIndex] }, (_, index) => index)
+        );
+        await page.click('#check-result-btn');
+    }
+
+    await waitForGameModal(page);
+    await waitForText(page, '#modal-title', 'You Win!');
+
+    const modalReason = await getText(page, '#modal-stats .modal-reason');
+    assert.match(modalReason, /filled the entire fraction wall/i);
+
+    await page.click('#modal-play-again');
+    await waitForHidden(page, '#game-modal');
+    await waitForText(page, '#fraction-round', '1');
+    await waitForText(page, '#correct-count', '0');
+});
+
+test('Colour in Fractions shows a loss modal when no possible moves remain', async (t) => {
+    const page = await openAppPage(browser, t);
+
+    await openFractions(page);
+    await configureFractionsDice(page, 2, 5);
+
+    const selectionPlan = [
+        { rowIndex: 3, cellIndexes: [0, 1] },
+        { rowIndex: 3, cellIndexes: [2, 3] },
+        { rowIndex: 6, cellIndexes: [0, 1, 2, 3] },
+        { rowIndex: 6, cellIndexes: [4, 5, 6, 7] },
+        { rowIndex: 3, cellIndexes: [4], extra: { rowIndex: 6, cellIndexes: [8, 9] } }
+    ];
+
+    for (let round = 0; round < selectionPlan.length; round += 1) {
+        const selection = selectionPlan[round];
+
+        await page.click('#roll-fraction-btn');
+        await waitForText(page, '#current-fraction', '2/5');
+
+        await clickFractionCells(page, selection.rowIndex, selection.cellIndexes);
+        if (selection.extra) {
+            await clickFractionCells(page, selection.extra.rowIndex, selection.extra.cellIndexes);
+        }
+
+        await page.click('#check-result-btn');
+    }
+
+    await waitForGameModal(page);
+    await waitForText(page, '#modal-title', 'Game Over');
+
+    const modalReason = await getText(page, '#modal-stats .modal-reason');
+    assert.match(modalReason, /no possible moves remaining/i);
+
+    await page.click('#modal-play-again');
+    await waitForHidden(page, '#game-modal');
+    await waitForText(page, '#fraction-round', '1');
+    await waitForText(page, '#correct-count', '0');
 });
