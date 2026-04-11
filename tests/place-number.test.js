@@ -63,7 +63,7 @@ test('Place That Number 0-100 keeps the integer version and records half-step pl
     await waitForVisible(page, '#game-modal');
 
     const priorCorrectRow = await getRowText(page, '#place-number-table tbody tr:nth-child(2)');
-    assert.deepEqual(priorCorrectRow, ['1', '7 & 4', '74', '74 1/2', 'Correct']);
+    assert.deepEqual(priorCorrectRow, ['1', '7 & 4', '74', '74 + 1/2', 'Correct']);
 });
 
 test('Place That Number 0-1000 supports three dice and records half-step placement history', async (t) => {
@@ -90,7 +90,7 @@ test('Place That Number 0-1000 supports three dice and records half-step placeme
     await waitForVisible(page, '#game-modal');
 
     const priorCorrectRow = await getRowText(page, '#place-number-table tbody tr:nth-child(2)');
-    assert.deepEqual(priorCorrectRow, ['1', '1 & 2 & 3', '123', '123 1/2', 'Correct']);
+    assert.deepEqual(priorCorrectRow, ['1', '1 & 2 & 3', '123', '123 + 1/2', 'Correct']);
 });
 
 test('Place That Number 0-6 fractions normalizes the chosen value and records mixed-fraction history', async (t) => {
@@ -116,5 +116,5 @@ test('Place That Number 0-6 fractions normalizes the chosen value and records mi
     await waitForVisible(page, '#game-modal');
 
     const priorCorrectRow = await getRowText(page, '#place-number-table tbody tr:nth-child(2)');
-    assert.deepEqual(priorCorrectRow, ['1', '2 & 5', '5/2 (= 2 1/2)', '2 1/2', 'Correct']);
+    assert.deepEqual(priorCorrectRow, ['1', '2 & 5', '5/2 (= 2 + 1/2)', '2 + 1/2', 'Correct']);
 });

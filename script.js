@@ -176,8 +176,9 @@ function greatestCommonDivisor(a, b) {
     return x || 1;
 }
 
-function formatMixedFractionFromUnits(units, unitsPerWhole) {
+function formatMixedFractionFromUnits(units, unitsPerWhole, options = {}) {
     if (typeof units !== 'number' || Number.isNaN(units)) return '-';
+    const { wholeJoiner = ' ' } = options;
 
     const whole = Math.floor(units / unitsPerWhole);
     const remainder = Math.abs(units % unitsPerWhole);
@@ -192,11 +193,17 @@ function formatMixedFractionFromUnits(units, unitsPerWhole) {
 
     return whole === 0
         ? `${numerator}/${denominator}`
-        : `${whole} ${numerator}/${denominator}`;
+        : `${whole}${wholeJoiner}${numerator}/${denominator}`;
 }
 
 function formatCanonicalChoice(rawLabel, canonicalLabel) {
     return rawLabel === canonicalLabel ? rawLabel : `${rawLabel} (= ${canonicalLabel})`;
+}
+
+function formatHistoryMixedFractionFromUnits(units, unitsPerWhole) {
+    return formatMixedFractionFromUnits(units, unitsPerWhole, {
+        wholeJoiner: ' + '
+    });
 }
 
 function formatReadableChoices(items) {
@@ -262,13 +269,16 @@ function buildPlaceFractionRollOptions(dice, placedValues, variant) {
 
 function createPlaceChoiceOption(variant, option) {
     const canonicalLabel = formatMixedFractionFromUnits(option.valueUnits, variant.unitsPerWhole);
+    const historyCanonicalLabel = formatHistoryMixedFractionFromUnits(option.valueUnits, variant.unitsPerWhole);
     return {
         id: `${option.rawLabel}:${option.valueUnits}`,
         rawLabel: option.rawLabel,
         valueUnits: option.valueUnits,
         canonicalLabel,
+        historyCanonicalLabel,
         choiceLabel: option.rawLabel,
-        selectedLabel: formatCanonicalChoice(option.rawLabel, canonicalLabel)
+        selectedLabel: formatCanonicalChoice(option.rawLabel, canonicalLabel),
+        historyLabel: formatCanonicalChoice(option.rawLabel, historyCanonicalLabel)
     };
 }
 
@@ -2269,6 +2279,10 @@ function formatPlaceNumberUnits(units, variant = getCurrentPlaceNumberVariant())
     return formatMixedFractionFromUnits(units, variant.unitsPerWhole);
 }
 
+function formatPlaceNumberHistoryUnits(units, variant = getCurrentPlaceNumberVariant()) {
+    return formatHistoryMixedFractionFromUnits(units, variant.unitsPerWhole);
+}
+
 function getPlaceNumberBenchmarkUnits(variant = getCurrentPlaceNumberVariant()) {
     return [
         Math.round(variant.rangeUnits / 4),
@@ -2895,7 +2909,7 @@ function checkPlaceNumberPlacement() {
     if (!state.currentRoll || !selectedOption || state.estimateUnits === null || state.isGameOver) return;
 
     const roll = state.currentRoll;
-    const estimateLabel = formatPlaceNumberUnits(state.estimateUnits);
+    const estimateLabel = formatPlaceNumberHistoryUnits(state.estimateUnits);
     const evaluation = evaluatePlaceNumberPlacement(selectedOption.valueUnits, state.estimateUnits);
 
     if (evaluation.isCorrect) {
@@ -2909,7 +2923,7 @@ function checkPlaceNumberPlacement() {
         addToPlaceNumberTable({
             round: state.round,
             roll: roll.display,
-            choice: selectedOption.selectedLabel,
+            choice: selectedOption.historyLabel,
             estimate: estimateLabel,
             result: 'Correct'
         });
@@ -2930,7 +2944,7 @@ function checkPlaceNumberPlacement() {
     addToPlaceNumberTable({
         round: state.round,
         roll: roll.display,
-        choice: selectedOption.selectedLabel,
+        choice: selectedOption.historyLabel,
         estimate: estimateLabel,
         result: 'Incorrect'
     });
