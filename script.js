@@ -3040,6 +3040,7 @@ function resetPlaceNumberGame() {
     resetPlaceNumberTurnState({ clearFailedPlacement: true });
     state.round = 1;
     state.placedNumbers = [];
+    state.showBenchmarks = false;
     state.isGameOver = false;
     state.stats = { correct: 0, incorrect: 0 };
 

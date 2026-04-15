@@ -296,3 +296,58 @@ test('Place That Number fraction benchmark toggle shows and hides the optional g
         labels: ['1', '3']
     });
 });
+
+test('Place That Number New Game resets benchmark guides back to hidden', async (t) => {
+    const page = await openAppPage(browser, t);
+
+    await openPlaceNumber(page, 'frac_0_6');
+    await page.check('#place-show-benchmarks');
+    await page.waitForFunction(() =>
+        document.querySelector('#place-show-benchmarks').checked &&
+        document.querySelector('#place-number-line').classList.contains('place-benchmarks-visible') &&
+        document.querySelector('#place-number-labels').classList.contains('place-benchmarks-visible')
+    );
+
+    await page.click('#reset-place-number-btn');
+    await page.waitForFunction(() =>
+        !document.querySelector('#place-show-benchmarks').checked &&
+        !document.querySelector('#place-number-line').classList.contains('place-benchmarks-visible') &&
+        !document.querySelector('#place-number-labels').classList.contains('place-benchmarks-visible')
+    );
+
+    assert.equal(await page.locator('#place-show-benchmarks').isChecked(), false);
+    assert.deepEqual(await getOptionalBenchmarkState(page), {
+        lineClasses: 'place-number-line',
+        labelClasses: 'place-number-labels',
+        labels: ['1', '3']
+    });
+});
+
+test('Place That Number version switching resets benchmark guides back to hidden', async (t) => {
+    const page = await openAppPage(browser, t);
+
+    await openPlaceNumber(page, 'frac_0_6');
+    await page.check('#place-show-benchmarks');
+    await page.waitForFunction(() =>
+        document.querySelector('#place-show-benchmarks').checked &&
+        document.querySelector('#place-number-line').classList.contains('place-benchmarks-visible') &&
+        document.querySelector('#place-number-labels').classList.contains('place-benchmarks-visible')
+    );
+
+    await page.click('.nav-link[href="#place-number"]');
+    await waitForVisible(page, '#place-version-modal');
+    await page.click('.place-version-option[data-place-variant="int_1000"]');
+    await waitForText(page, '#place-number-title', 'Place That Number (0 to 1000)');
+    await page.waitForFunction(() =>
+        !document.querySelector('#place-show-benchmarks').checked &&
+        !document.querySelector('#place-number-line').classList.contains('place-benchmarks-visible') &&
+        !document.querySelector('#place-number-labels').classList.contains('place-benchmarks-visible')
+    );
+
+    assert.equal(await page.locator('#place-show-benchmarks').isChecked(), false);
+    assert.deepEqual(await getOptionalBenchmarkState(page), {
+        lineClasses: 'place-number-line',
+        labelClasses: 'place-number-labels',
+        labels: ['250', '500', '750']
+    });
+});
