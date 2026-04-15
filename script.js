@@ -585,6 +585,138 @@ function showOptionPickerModal({
     });
 }
 
+function showProgressLossConfirmModal({
+    title,
+    message,
+    confirmLabel = 'Yes, Continue',
+    cancelLabel = 'Cancel'
+}) {
+    return new Promise((resolve) => {
+        const modal = $('#progress-confirm-modal');
+        const titleEl = $('#progress-confirm-title');
+        const messageEl = $('#progress-confirm-message');
+        const confirmBtn = $('#progress-confirm-yes');
+        const cancelBtn = $('#progress-confirm-cancel');
+
+        if (!modal || !titleEl || !messageEl || !confirmBtn || !cancelBtn) {
+            resolve(false);
+            return;
+        }
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        confirmBtn.textContent = confirmLabel;
+        cancelBtn.textContent = cancelLabel;
+
+        let isResolved = false;
+        let closeModal = () => {};
+
+        const cleanup = () => {
+            confirmBtn.onclick = null;
+            cancelBtn.onclick = null;
+        };
+
+        const finish = (value, dismissed = false) => {
+            if (isResolved) return;
+            isResolved = true;
+
+            if (!dismissed) {
+                closeModal('action');
+            }
+
+            cleanup();
+            resolve(value);
+        };
+
+        closeModal = openModal(modal, {
+            initialFocus: cancelBtn,
+            onDismiss: () => finish(false, true)
+        });
+
+        confirmBtn.onclick = () => finish(true);
+        cancelBtn.onclick = () => finish(false);
+    });
+}
+
+function hasRecordedGameProgress(stats = {}) {
+    return Object.values(stats).some(value => value > 0);
+}
+
+function getVisibleSectionId() {
+    return Array.from($$('.section')).find(section => !section.hidden)?.id || null;
+}
+
+function isFractionsGameInProgress() {
+    const state = GameState.fractions;
+    return !state.isGameOver && (
+        state.currentRoll !== null
+        || state.isSelecting
+        || state.selectedCells.length > 0
+        || state.round > 1
+        || hasRecordedGameProgress(state.stats)
+    );
+}
+
+function isDecimatsGameInProgress() {
+    const state = GameState.decimats;
+    return !state.isGameOver && (
+        state.currentRoll !== null
+        || state.isSelecting
+        || state.selectedCellIds.length > 0
+        || state.totalUnits > 0
+        || state.round > 1
+        || hasRecordedGameProgress(state.stats)
+    );
+}
+
+function isPlaceNumberGameInProgress() {
+    const state = GameState.placeNumber;
+    return !state.isGameOver && (
+        state.currentRoll !== null
+        || state.selectedOptionId !== null
+        || state.estimateUnits !== null
+        || state.placedNumbers.length > 0
+        || state.round > 1
+        || hasRecordedGameProgress(state.stats)
+    );
+}
+
+function getActiveUnfinishedGame() {
+    const visibleSectionId = getVisibleSectionId();
+
+    if (visibleSectionId === 'fractions' && isFractionsGameInProgress()) {
+        return { sectionId: 'fractions', label: 'Colour in Fractions' };
+    }
+
+    if (visibleSectionId === 'decimats' && isDecimatsGameInProgress()) {
+        return { sectionId: 'decimats', label: 'Colour in Decimats' };
+    }
+
+    if (visibleSectionId === 'place-number' && isPlaceNumberGameInProgress()) {
+        return { sectionId: 'place-number', label: 'Place That Number' };
+    }
+
+    return null;
+}
+
+async function confirmProgressLossIfNeeded({ action = 'navigate', targetId = null } = {}) {
+    const activeGame = getActiveUnfinishedGame();
+
+    if (!activeGame) {
+        return true;
+    }
+
+    const isRestartingCurrentGame = action === 'reset' || targetId === activeGame.sectionId;
+
+    return showProgressLossConfirmModal({
+        title: isRestartingCurrentGame ? 'Start a new game?' : 'Leave current game?',
+        message: isRestartingCurrentGame
+            ? `Your current progress in ${activeGame.label} will be lost if you start again.`
+            : `Your current progress in ${activeGame.label} will be lost if you continue.`,
+        confirmLabel: isRestartingCurrentGame ? 'Yes, Start New Game' : 'Yes, Continue'
+    });
+}
+
 function setFeedbackMessage(selector, message, type) {
     const feedback = $(selector);
     if (!feedback) return;
@@ -779,6 +911,28 @@ async function navigateToPlaceNumber() {
     applyPlaceNumberVariant(variant);
 }
 
+async function handleTopLevelNavigation(targetId) {
+    const confirmed = await confirmProgressLossIfNeeded({ action: 'navigate', targetId });
+    if (!confirmed) return;
+
+    if (targetId === 'fractions') {
+        await navigateToFractions();
+        return;
+    }
+
+    if (targetId === 'decimats') {
+        navigateToDecimats();
+        return;
+    }
+
+    if (targetId === 'place-number') {
+        await navigateToPlaceNumber();
+        return;
+    }
+
+    showSection(targetId);
+}
+
 function showSection(targetId) {
     const navLinks = $$('.nav-link');
     const sections = $$('.section');
@@ -808,44 +962,29 @@ function initNavigation() {
     });
 
     navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
+        link.addEventListener('click', async (e) => {
             e.preventDefault();
             const targetId = link.getAttribute('href').slice(1);
 
             mobileToggle?.setAttribute('aria-expanded', 'false');
             navMenu?.setAttribute('aria-expanded', 'false');
 
-            if (targetId === 'fractions') {
-                navigateToFractions();
-                return;
-            }
-
-            if (targetId === 'decimats') {
-                navigateToDecimats();
-                return;
-            }
-
-            if (targetId === 'place-number') {
-                navigateToPlaceNumber();
-                return;
-            }
-
-            showSection(targetId);
+            await handleTopLevelNavigation(targetId);
         });
     });
 
-    brandLink?.addEventListener('click', (e) => {
+    brandLink?.addEventListener('click', async (e) => {
         e.preventDefault();
         mobileToggle?.setAttribute('aria-expanded', 'false');
         navMenu?.setAttribute('aria-expanded', 'false');
-        showSection('home');
+        await handleTopLevelNavigation('home');
     });
 }
 
 function initPlayNowButtons() {
-    $('.play-fractions-btn')?.addEventListener('click', () => navigateToFractions());
-    $('.play-decimats-btn')?.addEventListener('click', () => navigateToDecimats());
-    $('.play-place-number-btn')?.addEventListener('click', () => navigateToPlaceNumber());
+    $('.play-fractions-btn')?.addEventListener('click', () => handleTopLevelNavigation('fractions'));
+    $('.play-decimats-btn')?.addEventListener('click', () => handleTopLevelNavigation('decimats'));
+    $('.play-place-number-btn')?.addEventListener('click', () => handleTopLevelNavigation('place-number'));
 }
 
 function initHowToPlay() {
@@ -1270,7 +1409,11 @@ function showEndModal({
 
 function initFractionsGame() {
     $('#roll-fraction-btn')?.addEventListener('click', rollFractionDice);
-    $('#reset-fractions-btn')?.addEventListener('click', resetFractionsGame);
+    $('#reset-fractions-btn')?.addEventListener('click', async () => {
+        if (await confirmProgressLossIfNeeded({ action: 'reset', targetId: 'fractions' })) {
+            resetFractionsGame();
+        }
+    });
     $('#check-result-btn')?.addEventListener('click', checkResult);
     $('#skip-turn-btn')?.addEventListener('click', skipTurn);
     $('#clear-selection-btn')?.addEventListener('click', clearSelection);
@@ -2304,7 +2447,11 @@ function initDecimatsGame() {
     $('#check-decimat-btn')?.addEventListener('click', checkDecimatResult);
     $('#skip-decimat-turn-btn')?.addEventListener('click', skipDecimatTurn);
     $('#clear-decimat-selection-btn')?.addEventListener('click', () => clearDecimatSelection());
-    $('#reset-decimats-btn')?.addEventListener('click', resetDecimatsGame);
+    $('#reset-decimats-btn')?.addEventListener('click', async () => {
+        if (await confirmProgressLossIfNeeded({ action: 'reset', targetId: 'decimats' })) {
+            resetDecimatsGame();
+        }
+    });
 
     resetDecimatsGame();
 }
@@ -3063,7 +3210,11 @@ function initPlaceNumberGame() {
     $('#check-place-number-btn')?.addEventListener('click', checkPlaceNumberPlacement);
     $('#clear-place-marker-btn')?.addEventListener('click', clearPlaceNumberMarker);
     $('#place-hint-toggle')?.addEventListener('click', togglePlaceNumberHint);
-    $('#reset-place-number-btn')?.addEventListener('click', resetPlaceNumberGame);
+    $('#reset-place-number-btn')?.addEventListener('click', async () => {
+        if (await confirmProgressLossIfNeeded({ action: 'reset', targetId: 'place-number' })) {
+            resetPlaceNumberGame();
+        }
+    });
     $('#place-show-benchmarks')?.addEventListener('change', (event) => {
         GameState.placeNumber.showBenchmarks = event.currentTarget.checked;
         updatePlaceNumberBenchmarkGuides();

@@ -77,6 +77,13 @@ async function openDecimats(page) {
     await waitForVisible(page, '#decimats');
 }
 
+async function openPlaceNumber(page, variant = 'int_100') {
+    await page.click('.play-place-number-btn');
+    await waitForVisible(page, '#place-version-modal');
+    await page.click(`.place-version-option[data-place-variant="${variant}"]`);
+    await waitForVisible(page, '#place-number');
+}
+
 async function openFractionDiceModal(page) {
     await page.click('#custom-dice-trigger');
     await waitForVisible(page, '#custom-dice-modal');
@@ -192,6 +199,7 @@ module.exports = {
     openAppPage,
     openDecimats,
     openFractionDiceModal,
+    openPlaceNumber,
     openFractions,
     reloadApp,
     setRandomSequence,

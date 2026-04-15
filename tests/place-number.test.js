@@ -8,19 +8,13 @@ const {
     getText,
     isDisabled,
     openAppPage,
+    openPlaceNumber,
     setRandomSequence,
     waitForText,
     waitForVisible
 } = require('./support/browser-test-helpers');
 
 let browser;
-
-async function openPlaceNumber(page, variant) {
-    await page.click('.play-place-number-btn');
-    await waitForVisible(page, '#place-version-modal');
-    await page.click(`.place-version-option[data-place-variant="${variant}"]`);
-    await waitForVisible(page, '#place-number');
-}
 
 async function clickPlaceChoice(page, label) {
     await page.locator('#place-choice-buttons .place-option-btn', { hasText: label }).click();
