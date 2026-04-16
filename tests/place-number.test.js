@@ -160,8 +160,53 @@ test('Place That Number fraction feedback keeps improper fractions in the top me
     await waitForVisible(page, '#game-modal');
 
     const feedback = await getText(page, '#place-number-feedback');
-    assert.match(feedback, /6\/5 belongs between 1 and 3\/2/i);
+    assert.match(feedback, /6\/5.*1 and 3\/2/i);
+    assert.match(feedback, /true position is a little farther left/i);
     assert.doesNotMatch(feedback, /1 1\/5|1 1\/2/i);
+});
+
+test('Place That Number fraction keeps estimated benchmarks for order and compares accuracy to the true value', async (t) => {
+    const page = await openAppPage(browser, t);
+
+    await openPlaceNumber(page, 'frac_0_6');
+    await setRandomSequence(page, [0.55, 0.2, 0.75, 0.95, 0.75, 0.35]);
+
+    await page.click('#roll-place-number-btn');
+    await waitForText(page, '#place-digits', '4 & 2');
+    await clickPlaceChoice(page, '2/4');
+    await clickNumberLineAtRatio(page, 43 / 360);
+    await page.click('#check-place-number-btn');
+    await waitForText(page, '#place-round', '2');
+
+    await page.click('#roll-place-number-btn');
+    await waitForText(page, '#place-digits', '5 & 6');
+    await clickPlaceChoice(page, '5/6');
+    await clickNumberLineAtRatio(page, 73 / 360);
+    await page.click('#check-place-number-btn');
+    await waitForText(page, '#place-round', '3');
+
+    assert.deepEqual(
+        await page.evaluate(() => GameState.placeNumber.placedNumbers.map(({ valueUnits, positionUnits }) => ({
+            valueUnits,
+            positionUnits
+        }))),
+        [
+            { valueUnits: 30, positionUnits: 43 },
+            { valueUnits: 50, positionUnits: 73 }
+        ]
+    );
+
+    await page.click('#roll-place-number-btn');
+    await waitForText(page, '#place-digits', '5 & 3');
+    await clickPlaceChoice(page, '3/5');
+    await clickNumberLineAtRatio(page, 53 / 360);
+    await page.click('#check-place-number-btn');
+    await waitForVisible(page, '#game-modal');
+
+    const feedback = await getText(page, '#place-number-feedback');
+    assert.match(feedback, /3\/5.*1\/2 and 5\/6/i);
+    assert.match(feedback, /true position is a little farther left/i);
+    assert.doesNotMatch(feedback, /keep your marker inside that gap/i);
 });
 
 test('Place That Number waits for a chosen value before allowing marker placement', async (t) => {

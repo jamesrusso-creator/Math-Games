@@ -2615,15 +2615,21 @@ function getPlaceNumberWindow(valueUnits) {
     }
 
     const valueGap = Math.max(1, right.valueUnits - left.valueUnits);
-    const positionGap = Math.max(1, right.positionUnits - left.positionUnits);
-    const ratio = (valueUnits - left.valueUnits) / valueGap;
-    const expectedPositionUnits = left.positionUnits + (ratio * positionGap);
+    const lowerPositionUnits = Math.min(left.positionUnits, right.positionUnits);
+    const upperPositionUnits = Math.max(left.positionUnits, right.positionUnits);
     const tolerance = Math.min(
-        Math.max(positionGap * 0.18, 3),
-        Math.max(2, positionGap * 0.4)
+        Math.max(valueGap * 0.18, 3),
+        Math.max(2, valueGap * 0.4)
     );
 
-    return { left, right, expectedPositionUnits, tolerance };
+    return {
+        left,
+        right,
+        lowerPositionUnits,
+        upperPositionUnits,
+        truePositionUnits: valueUnits,
+        tolerance
+    };
 }
 
 function describePlaceNumberWindow(valueUnits) {
@@ -3034,8 +3040,8 @@ function evaluatePlaceNumberPlacement(selectedOption, estimateUnits) {
     const variant = getCurrentPlaceNumberVariant();
     const valueUnits = selectedOption.valueUnits;
     const windowData = getPlaceNumberWindow(valueUnits);
-    const insideInterval = estimateUnits > windowData.left.positionUnits && estimateUnits < windowData.right.positionUnits;
-    const difference = Math.abs(estimateUnits - windowData.expectedPositionUnits);
+    const insideInterval = estimateUnits > windowData.lowerPositionUnits && estimateUnits < windowData.upperPositionUnits;
+    const difference = Math.abs(estimateUnits - windowData.truePositionUnits);
     const valueLabel = selectedOption.choiceLabel;
     const leftLabel = formatPlaceNumberFeedbackUnits(windowData.left.valueUnits, variant);
     const rightLabel = formatPlaceNumberFeedbackUnits(windowData.right.valueUnits, variant);
@@ -3056,10 +3062,10 @@ function evaluatePlaceNumberPlacement(selectedOption, estimateUnits) {
         };
     }
 
-    const direction = estimateUnits < windowData.expectedPositionUnits ? 'a little farther right' : 'a little farther left';
+    const direction = estimateUnits < windowData.truePositionUnits ? 'a little farther right' : 'a little farther left';
     return {
         isCorrect: false,
-        message: `${valueLabel} belongs between ${leftLabel} and ${rightLabel}. Try moving your marker ${direction}.`,
+        message: `${valueLabel} is in the right gap between ${leftLabel} and ${rightLabel}, but its true position is ${direction}.`,
         windowData
     };
 }
