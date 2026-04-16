@@ -336,6 +336,40 @@ test('Place That Number fraction benchmark toggle shows and hides the optional g
     });
 });
 
+test('Place That Number game over automatically shows the optional benchmark guides', async (t) => {
+    const page = await openAppPage(browser, t);
+
+    await openPlaceNumber(page, 'int_100');
+    await setRandomSequence(page, [0.75, 0.45, 0.15, 0.15]);
+
+    assert.equal(await page.locator('#place-show-benchmarks').isChecked(), false);
+
+    await page.click('#roll-place-number-btn');
+    await waitForText(page, '#place-digits', '7 & 4');
+    await clickPlaceChoice(page, '74');
+    await clickNumberLineAtRatio(page, 0.745);
+    await page.click('#check-place-number-btn');
+    await waitForText(page, '#place-round', '2');
+
+    await page.click('#roll-place-number-btn');
+    await waitForText(page, '#place-digits', '1 & 1');
+    await clickNumberLineAtRatio(page, 1);
+    await page.click('#check-place-number-btn');
+    await waitForVisible(page, '#game-modal');
+    await page.waitForFunction(() =>
+        document.querySelector('#place-show-benchmarks').checked &&
+        document.querySelector('#place-number-line').classList.contains('place-benchmarks-visible') &&
+        document.querySelector('#place-number-labels').classList.contains('place-benchmarks-visible')
+    );
+
+    assert.equal(await page.locator('#place-show-benchmarks').isChecked(), true);
+    assert.deepEqual(await getOptionalBenchmarkState(page), {
+        lineClasses: 'place-number-line place-benchmarks-visible',
+        labelClasses: 'place-number-labels place-benchmarks-visible',
+        labels: ['25', '50', '75']
+    });
+});
+
 test('Place That Number New Game resets benchmark guides back to hidden', async (t) => {
     const page = await openAppPage(browser, t);
 

@@ -3082,6 +3082,7 @@ function advancePlaceNumberRound() {
 function endPlaceNumberGame(isWin) {
     const state = GameState.placeNumber;
     state.isGameOver = true;
+    state.showBenchmarks = true;
     stopPlaceNumberDrag();
     resetPlaceNumberTurnState({ clearFailedPlacement: isWin });
 
