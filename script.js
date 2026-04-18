@@ -2614,21 +2614,14 @@ function getPlaceNumberWindow(valueUnits) {
         }
     }
 
-    const valueGap = Math.max(1, right.valueUnits - left.valueUnits);
     const lowerPositionUnits = Math.min(left.positionUnits, right.positionUnits);
     const upperPositionUnits = Math.max(left.positionUnits, right.positionUnits);
-    const tolerance = Math.min(
-        Math.max(valueGap * 0.18, 3),
-        Math.max(2, valueGap * 0.4)
-    );
 
     return {
         left,
         right,
         lowerPositionUnits,
-        upperPositionUnits,
-        truePositionUnits: valueUnits,
-        tolerance
+        upperPositionUnits
     };
 }
 
@@ -3041,31 +3034,21 @@ function evaluatePlaceNumberPlacement(selectedOption, estimateUnits) {
     const valueUnits = selectedOption.valueUnits;
     const windowData = getPlaceNumberWindow(valueUnits);
     const insideInterval = estimateUnits > windowData.lowerPositionUnits && estimateUnits < windowData.upperPositionUnits;
-    const difference = Math.abs(estimateUnits - windowData.truePositionUnits);
     const valueLabel = selectedOption.choiceLabel;
     const leftLabel = formatPlaceNumberFeedbackUnits(windowData.left.valueUnits, variant);
     const rightLabel = formatPlaceNumberFeedbackUnits(windowData.right.valueUnits, variant);
 
-    if (insideInterval && difference <= windowData.tolerance) {
+    if (insideInterval) {
         return {
             isCorrect: true,
-            message: `Placed! ${valueLabel} sits well on your line and now becomes a new benchmark.`,
+            message: `Placed! ${valueLabel} is in the correct gap and now becomes a new benchmark.`,
             windowData
         };
     }
 
-    if (!insideInterval) {
-        return {
-            isCorrect: false,
-            message: `${valueLabel} needs to sit between ${leftLabel} and ${rightLabel}. Keep your marker inside that gap.`,
-            windowData
-        };
-    }
-
-    const direction = estimateUnits < windowData.truePositionUnits ? 'a little farther right' : 'a little farther left';
     return {
         isCorrect: false,
-        message: `${valueLabel} is in the right gap between ${leftLabel} and ${rightLabel}, but its true position is ${direction}.`,
+        message: `${valueLabel} needs to sit between ${leftLabel} and ${rightLabel}. Keep your marker inside that gap.`,
         windowData
     };
 }
@@ -3097,7 +3080,7 @@ function endPlaceNumberGame(isWin) {
         roundsPlayed: Math.max(1, totalRounds),
         onPlayAgain: resetPlaceNumberGame,
         winReason: 'You used every available roll without a mistake and built a complete bank of benchmarks.',
-        loseReason: 'The first inaccurate placement ended the run. Compare how many numbers you can place before a miss.',
+        loseReason: 'The first placement in the wrong gap ended the run. Compare how many numbers you can place before a miss.',
         statsItems: [
             { className: 'correct', value: state.stats.correct, label: 'Placed' },
             { className: 'skipped', value: state.placedNumbers.length + 2, label: 'Benchmarks' },
