@@ -3041,15 +3041,13 @@ function evaluatePlaceNumberPlacement(selectedOption, estimateUnits) {
     if (insideInterval) {
         return {
             isCorrect: true,
-            message: `Placed! ${valueLabel} is in the correct gap and now becomes a new benchmark.`,
-            windowData
+            message: `Placed! ${valueLabel} is in the correct gap and now becomes a new benchmark.`
         };
     }
 
     return {
         isCorrect: false,
-        message: `${valueLabel} needs to sit between ${leftLabel} and ${rightLabel}. Keep your marker inside that gap.`,
-        windowData
+        message: `${valueLabel} needs to sit between ${leftLabel} and ${rightLabel}. Keep your marker inside that gap.`
     };
 }
 
