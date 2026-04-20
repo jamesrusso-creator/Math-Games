@@ -104,6 +104,12 @@ test('Place That Number 0-6 fractions use 1 and 3 benchmarks and simplified impr
     await openPlaceNumber(page, 'frac_0_6');
     assert.equal(await getText(page, '#place-number-title'), 'Place That Number (0 to 6 Fractions)');
     assert.equal(await getText(page, '#place-benchmark-toggle-label'), 'Show 1 / 3 benchmarks');
+    assert.deepEqual(
+        await page.locator('#place-number-table thead th').evaluateAll((nodes) =>
+            nodes.filter((node) => !node.hidden).map((node) => node.textContent.trim())
+        ),
+        ['Rd', 'Dice', 'Fraction', 'Decimal', 'Placed At', 'Result']
+    );
 
     await setRandomSequence(page, [0.2, 0.75, 0, 0]);
 
@@ -122,7 +128,7 @@ test('Place That Number 0-6 fractions use 1 and 3 benchmarks and simplified impr
     await waitForVisible(page, '#game-modal');
 
     const priorCorrectRow = await getRowText(page, '#place-number-table tbody tr:nth-child(2)');
-    assert.deepEqual(priorCorrectRow, ['1', '2 & 5', '5/2 (= 2 + 1/2)', '2 + 1/2', 'Correct']);
+    assert.deepEqual(priorCorrectRow, ['1', '2 & 5', '5/2 (= 2 + 1/2)', '2.50', '2.50', 'Correct']);
 
     const markerLabels = await page.locator('.place-marker-label').evaluateAll((nodes) =>
         nodes.map((node) => node.textContent.trim())

@@ -217,10 +217,16 @@ function formatImproperFractionFromUnits(units, unitsPerWhole) {
     return `${units / divisor}/${unitsPerWhole / divisor}`;
 }
 
+function formatFixedDecimalFromUnits(units, unitsPerWhole, digits = 2) {
+    if (typeof units !== 'number' || Number.isNaN(units)) return '-';
+    return (units / unitsPerWhole).toFixed(digits);
+}
+
 const PLACE_NUMBER_FORMATTERS = {
     mixed: formatMixedFractionFromUnits,
     historyMixed: formatHistoryMixedFractionFromUnits,
-    improper: formatImproperFractionFromUnits
+    improper: formatImproperFractionFromUnits,
+    decimal2: (units, unitsPerWhole) => formatFixedDecimalFromUnits(units, unitsPerWhole, 2)
 };
 
 function formatReadableChoices(items) {
@@ -325,8 +331,12 @@ function createPlaceNumberVariant(config) {
         benchmarkToggleTemplate: formatPlaceBenchmarkToggleLabel,
         selectedValueFormat: 'mixed',
         historyValueFormat: 'historyMixed',
+        historyPlacementFormat: 'historyMixed',
+        historyDecimalFormat: 'decimal2',
         feedbackValueFormat: 'mixed',
         markerValueFormat: 'mixed',
+        historyDecimalLabel: 'Decimal',
+        showHistoryDecimalColumn: false,
         ...config
     };
 }
@@ -406,8 +416,10 @@ const PLACE_NUMBER_VARIANTS = {
         statusRollLabel: 'Dice',
         historyRollLabel: 'Dice',
         historyChoiceLabel: 'Fraction',
+        historyPlacementFormat: 'decimal2',
         feedbackValueFormat: 'improper',
         markerValueFormat: 'improper',
+        showHistoryDecimalColumn: true,
         wallHint: 'Choose one of the two fractions, then click or drag on the line to place it between 0 and 6.',
         lineAriaLabel: 'Interactive number line from 0 to 6. Click or drag to place your chosen fraction.',
         howToPlaySteps: [
@@ -2474,7 +2486,11 @@ function formatPlaceNumberUnits(units, variant = getCurrentPlaceNumberVariant())
 }
 
 function formatPlaceNumberHistoryUnits(units, variant = getCurrentPlaceNumberVariant()) {
-    return formatPlaceVariantUnits(units, variant, 'historyMixed');
+    return formatPlaceVariantUnits(units, variant, variant.historyPlacementFormat);
+}
+
+function formatPlaceNumberHistoryDecimalUnits(units, variant = getCurrentPlaceNumberVariant()) {
+    return formatPlaceVariantUnits(units, variant, variant.historyDecimalFormat);
 }
 
 function formatPlaceNumberImproperUnits(units, variant = getCurrentPlaceNumberVariant()) {
@@ -2536,6 +2552,9 @@ function renderPlaceNumberStaticUI() {
     $('#place-choice-label').textContent = variant.statusChoiceLabel;
     $('#place-history-roll-header').textContent = variant.historyRollLabel;
     $('#place-history-choice-header').textContent = variant.historyChoiceLabel;
+    $('#place-history-decimal-header').textContent = variant.historyDecimalLabel;
+    $('#place-history-decimal-header').hidden = !variant.showHistoryDecimalColumn;
+    $('#place-history-decimal-col').hidden = !variant.showHistoryDecimalColumn;
     $('#place-wall-hint').textContent = variant.wallHint;
     $('#place-choice-title').textContent = variant.choiceCardTitle;
     $('#place-benchmark-toggle-label').textContent = variant.benchmarkToggleTemplate(benchmarkLabels);
@@ -2842,13 +2861,20 @@ function updatePlaceNumberDisplay() {
 }
 
 function addToPlaceNumberTable(entry) {
-    prependHistoryRow('#place-number-table', [
+    const variant = getCurrentPlaceNumberVariant();
+    const cells = [
         entry.round,
         entry.roll,
-        entry.choice,
-        entry.estimate,
-        entry.result
-    ], entry.result);
+        entry.choice
+    ];
+
+    if (variant.showHistoryDecimalColumn) {
+        cells.push(entry.decimal ?? '-');
+    }
+
+    cells.push(entry.estimate, entry.result);
+
+    prependHistoryRow('#place-number-table', cells, entry.result);
 }
 
 function setPlaceNumberDiceDisplay(dice) {
@@ -3088,12 +3114,16 @@ function endPlaceNumberGame(isWin) {
 }
 
 function checkPlaceNumberPlacement() {
+    const variant = getCurrentPlaceNumberVariant();
     const state = GameState.placeNumber;
     const selectedOption = getPlaceNumberOptionById();
     if (!state.currentRoll || !selectedOption || state.estimateUnits === null || state.isGameOver) return;
 
     const roll = state.currentRoll;
-    const estimateLabel = formatPlaceNumberHistoryUnits(state.estimateUnits);
+    const estimateLabel = formatPlaceNumberHistoryUnits(state.estimateUnits, variant);
+    const decimalLabel = variant.showHistoryDecimalColumn
+        ? formatPlaceNumberHistoryDecimalUnits(selectedOption.valueUnits, variant)
+        : null;
     const evaluation = evaluatePlaceNumberPlacement(selectedOption, state.estimateUnits);
 
     if (evaluation.isCorrect) {
@@ -3108,6 +3138,7 @@ function checkPlaceNumberPlacement() {
             round: state.round,
             roll: roll.display,
             choice: selectedOption.historyLabel,
+            decimal: decimalLabel,
             estimate: estimateLabel,
             result: 'Correct'
         });
@@ -3129,6 +3160,7 @@ function checkPlaceNumberPlacement() {
         round: state.round,
         roll: roll.display,
         choice: selectedOption.historyLabel,
+        decimal: decimalLabel,
         estimate: estimateLabel,
         result: 'Incorrect'
     });
