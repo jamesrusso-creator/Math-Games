@@ -71,6 +71,33 @@ test('Place That Number 0-100 keeps the integer version and records half-step pl
     assert.deepEqual(priorCorrectRow, ['1', '7 & 4', '74', '74 + 1/2', 'Correct']);
 });
 
+test('Place That Number -100 to 100 uses a sign die and records negative placement history', async (t) => {
+    const page = await openAppPage(browser, t);
+
+    await openPlaceNumber(page, 'int_neg_100');
+    assert.equal(await getText(page, '#place-number-title'), 'Place That Number (-100 to 100)');
+    assert.equal(await getText(page, '#place-benchmark-toggle-label'), 'Show -50 / 0 / 50 benchmarks');
+
+    await setRandomSequence(page, [0.75, 0.75, 0.45, 0.1, 0.15, 0.15]);
+
+    await page.click('#roll-place-number-btn');
+    await waitForText(page, '#place-digits', '- & 7 & 4');
+    await clickPlaceChoice(page, '-74');
+    await clickNumberLineAtRatio(page, 51 / 400);
+    await page.click('#check-place-number-btn');
+    await waitForText(page, '#place-round', '2');
+
+    await page.click('#roll-place-number-btn');
+    await waitForText(page, '#place-digits', '+ & 1 & 1');
+    await clickNumberLineAtRatio(page, 1);
+    await page.click('#check-place-number-btn');
+
+    await waitForVisible(page, '#game-modal');
+
+    const priorCorrectRow = await getRowText(page, '#place-number-table tbody tr:nth-child(2)');
+    assert.deepEqual(priorCorrectRow, ['1', '- & 7 & 4', '-74', '-74 - 1/2', 'Correct']);
+});
+
 test('Place That Number 0-1000 supports three dice and records half-step placement history', async (t) => {
     const page = await openAppPage(browser, t);
 

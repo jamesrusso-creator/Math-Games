@@ -17,9 +17,10 @@ The project currently includes three games:
 - **Without Improper Fractions** — the numerator stays smaller than the denominator.
 - **With Improper Fractions** — the numerator can be equal to or larger than the denominator.
 
-`Place That Number` has three selectable versions:
+`Place That Number` has four selectable versions:
 
 - **INTEGER / 0 to 100** — two digit dice on a 0 to 100 number line.
+- **INTEGER / -100 to 100** — a sign die plus two digit dice on a -100 to 100 number line.
 - **INTEGER / 0 to 1000** — three digit dice on a 0 to 1000 number line.
 - **FRACTION / 0 to 6** — two dice from 1 to 6, arranged as a fraction and placed on a 0 to 6 line.
 
