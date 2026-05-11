@@ -1196,6 +1196,7 @@ function initCustomDiceUI() {
 
         title.textContent = content.title;
         if (subtitle) subtitle.textContent = content.subtitle;
+        if (panelKey === 'fractions') updateFractionDiceVersionWarning();
     }
 
     triggers.forEach(trigger => {
@@ -1220,6 +1221,7 @@ function initCustomDiceUI() {
     Object.values(panelActions).forEach(bindCustomDicePanelActions);
     bindIntegerInputValidation(forEachFractionDiceFace);
     bindIntegerInputValidation(forEachDecimatDiceFace);
+    bindFractionDiceWarningUpdates();
 }
 
 function showDiceMessage(el, text, autoHide, isSuccess = true) {
@@ -1358,6 +1360,7 @@ function populateFractionDiceInputs() {
         GameState.fractions.customFracDice,
         ({ fracSelect }) => fracSelect
     );
+    updateFractionDiceVersionWarning();
 }
 
 function populateDecimatDiceInputs() {
@@ -1374,6 +1377,56 @@ function validateFractionDice() {
         iterateFaces: forEachFractionDiceFace,
         errorMsg: $('#fraction-dice-error'),
         getIntegerErrorMessage: face => `Face ${face}: Integer dice must be between 1 and 6.`
+    });
+}
+
+function canGenerateImproperFraction(intValues, denominators) {
+    return intValues.some(numerator =>
+        denominators.some(denominator => numerator >= denominator)
+    );
+}
+
+function areFractionDiceValuesValid({ intValues, extraValues }) {
+    return isValidDiceArray(
+        intValues,
+        FRACTION_DICE_FACE_COUNT,
+        value => Number.isInteger(value) && value >= 1 && value <= 6
+    ) && isValidDiceArray(
+        extraValues,
+        FRACTION_DICE_FACE_COUNT,
+        value => FRACTION_DENOMINATOR_OPTIONS.includes(value)
+    );
+}
+
+function getFractionDiceVersionWarning(diceValues) {
+    if (!areFractionDiceValuesValid(diceValues)) return '';
+
+    const canRollImproper = canGenerateImproperFraction(diceValues.intValues, diceValues.extraValues);
+
+    if (currentVersion === 'improper' && !canRollImproper) {
+        return 'Warning: This game is set to With Improper Fractions, but these dice cannot roll an improper fraction.';
+    }
+
+    if (currentVersion !== 'improper' && canRollImproper) {
+        return 'Warning: This game is set to Without Improper Fractions, but these dice can roll an improper fraction.';
+    }
+
+    return '';
+}
+
+function updateFractionDiceVersionWarning() {
+    const warning = $('#fraction-dice-warning');
+    if (!warning) return;
+
+    const warningText = getFractionDiceVersionWarning(getFractionDiceValues());
+    warning.textContent = warningText;
+    warning.hidden = warningText === '';
+}
+
+function bindFractionDiceWarningUpdates() {
+    forEachFractionDiceFace(({ intInput, fracSelect }) => {
+        intInput?.addEventListener('input', updateFractionDiceVersionWarning);
+        fracSelect?.addEventListener('change', updateFractionDiceVersionWarning);
     });
 }
 
@@ -1873,6 +1926,11 @@ function setCustomDicePanelLocked(panelSelector, locked, message) {
             notice.className = 'dice-locked-notice';
             notice.setAttribute('role', 'alert');
             notice.textContent = message;
+        }
+        const versionWarning = panel.querySelector('.dice-version-warning');
+        if (versionWarning) {
+            versionWarning.after(notice);
+        } else {
             panel.prepend(notice);
         }
         notice.hidden = false;

@@ -94,6 +94,58 @@ test('Colour in Fractions custom dice persist for the current session and reset 
     assert.equal(await page.locator('#frac-denom-1').inputValue(), '4');
 });
 
+test('Colour in Fractions warns when proper version dice can roll improper fractions', async (t) => {
+    const page = await openAppPage(browser, t);
+
+    await openFractions(page, 'proper');
+    await openFractionDiceModal(page);
+
+    assert.equal(await page.locator('#fraction-dice-warning').evaluate((warning) => warning.hidden), true);
+
+    await page.locator('#frac-int-1').fill('6');
+    await page.waitForFunction(() => {
+        const warning = document.querySelector('#fraction-dice-warning');
+        return warning
+            && !warning.hidden
+            && warning.textContent.includes('Without Improper Fractions')
+            && warning.textContent.includes('can roll an improper fraction');
+    });
+
+    await page.locator('#frac-int-1').fill('1');
+    await page.waitForFunction(() => {
+        const warning = document.querySelector('#fraction-dice-warning');
+        return warning && warning.hidden;
+    });
+});
+
+test('Colour in Fractions warns when improper version dice cannot roll improper fractions', async (t) => {
+    const page = await openAppPage(browser, t);
+
+    await openFractions(page, 'improper');
+    await openFractionDiceModal(page);
+
+    assert.equal(await page.locator('#fraction-dice-warning').evaluate((warning) => warning.hidden), true);
+
+    for (let face = 1; face <= 6; face += 1) {
+        await page.locator(`#frac-int-${face}`).fill('1');
+        await page.selectOption(`#frac-denom-${face}`, '6');
+    }
+
+    await page.waitForFunction(() => {
+        const warning = document.querySelector('#fraction-dice-warning');
+        return warning
+            && !warning.hidden
+            && warning.textContent.includes('With Improper Fractions')
+            && warning.textContent.includes('cannot roll an improper fraction');
+    });
+
+    await page.locator('#frac-int-1').fill('6');
+    await page.waitForFunction(() => {
+        const warning = document.querySelector('#fraction-dice-warning');
+        return warning && warning.hidden;
+    });
+});
+
 test('Colour in Fractions locks custom dice during an active round', async (t) => {
     const page = await openAppPage(browser, t);
 
