@@ -2686,6 +2686,14 @@ function renderPlaceNumberDice(dice = null, { rolling = false } = {}) {
         face.textContent = dice && typeof dice[index] !== 'undefined' ? String(dice[index]) : '?';
         die.appendChild(face);
         row.appendChild(die);
+
+        if (index < variant.diceCount - 1) {
+            const operator = document.createElement('span');
+            operator.className = 'dice-and-mark';
+            operator.setAttribute('aria-hidden', 'true');
+            operator.textContent = '&';
+            row.appendChild(operator);
+        }
     }
 }
 

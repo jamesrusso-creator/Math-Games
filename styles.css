@@ -898,6 +898,15 @@ main {
     text-align: center;
 }
 
+.dice-and-mark {
+    color: var(--color-primary);
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1;
+    min-width: 1.2rem;
+    text-align: center;
+}
+
 .dice.small {
     width: 60px;
     height: 60px;
@@ -2015,6 +2024,7 @@ main:has(.game-section:not([hidden])) {
 
 .place-dice-row {
     flex-wrap: wrap;
+    gap: 0.65rem;
 }
 
 .place-benchmark-toggle input {
