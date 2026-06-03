@@ -80,4 +80,4 @@ Coverage output is written into `coverage/`, including an HTML report at `covera
 
 ## License
 
-Educational use.
+MIT. See [LICENSE](LICENSE).

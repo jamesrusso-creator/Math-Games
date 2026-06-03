@@ -1,6 +1,7 @@
 {
   "name": "math-games",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "test": "node --test tests/games.test.js",
     "coverage": "COLLECT_COVERAGE=1 node --test tests/games.test.js"
